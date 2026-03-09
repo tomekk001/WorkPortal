@@ -1,71 +1,162 @@
-WorkPortal - Job Board System
-Nowoczesny system ogłoszeń o pracę zbudowany w architekturze Fullstack (Decoupled). Projekt ma na celu umożliwienie kandydatom aplikowanie na oferty, a pracodawcom zarządzanie procesem rekrutacji.
+# 🧑‍💻 WorkPortal - Job Board System
 
-🚀 Tech Stack
-Frontend: React (Vite) + TypeScript + Tailwind CSS
+Nowoczesny portal ogłoszeniowy łączący **Kandydatów z Pracodawcami**.  
+Projekt realizowany w architekturze **Monorepo (Frontend + Backend)**.
 
-Backend: NestJS + TypeScript
+---
 
-Database: PostgreSQL
+# 🚀 Technologie
 
-ORM: Prisma
+- 🎨 **Frontend:** `React` + `TypeScript` + `Vite` + `Tailwind CSS`
+- ⚙️ **Backend:** `NestJS` + `TypeScript` + `Prisma ORM`
+- 🗄 **Baza danych:** `PostgreSQL (Docker)`
+- ✅ **Walidacja:** `Zod`
 
-Infrastructure: Docker & Docker Compose
+---
 
-Validation: Zod
+# 🛠 Wymagania (Prerequisites)
 
-🏗️ Project Structure
-/server - API serwerowe oparte o NestJS.
+Przed uruchomieniem upewnij się, że masz zainstalowane:
 
-/client - Aplikacja kliencka (SPA) oparta o React.
+- [Node.js](https://nodejs.org/) *(wersja LTS)*
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
-docker-compose.yml - Konfiguracja kontenerów dla bazy danych.
+---
 
-🛠️ Getting Started
-1. Prerequisites
-Upewnij się, że masz zainstalowane:
+# ⚡ Szybki Start (Instalacja)
 
-Node.js (LTS)
+Wykonaj te kroki, aby uruchomić projekt od zera.
 
-Docker & Docker Compose
+---
 
-2. Environment Setup
-W folderze /server utwórz plik .env (jeśli nie istnieje) i skonfiguruj połączenie z bazą:
+# 1️⃣ Baza Danych
 
-Fragment kodu
-DATABASE_URL="postgresql://admin:password123@localhost:5432/job_board?schema=public"
-3. Database & Backend
-Uruchom bazę danych i serwer:
+Uruchom kontener z PostgreSQL w tle:
 
-Bash
-# Uruchom bazę danych (w głównym folderze)
+```bash
 docker-compose up -d
+```
 
-# Przejdź do serwera i zainstaluj zależności
+---
+
+# 2️⃣ Backend (Server)
+
+Otwórz terminal w folderze **server**:
+
+```bash
 cd server
-npm install
+```
 
-# Wykonaj migracje Prisma
+### 1. Instalacja zależności
+
+```bash
+npm install
+```
+
+### 2. Konfiguracja `.env`
+
+Upewnij się, że masz w pliku `.env`:
+
+```env
+DATABASE_URL="postgresql://admin:password123@localhost:5432/job_board?schema=public"
+```
+
+### 3. Migracja bazy danych
+
+Zapisanie schematu do PostgreSQL:
+
+```bash
 npx prisma migrate dev --name init
+```
 
-# Uruchom backend w trybie dev
+### 4. Uruchom serwer
+
+```bash
 npm run start:dev
-4. Frontend
-Uruchom aplikację kliencką:
+```
 
-Bash
+Serwer wystartuje pod adresem:
+
+```
+http://localhost:3000
+```
+
+---
+
+# 3️⃣ Frontend (Client)
+
+Otwórz nowy terminal w folderze **client**:
+
+```bash
 cd client
+```
+
+### 1. Instalacja zależności
+
+```bash
 npm install
+```
+
+### 2. Uruchom aplikację
+
+```bash
 npm run dev
-📈 Roadmap
-[x] Initial project setup (Server & Client)
+```
 
-[x] Docker & PostgreSQL configuration
+Aplikacja będzie dostępna pod adresem:
 
-[x] Prisma integration
+```
+http://localhost:5173
+```
 
-[ ] Next step: Full database schema implementation (Users, Jobs, Applications)
+---
 
-[ ] Authentication (JWT)
+# 📚 Ściąga z Komend (Cheatsheet)
 
-[ ] Employer & Candidate Dashboards
+### 🔄 Migracja bazy danych
+
+Najważniejsza komenda – uruchamiaj po każdej zmianie w `schema.prisma`.
+
+```bash
+npx prisma migrate dev
+```
+
+---
+
+### 🗄 Prisma Studio
+
+Panel do podglądu i edycji danych w bazie:
+
+```bash
+npx prisma studio
+```
+
+---
+
+### 🔧 Generowanie typów Prisma
+
+Pomocne gdy IDE nie widzi zmian:
+
+```bash
+npx prisma generate
+```
+
+---
+
+### 🌱 Seed danych
+
+Wypełnia bazę przykładowymi danymi:
+
+```bash
+npx prisma db seed
+```
+
+---
+
+# 🧾 Komendy NPM
+
+| Komenda | Opis |
+|--------|------|
+| `npm run dev` | Uruchamia serwer deweloperski Vite |
+| `npm run build` | Buduje wersję produkcyjną |
+| `npm run preview` | Podgląd zbudowanej wersji produkcyjnej |
