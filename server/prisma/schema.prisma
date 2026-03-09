@@ -1,4 +1,7 @@
 // server/prisma/schema.prisma
+
+
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,9 +11,154 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ENUMY (Słowniki) 
+
+enum Role {
+  CANDIDATE // Kandydat
+  EMPLOYER  // Pracodawca
+  ADMIN     // Administrator
+}
+
+enum ApplicationStatus {
+  NEW       // Nowy
+  REVIEWING // W trakcie sprawdzania (np. Zaproszony)
+  REJECTED  // Odrzucony
+  HIRED     // Zatrudniony
+}
+
+enum ContractType {
+  B2B
+  UOP // Umowa o Pracę
+  UZ  // Umowa Zlecenie
+  UOD // Umowa o Dzieło
+}
+
+enum WorkMode {
+  REMOTE // Zdalna
+  HYBRID // Hybrydowa
+  ONSITE // Stacjonarna
+}
+
+// --- MODELE ---
+
+// Główny model użytkownika (logowanie)
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // Hasło będzie zahaszowane (bcrypt/argon2)
+  role      Role     @default(CANDIDATE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Dane osobowe (wspólne lub specyficzne)
+  firstName String?
+  lastName  String?
+  phone     String?
+
+  // Relacje
+  candidateProfile CandidateProfile? // Jeśli user to kandydat
+  companyProfile   CompanyProfile?   // Jeśli user to pracodawca
+  
+  applications     Application[]     // Aplikacje wysłane przez kandydata
+  savedOffers      SavedOffer[]      // Ulubione ogłoszenia kandydata
+}
+
+// Profil Kandydata (CV, umiejętności)
+model CandidateProfile {
+  id     Int    @id @default(autoincrement())
+  userId Int    @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  cvUrl  String? // Link do pliku CV (np. S3 / Uploads)
+  bio    String? // Krótki opis o sobie
+}
+
+// Profil Pracodawcy (Firma, Logo)
+model CompanyProfile {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  companyName String
+  logoUrl     String? // Link do logo
+  description String? // Opis działalności
+  website     String? 
+  location    String? // Główna siedziba (adres)
+
+  jobOffers   JobOffer[] // Ogłoszenia wystawione przez tę firmę
+}
+
+// Kategoria ogłoszenia (IT, Marketing itp.)
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  jobOffers JobOffer[]
+}
+
+// Ogłoszenie o pracę
 model JobOffer {
   id          Int      @id @default(autoincrement())
   title       String
-  description String
+  description String   @db.Text // Dłuższy tekst
+  
+  // Szczegóły oferty
+  salaryMin   Int?     // Widełki od
+  salaryMax   Int?     // Widełki do
+  currency    String   @default("PLN")
+  location    String   // Miasto / Województwo
+  contract    ContractType
+  workMode    WorkMode
+  
+  // Statusy i statystyki
+  isActive    Boolean  @default(false) // Czy oferta jest widoczna (po moderacji admina)
+  isPromoted  Boolean  @default(false) // Czy wyróżniona (funkcja admina)
+  views       Int      @default(0)     // Licznik wyświetleń
+  validUntil  DateTime // Data ważności ogłoszenia
+
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacje
+  companyId   Int
+  company     CompanyProfile @relation(fields: [companyId], references: [id])
+
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  applications Application[]
+  savedBy      SavedOffer[]
+}
+
+// Aplikacja (Zgłoszenie kandydata na ofertę)
+model Application {
+  id        Int      @id @default(autoincrement())
+  appliedAt DateTime @default(now())
+  
+  status    ApplicationStatus @default(NEW)
+  
+  // Relacje
+  userId    Int      // Kto aplikował
+  user      User     @relation(fields: [userId], references: [id])
+  
+  jobOfferId Int     // Na co aplikował
+  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id])
+
+  // Opcjonalnie: CV dedykowane pod tę ofertę (jeśli inne niż w profilu)
+  customCvUrl String? 
+
+  @@unique([userId, jobOfferId]) // Zabezpieczenie: jedna osoba może aplikować tylko raz na jedną ofertę
+}
+
+// Schowek (Ulubione ogłoszenia)
+model SavedOffer {
+  id        Int      @id @default(autoincrement())
+  savedAt   DateTime @default(now())
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  jobOfferId Int
+  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id])
+
+  @@unique([userId, jobOfferId]) // Nie można zapisać dwa razy tego samego
 }
