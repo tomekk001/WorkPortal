@@ -1,43 +1,55 @@
-import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { LoginForm } from './features/auth/LoginForm';
 import { RegisterForm } from './features/auth/RegisterForm';
-import './App.css'
+import { CandidateDashboard } from './features/job-offers/views/CandidateDashboard';
+import { EmployerDashboard } from './features/job-offers/views/EmployerDashboard';
+import './App.css';
+
+const ProtectedRoute = () => {
+  const { token, role } = useAuth();
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role === 'EMPLOYER') {
+    return <EmployerDashboard />;
+  }
+
+  return <CandidateDashboard />;
+};
 
 function App() {
-  const [showLogin, setShowLogin] = useState(true);
-
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '40px 20px' }}>
-      <h1 style={{ textAlign: 'center', color: '#333' }}>Witaj w Job Board</h1>
-      
-      {/* Przyciski do nawigacji */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '30px' }}>
-        <button 
-          onClick={() => setShowLogin(true)} 
-          style={{ 
-            padding: '10px 20px', 
-            fontWeight: showLogin ? 'bold' : 'normal',
-            cursor: 'pointer'
-          }}
-        >
-          Zaloguj się
-        </button>
-        <button 
-          onClick={() => setShowLogin(false)} 
-          style={{ 
-            padding: '10px 20px', 
-            fontWeight: !showLogin ? 'bold' : 'normal',
-            cursor: 'pointer'
-          }}
-        >
-          Zarejestruj się
-        </button>
-      </div>
+    <Router>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+          <main className="p-4">
+            <Routes>
+              {/* Osobne podstrony na logowanie i rejestrację */}
+              <Route path="/login" element={
+                <div className="mt-10">
+                  <h1 className="text-center text-2xl font-bold mb-6">Zaloguj się do Job Board</h1>
+                  <LoginForm />
+                </div>
+              } />
+              <Route path="/register" element={
+                <div className="mt-10">
+                  <h1 className="text-center text-2xl font-bold mb-6">Załóż konto</h1>
+                  <RegisterForm />
+                </div>
+              } />
 
-      {/* Wyświetlanie odpowiedniego formularza */}
-      {showLogin ? <LoginForm /> : <RegisterForm />}
-    </div>
+              {/* Główny panel (widoczny tylko po zalogowaniu) */}
+              <Route path="/" element={<ProtectedRoute />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
+      </AuthProvider>
+    </Router>
   );
 }
 
-export default App
+export default App;
