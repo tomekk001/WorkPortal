@@ -1,4 +1,5 @@
 import { useAuth } from '../../auth/AuthContext';
+import { Link } from 'react-router-dom';
 
 export const EmployerDashboard = () => {
   const { logout } = useAuth();
@@ -17,9 +18,12 @@ export const EmployerDashboard = () => {
           <h3 className="text-xl font-bold text-gray-800">Twoje ogłoszenia</h3>
           <p className="text-gray-600">Zarządzaj swoimi procesami rekrutacyjnymi.</p>
         </div>
-        <button className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 font-bold">
+        <Link 
+          to="/add-offer" 
+          className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 font-bold transition"
+        >
           + Dodaj nowe ogłoszenie
-        </button>
+        </Link>
       </div>
 
       {/* Tu w przyszłości wstawimy listę ogłoszeń dodanych przez pracodawcę używając JobOfferCard */}

@@ -4,6 +4,7 @@ import { LoginForm } from './features/auth/LoginForm';
 import { RegisterForm } from './features/auth/RegisterForm';
 import { CandidateDashboard } from './features/job-offers/views/CandidateDashboard';
 import { EmployerDashboard } from './features/job-offers/views/EmployerDashboard';
+import { CreateJobOffer } from './features/job-offers/views/CreateJobOffer';
 import './App.css';
 
 const ProtectedRoute = () => {
@@ -44,6 +45,7 @@ function App() {
               {/* Główny panel (widoczny tylko po zalogowaniu) */}
               <Route path="/" element={<ProtectedRoute />} />
               <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/add-offer" element={<CreateJobOffer />} />
             </Routes>
           </main>
         </div>
