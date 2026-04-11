@@ -5,6 +5,7 @@ import { RegisterForm } from './features/auth/RegisterForm';
 import { CandidateDashboard } from './features/job-offers/views/CandidateDashboard';
 import { EmployerDashboard } from './features/job-offers/views/EmployerDashboard';
 import { CreateJobOffer } from './features/job-offers/views/CreateJobOffer';
+import { ApplicationForm } from './features/job-offers/views/ApplicationForm';
 import './App.css';
 
 const ProtectedRoute = () => {
@@ -46,6 +47,7 @@ function App() {
               <Route path="/" element={<ProtectedRoute />} />
               <Route path="*" element={<Navigate to="/" replace />} />
               <Route path="/add-offer" element={<CreateJobOffer />} />
+              <Route path="/apply/:jobId" element={<ApplicationForm />} />
             </Routes>
           </main>
         </div>

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Headers, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JobOffersService } from './job-offers.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -12,31 +12,127 @@ export class JobOffersController {
     return this.jobOffersService.searchOffers(title, location);
   }
   
-  // Dodaj ten endpoint do kontrolera
-@Get('categories')
-async getCategories() {
-  return this.jobOffersService.findAllCategories();
-}
+  @Get('categories')
+  async getCategories() {
+    return this.jobOffersService.findAllCategories();
+  }
 
-  // 2. Odbieranie nowej oferty z formularza Pracodawcy (POST)
+  // WAŻNE: Trasy na POST muszą być w kolejności od najbardziej specyficznych do generalnych!
+  // @Post('submit-application') i @Post(':id/apply') MUSZĄ być PRZED @Post()
+
+  // 4. Przesyłanie pełnego formularza aplikacji (POST)
+  @Post('submit-application')
+  async submitApplication(
+    @Headers('authorization') authHeader: string,
+    @Body() body: any
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Brak dostępu. Zaloguj się.');
+    }
+
+    if (!body || !body.jobOfferId) {
+      throw new BadRequestException('Brak ID oferty w request body.');
+    }
+
+    const token = authHeader.split(' ')[1];
+    const { jobOfferId } = body;
+
+    try {
+      const jwtService = new JwtService({ secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ' });
+      const decoded = jwtService.verify(token);
+      
+      return this.jobOffersService.submitApplicationForm(
+        decoded.sub,
+        jobOfferId,
+        body,
+        {}
+      );
+    } catch (err: any) {
+      console.error('Błąd podczas przesyłania aplikacji:', err);
+      if (err.message.includes('jwt')) {
+        throw new UnauthorizedException('Nieprawidłowy lub wygasły token.');
+      }
+      throw err;
+    }
+  }
+
+  // 3. Aplikacja na ofertę (POST)
+  @Post(':id/apply')
+  async apply(
+    @Headers('authorization') authHeader: string,
+    @Body() body: any
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Brak dostępu. Zaloguj się.');
+    }
+
+    const token = authHeader.split(' ')[1];
+    const jobOfferId = body.jobOfferId;
+
+    if (!jobOfferId) {
+      throw new UnauthorizedException('Brak ID oferty.');
+    }
+
+    try {
+      const jwtService = new JwtService({ secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ' });
+      const decoded = jwtService.verify(token);
+      return this.jobOffersService.applyForOffer(decoded.sub, jobOfferId);
+    } catch (err) {
+      throw new UnauthorizedException('Nieprawidłowy lub wygasły token.');
+    }
+  }
+
+  // 5. Pobieranie ofert pracodawcy (GET)
+  @Get('my-offers')
+  async getMyOffers(@Headers('authorization') authHeader: string) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Brak dostępu. Zaloguj się.');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+      const jwtService = new JwtService({ secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ' });
+      const decoded = jwtService.verify(token);
+      return this.jobOffersService.getEmployerOffers(decoded.sub);
+    } catch (err) {
+      throw new UnauthorizedException('Nieprawidłowy lub wygasły token.');
+    }
+  }
+
+  // 6. Pobieranie aplikacji dla pracodawcy (GET)
+  @Get('my-applications')
+  async getMyApplications(@Headers('authorization') authHeader: string) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Brak dostępu. Zaloguj się.');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+      const jwtService = new JwtService({ secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ' });
+      const decoded = jwtService.verify(token);
+      return this.jobOffersService.getEmployerApplications(decoded.sub);
+    } catch (err) {
+      throw new UnauthorizedException('Nieprawidłowy lub wygasły token.');
+    }
+  }
+
+  // 2. Odbieranie nowej oferty z formularza Pracodawcy (POST) - GENERYCZNE, NA KOŃCU
   @Post()
   async create(@Headers('authorization') authHeader: string, @Body() data: any) {
     if (!authHeader) {
       throw new UnauthorizedException('Brak dostępu. Zaloguj się.');
     }
 
-    // Token przychodzi w formacie "Bearer eyJhbGciOi...", więc wyciągamy sam token
     const token = authHeader.split(' ')[1];
     
     try {
-      // Weryfikujemy token (używamy paczki, którą już masz zainstalowaną)
       const jwtService = new JwtService({ secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ' });
       const decoded = jwtService.verify(token);
       
-      // Przekazujemy ID użytkownika (decoded.sub) oraz dane z formularza do serwisu
       return this.jobOffersService.createOffer(decoded.sub, data);
     } catch (err) {
       throw new UnauthorizedException('Nieprawidłowy lub wygasły token.');
     }
-  }
-}
+  }}
