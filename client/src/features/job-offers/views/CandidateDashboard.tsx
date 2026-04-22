@@ -10,15 +10,20 @@ export const CandidateDashboard = () => {
   const [offers, setOffers] = useState<JobOffer[]>([]);
   const [totalOffers, setTotalOffers] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  const fetchOffers = async (title?: string, location?: string) => {
+  const fetchOffers = async (title?: string, location?: string, categoryId?: string) => {
     setLoading(true);
     try {
+      const params: Record<string, string | undefined> = { title, location };
+      if (categoryId) {
+        params.categoryId = categoryId;
+      }
       const response = await axios.get('http://localhost:3000/job-offers/search', {
-        params: { title, location }
+        params,
       });
       
       if (Array.isArray(response.data)) {
@@ -45,9 +50,22 @@ export const CandidateDashboard = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/job-offers/categories');
+      if (Array.isArray(response.data)) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error('Błąd pobierania kategorii:', error);
+      setCategories([]);
+    }
+  };
+
   useEffect(() => {
     fetchOffers();
     fetchTotalOffers();
+    fetchCategories();
   }, []);
 
   const handleApply = (offerId: number) => {
@@ -78,7 +96,10 @@ export const CandidateDashboard = () => {
           <div className="mb-12">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Filtruj oferty</h2>
-              <SearchBar onSearch={(title, location) => fetchOffers(title, location)} />
+              <SearchBar
+                categories={categories}
+                onSearch={(title, location, categoryId) => fetchOffers(title, location, categoryId)}
+              />
             </div>
           </div>
 

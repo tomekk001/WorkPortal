@@ -8,8 +8,12 @@ export class JobOffersController {
 
   // 1. Zwracanie ofert do wyszukiwarki (GET)
   @Get('search')
-  async search(@Query('title') title?: string, @Query('location') location?: string) {
-    return this.jobOffersService.searchOffers(title, location);
+  async search(
+    @Query('title') title?: string,
+    @Query('location') location?: string,
+    @Query('categoryId') categoryId?: string,
+  ) {
+    return this.jobOffersService.searchOffers(title, location, categoryId);
   }
   
   @Get('categories')

@@ -8,14 +8,13 @@ export class JobOffersService {
   // =========================================================================
   // 1. WYSZUKIWARKA OFERT (Dla Kandydata i niezalogowanych)
   // =========================================================================
-  async searchOffers(title?: string, location?: string) {
+  async searchOffers(title?: string, location?: string, categoryId?: string) {
     return this.prisma.jobOffer.findMany({
       where: {
-        isActive: true, // Zwraca tylko aktywne/zatwierdzone oferty
-        
-        // Wyszukiwanie 'contains' (zawiera) i 'mode: insensitive' (ignoruje wielkość liter)
+        isActive: true,
         title: title ? { contains: title, mode: 'insensitive' } : undefined,
         location: location ? { contains: location, mode: 'insensitive' } : undefined,
+        categoryId: categoryId ? Number(categoryId) : undefined,
       },
       orderBy: {
         createdAt: 'desc',

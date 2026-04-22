@@ -1,16 +1,23 @@
 import { useState } from 'react';
 
-interface SearchBarProps {
-  onSearch: (title: string, location: string) => void;
+interface Category {
+  id: number;
+  name: string;
 }
 
-export const SearchBar = ({ onSearch }: SearchBarProps) => {
+interface SearchBarProps {
+  categories: Category[];
+  onSearch: (title: string, location: string, categoryId: string) => void;
+}
+
+export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
+  const [categoryId, setCategoryId] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(title, location);
+    onSearch(title, location, categoryId);
   };
 
   return (
@@ -25,6 +32,19 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
           onChange={(e) => setTitle(e.target.value)}
           className="flex-2 p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
         />
+
+        <select
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          className="flex-1 p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-full"
+        >
+          <option value="">Wszystkie kategorie</option>
+          {categories.map((category) => (
+            <option key={category.id} value={String(category.id)}>
+              {category.name}
+            </option>
+          ))}
+        </select>
 
         <select
           value={location}
