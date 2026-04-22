@@ -4,13 +4,14 @@ import { SearchBar } from '../components/SearchBar';
 import { JobOfferCard, type JobOffer } from '../components/JobOfferCard';
 import { useAuth } from '../../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Header } from '../../auth/Header';
 
 export const CandidateDashboard = () => {
   const [offers, setOffers] = useState<JobOffer[]>([]);
   const [totalOffers, setTotalOffers] = useState(0);
   const [loading, setLoading] = useState(false);
   
-  const { logout, token } = useAuth();
+  const { token } = useAuth();
   const navigate = useNavigate();
 
   const fetchOffers = async (title?: string, location?: string) => {
@@ -58,54 +59,72 @@ export const CandidateDashboard = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      
-      {/* BANER Z LICZBĄ OGŁOSZEŃ */}
-      <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white">
-        <h1 className="text-3xl font-bold">
-          {totalOffers} ofert pracy od najlepszych pracodawców
-        </h1>
-        <p className="text-blue-100 mt-2">Znajdź swoją wymarzaną pracę już teraz</p>
-      </div>
-      
-      <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-800">Panel Kandydata</h2>
-        <button 
-          onClick={logout} 
-          className="text-gray-600 border border-gray-300 px-4 py-2 rounded hover:bg-gray-50 transition font-medium"
-        >
-          Wyloguj się
-        </button>
-      </div>
-
-      <SearchBar onSearch={(title, location) => fetchOffers(title, location)} />
-      {/* 2. Lista ofert */}
-      <div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">
-          Znalezione oferty <span className="text-gray-500 text-lg font-normal">({offers.length})</span>
-        </h3>
-        
-        {loading && <p className="text-gray-500 animate-pulse">Trwa ładowanie najnowszych ofert...</p>}
-        
-        {!loading && offers.length === 0 && (
-          <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <p className="text-gray-500 text-lg">Niestety, nie znaleźliśmy ofert spełniających te kryteria.</p>
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-6 py-10">
+          
+          {/* HERO BANNER */}
+          <div className="mb-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-8 text-white">
+            <h1 className="text-4xl font-bold mb-2">
+              Szukasz nowej pracy?
+            </h1>
+            <p className="text-blue-100 text-lg">
+              Znaleźliśmy dla Ciebie <span className="font-bold text-2xl">{totalOffers}</span> ofert pracy od najlepszych pracodawców
+            </p>
           </div>
-        )}
 
-        <div className="flex flex-col gap-4">
-          {/* Mapujemy tablicę na zewnętrzne kafelki JobOfferCard */}
-          {Array.isArray(offers) && offers.map((offer) => (
-            <JobOfferCard 
-              key={offer.id} 
-              offer={offer} 
-              onActionClick={handleApply} 
-              actionLabel="Aplikuj teraz" 
-            />
-          ))}
+          {/* SEARCH SECTION */}
+          <div className="mb-12">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Filtruj oferty</h2>
+              <SearchBar onSearch={(title, location) => fetchOffers(title, location)} />
+            </div>
+          </div>
+
+          {/* OFFERS LIST */}
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Dostępne oferty pracy</h2>
+                <p className="text-gray-600 mt-1">
+                  {loading ? 'Ładowanie...' : `Znaleziono ${offers.length} ofert${offers.length !== 1 ? '' : ''}`}
+                </p>
+              </div>
+            </div>
+            
+            {loading && (
+              <div className="flex justify-center py-12">
+                <div className="text-gray-500 flex flex-col items-center gap-2">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <p>Ładowanie najnowszych ofert...</p>
+                </div>
+              </div>
+            )}
+            
+            {!loading && offers.length === 0 && (
+              <div className="text-center py-16 bg-white rounded-lg border border-dashed border-gray-300">
+                <p className="text-gray-500 text-lg mb-2">😕 Niestety, nie znaleźliśmy ofert spełniających te kryteria.</p>
+                <p className="text-gray-400 text-sm">Spróbuj zmienić filtry lub poczekaj na nowe ogłoszenia.</p>
+              </div>
+            )}
+
+            {!loading && offers.length > 0 && (
+              <div className="space-y-4">
+                {Array.isArray(offers) && offers.map((offer) => (
+                  <JobOfferCard 
+                    key={offer.id} 
+                    offer={offer} 
+                    onActionClick={handleApply} 
+                    actionLabel="Aplikuj" 
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
-
-    </div>
+    </>
   );
 };

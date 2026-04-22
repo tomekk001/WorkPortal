@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { Header } from '../../auth/Header';
 
 export const CreateJobOffer = () => {
   const { token } = useAuth();
@@ -38,18 +39,20 @@ export const CreateJobOffer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          
-          {/* HEADER */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-10">
-            <h2 className="text-4xl font-bold text-white">Stwórz nowe ogłoszenie</h2>
-            <p className="text-blue-100 mt-3 text-lg">Wypełnij formularz, aby opublikować ofertę pracy na portalu</p>
-          </div>
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            
+            {/* HEADER */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-10">
+              <h2 className="text-4xl font-bold text-white">Stwórz nowe ogłoszenie</h2>
+              <p className="text-blue-100 mt-3 text-lg">Wypełnij formularz, aby opublikować ofertę pracy na portalu</p>
+            </div>
 
-          {/* FORM */}
-          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="p-8 space-y-8">
             
             {/* TYTUŁ */}
             <div>
@@ -138,9 +141,10 @@ export const CreateJobOffer = () => {
               </button>
             </div>
             
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

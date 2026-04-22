@@ -22,34 +22,54 @@ const ProtectedRoute = () => {
   return <CandidateDashboard />;
 };
 
+const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+  const { token } = useAuth();
+
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
+      <div className="max-w-md mx-auto py-12 px-4">
+        {children}
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <Router>
       <AuthProvider>
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-          <main className="p-4">
-            <Routes>
-              {/* Osobne podstrony na logowanie i rejestrację */}
-              <Route path="/login" element={
-                <div className="mt-10">
-                  <h1 className="text-center text-2xl font-bold mb-6">Zaloguj się do Job Board</h1>
+          <Routes>
+            {/* Authentication pages (without header) */}
+            <Route path="/login" element={
+              <AuthLayout>
+                <div className="bg-white rounded-xl shadow-lg p-8">
+                  <h1 className="text-3xl font-bold mb-2 text-center">Job Board</h1>
+                  <p className="text-gray-600 text-center mb-6">Zaloguj się na swoje konto</p>
                   <LoginForm />
                 </div>
-              } />
-              <Route path="/register" element={
-                <div className="mt-10">
-                  <h1 className="text-center text-2xl font-bold mb-6">Załóż konto</h1>
+              </AuthLayout>
+            } />
+            <Route path="/register" element={
+              <AuthLayout>
+                <div className="bg-white rounded-xl shadow-lg p-8">
+                  <h1 className="text-3xl font-bold mb-2 text-center">Job Board</h1>
+                  <p className="text-gray-600 text-center mb-6">Załóż nowe konto</p>
                   <RegisterForm />
                 </div>
-              } />
+              </AuthLayout>
+            } />
 
-              {/* Główny panel (widoczny tylko po zalogowaniu) */}
-              <Route path="/" element={<ProtectedRoute />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-              <Route path="/add-offer" element={<CreateJobOffer />} />
-              <Route path="/apply/:jobId" element={<ApplicationForm />} />
-            </Routes>
-          </main>
+            {/* Protected pages (with header) */}
+            <Route path="/" element={<ProtectedRoute />} />
+            <Route path="/add-offer" element={<CreateJobOffer />} />
+            <Route path="/apply/:jobId" element={<ApplicationForm />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </div>
       </AuthProvider>
     </Router>

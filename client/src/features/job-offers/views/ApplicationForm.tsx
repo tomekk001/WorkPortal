@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
+import { Header } from '../../auth/Header';
 import axios from 'axios';
 
 export const ApplicationForm = () => {
@@ -122,11 +123,13 @@ export const ApplicationForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          
-          {/* HEADER */}
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            
+            {/* HEADER */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-10">
             <Link to="/" className="text-blue-100 hover:text-white mb-4 inline-block text-sm">
               ← Wróć do ogłoszeń
@@ -373,5 +376,6 @@ export const ApplicationForm = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
