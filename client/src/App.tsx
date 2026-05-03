@@ -1,43 +1,79 @@
-import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { LoginForm } from './features/auth/LoginForm';
 import { RegisterForm } from './features/auth/RegisterForm';
-import './App.css'
+import { CandidateDashboard } from './features/job-offers/views/CandidateDashboard';
+import { EmployerDashboard } from './features/job-offers/views/EmployerDashboard';
+import { CreateJobOffer } from './features/job-offers/views/CreateJobOffer';
+import { ApplicationForm } from './features/job-offers/views/ApplicationForm';
+import './App.css';
 
-function App() {
-  const [showLogin, setShowLogin] = useState(true);
+const ProtectedRoute = () => {
+  const { token, role } = useAuth();
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role === 'EMPLOYER') {
+    return <EmployerDashboard />;
+  }
+
+  return <CandidateDashboard />;
+};
+
+const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+  const { token } = useAuth();
+
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: '40px 20px' }}>
-      <h1 style={{ textAlign: 'center', color: '#333' }}>Witaj w Job Board</h1>
-      
-      {/* Przyciski do nawigacji */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '30px' }}>
-        <button 
-          onClick={() => setShowLogin(true)} 
-          style={{ 
-            padding: '10px 20px', 
-            fontWeight: showLogin ? 'bold' : 'normal',
-            cursor: 'pointer'
-          }}
-        >
-          Zaloguj się
-        </button>
-        <button 
-          onClick={() => setShowLogin(false)} 
-          style={{ 
-            padding: '10px 20px', 
-            fontWeight: !showLogin ? 'bold' : 'normal',
-            cursor: 'pointer'
-          }}
-        >
-          Zarejestruj się
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
+      <div className="max-w-md mx-auto py-12 px-4">
+        {children}
       </div>
-
-      {/* Wyświetlanie odpowiedniego formularza */}
-      {showLogin ? <LoginForm /> : <RegisterForm />}
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+          <Routes>
+            {/* Authentication pages (without header) */}
+            <Route path="/login" element={
+              <AuthLayout>
+                <div className="bg-white rounded-xl shadow-lg p-8">
+                  <h1 className="text-3xl font-bold mb-2 text-center">Job Board</h1>
+                  <p className="text-gray-600 text-center mb-6">Zaloguj się na swoje konto</p>
+                  <LoginForm />
+                </div>
+              </AuthLayout>
+            } />
+            <Route path="/register" element={
+              <AuthLayout>
+                <div className="bg-white rounded-xl shadow-lg p-8">
+                  <h1 className="text-3xl font-bold mb-2 text-center">Job Board</h1>
+                  <p className="text-gray-600 text-center mb-6">Załóż nowe konto</p>
+                  <RegisterForm />
+                </div>
+              </AuthLayout>
+            } />
+
+            {/* Protected pages (with header) */}
+            <Route path="/" element={<ProtectedRoute />} />
+            <Route path="/add-offer" element={<CreateJobOffer />} />
+            <Route path="/apply/:jobId" element={<ApplicationForm />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </Router>
   );
 }
 
-export default App
+export default App;
