@@ -4,37 +4,61 @@ import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 import axios from 'axios';
 
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 14px',
+  border: '1px solid #e8e5df',
+  borderRadius: 8,
+  fontSize: 14,
+  color: '#0f1923',
+  background: '#f8f7f4',
+  outline: 'none',
+  boxSizing: 'border-box',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.15s, background 0.15s',
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 12,
+  fontWeight: 700,
+  color: '#6b7280',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  marginBottom: 8,
+};
+
+const sectionStyle: React.CSSProperties = {
+  borderBottom: '1px solid #f3f4f6',
+  paddingBottom: 28,
+  marginBottom: 28,
+};
+
+const sectionTitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  fontWeight: 700,
+  color: '#0f1923',
+  marginBottom: 20,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+};
+
 export const ApplicationForm = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  // Upewniamy się że jobId jest liczbą
   const jobOfferId = jobId ? Number(jobId) : null;
 
-  if (!jobOfferId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600 text-lg">Błąd: Brak ID oferty</p>
-      </div>
-    );
-  }
-
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    startDate: '',
-    contractType: '',
-    expectedSalary: '',
-    message: '',
-    agreedToTerms: false,
+    firstName: '', lastName: '', email: '', phone: '',
+    startDate: '', contractType: '', expectedSalary: '',
+    message: '', agreedToTerms: false,
   });
 
   const [files, setFiles] = useState<{ cv: File | null; additional: File | null }>({
-    cv: null,
-    additional: null,
+    cv: null, additional: null,
   });
 
   const [messageCount, setMessageCount] = useState(0);
@@ -42,12 +66,8 @@ export const ApplicationForm = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
     if (type === 'checkbox') {
-      setFormData({
-        ...formData,
-        [name]: (e.target as HTMLInputElement).checked,
-      });
+      setFormData({ ...formData, [name]: (e.target as HTMLInputElement).checked });
     } else if (name === 'message') {
       const truncated = value.slice(0, 500);
       setFormData({ ...formData, [name]: truncated });
@@ -75,307 +95,275 @@ export const ApplicationForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.phone.trim()) {
       alert('Wypełnij wszystkie wymagane pola.');
       return;
     }
-
-    // Pliki są opcjonalne na razie
     if (!formData.startDate || !formData.contractType || !formData.expectedSalary || !formData.agreedToTerms) {
       alert('Wypełnij wszystkie wymagane pola i zaakceptuj warunki.');
       return;
     }
-
     setLoading(true);
-
     try {
-      // Wysyłamy JSON zamiast FormData
-      const dataToSend = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        startDate: formData.startDate,
-        contractType: formData.contractType,
-        expectedSalary: formData.expectedSalary,
-        message: formData.message,
-        jobOfferId: jobOfferId,
-        cvFileName: files.cv?.name || null,
+      await axios.post('http://localhost:3000/job-offers/submit-application', {
+        firstName: formData.firstName, lastName: formData.lastName,
+        email: formData.email, phone: formData.phone,
+        startDate: formData.startDate, contractType: formData.contractType,
+        expectedSalary: formData.expectedSalary, message: formData.message,
+        jobOfferId, cvFileName: files.cv?.name || null,
         additionalFileName: files.additional?.name || null,
-      };
-
-      await axios.post('http://localhost:3000/job-offers/submit-application', dataToSend, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      }, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
-
-      alert('✅ Aplikacja przesłana pomyślnie! Pracodawca otrzymał Twoją aplikację.');
+      alert('Aplikacja przesłana pomyślnie!');
       navigate('/');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message;
-      alert(`❌ Błąd: ${errorMessage}`);
+      alert(`Błąd: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (!jobOfferId) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#dc2626', fontSize: 16 }}>Błąd: Brak ID oferty</p>
+      </div>
+    );
+  }
+
   return (
-    <>
+    <div style={{ minHeight: '100vh', background: '#f8f7f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
       <Header />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-            
-            {/* HEADER */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-10">
-            <Link to="/" className="text-blue-100 hover:text-white mb-4 inline-block text-sm">
-              ← Wróć do ogłoszeń
-            </Link>
-            <h2 className="text-4xl font-bold text-white">Aplikuj na stanowisko</h2>
-            <p className="text-blue-100 mt-3 text-lg">Wypełnij poniższy formularz, aby przesłać swoją aplikację</p>
-          </div>
 
-          {/* FORM */}
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            
+      {/* HERO */}
+      <div style={{ background: '#0f1923', padding: '40px 0 36px' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 32px' }}>
+          <Link to="/" style={{
+            fontSize: 13, color: '#7dd3b0', fontWeight: 600,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            marginBottom: 16, textDecoration: 'none'
+          }}>
+            ← Wróć do ogłoszeń
+          </Link>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 8 }}>
+            Formularz aplikacji
+          </p>
+          <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.4rem)', fontWeight: 800, color: '#fff', margin: '0 0 8px', letterSpacing: '-0.02em' }}>
+            Aplikuj na stanowisko
+          </h1>
+          <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
+            Wypełnij formularz, aby przesłać swoją kandydaturę do pracodawcy.
+          </p>
+        </div>
+      </div>
+
+      {/* FORM CARD */}
+      <div style={{ maxWidth: 760, margin: '32px auto', padding: '0 32px 64px' }}>
+        <div style={{
+          background: '#fff', borderRadius: 16,
+          border: '1px solid #e8e5df',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+        }}>
+          <form onSubmit={handleSubmit} style={{ padding: '36px 40px' }}>
+
             {/* DANE OSOBOWE */}
-            <div className="border-b-2 border-gray-200 pb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Dane osobowe</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Imię *</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="Twoje imię"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Nazwisko *</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Twoje nazwisko"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="twój.email@example.com"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">Numer telefonu *</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="+48 123 456 789"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                    required
-                  />
-                </div>
+            <div style={sectionStyle}>
+              <p style={sectionTitleStyle}>
+                <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>1</span>
+                Dane osobowe
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {[
+                  { name: 'firstName', label: 'Imię *', placeholder: 'Twoje imię', type: 'text' },
+                  { name: 'lastName', label: 'Nazwisko *', placeholder: 'Twoje nazwisko', type: 'text' },
+                  { name: 'email', label: 'Email *', placeholder: 'adres@email.com', type: 'email' },
+                  { name: 'phone', label: 'Telefon *', placeholder: '+48 123 456 789', type: 'tel' },
+                ].map(field => (
+                  <div key={field.name}>
+                    <label style={labelStyle}>{field.label}</label>
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      value={(formData as any)[field.name]}
+                      onChange={handleInputChange}
+                      placeholder={field.placeholder}
+                      required
+                      style={inputStyle}
+                      onFocus={e => { e.target.style.borderColor = '#0f1923'; e.target.style.background = '#fff'; }}
+                      onBlur={e => { e.target.style.borderColor = '#e8e5df'; e.target.style.background = '#f8f7f4'; }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* DOKUMENTY */}
-            <div className="border-b-2 border-gray-200 pb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Dokumenty</h3>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-800 mb-3">
-                  Załącznik - CV (PDF, max. 10 MB) *
-                </label>
-                <div className="flex items-center gap-4">
-                  <label className="flex-1 relative cursor-pointer">
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      onChange={(e) => handleFileChange(e, 'cv')}
-                      className="hidden"
-                    />
-                    <div className="px-6 py-4 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-100 transition-colors text-center">
-                      <p className="text-blue-600 font-medium">
-                        {files.cv ? `✓ ${files.cv.name}` : 'Kliknij aby wybrać plik'}
-                      </p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-3">
-                  Dodatkowe pliki (max. 5 MB)
-                </label>
-                <div className="flex items-center gap-4">
-                  <label className="flex-1 relative cursor-pointer">
-                    <input
-                      type="file"
-                      onChange={(e) => handleFileChange(e, 'additional')}
-                      className="hidden"
-                    />
-                    <div className="px-6 py-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-center">
-                      <p className="text-gray-600 font-medium">
-                        {files.additional ? `✓ ${files.additional.name}` : 'Kliknij aby wybrać plik'}
-                      </p>
-                    </div>
-                  </label>
-                </div>
+            <div style={sectionStyle}>
+              <p style={sectionTitleStyle}>
+                <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>2</span>
+                Dokumenty
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {[
+                  { key: 'cv' as const, label: 'CV (PDF, max. 10 MB) *', accept: '.pdf' },
+                  { key: 'additional' as const, label: 'Dodatkowy plik (max. 5 MB)', accept: '*' },
+                ].map(({ key, label, accept }) => (
+                  <div key={key}>
+                    <label style={labelStyle}>{label}</label>
+                    <label style={{ cursor: 'pointer', display: 'block' }}>
+                      <input type="file" accept={accept} onChange={e => handleFileChange(e, key)} style={{ display: 'none' }} />
+                      <div style={{
+                        padding: '16px', borderRadius: 8, textAlign: 'center',
+                        border: `2px dashed ${files[key] ? '#7dd3b0' : '#e8e5df'}`,
+                        background: files[key] ? '#f0fdf4' : '#f8f7f4',
+                        transition: 'all 0.15s',
+                      }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: files[key] ? '#166534' : '#6b7280', margin: 0 }}>
+                          {files[key] ? `✓ ${files[key]!.name}` : 'Kliknij aby wybrać plik'}
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* WARUNKI PRACY */}
-            <div className="border-b-2 border-gray-200 pb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Warunki pracy</h3>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-800 mb-3">
-                  Kiedy możesz rozpocząć nową pracę? *
-                </label>
-                <div className="space-y-3">
-                  {[
-                    { value: 'immediately', label: 'Od zaraz' },
-                    { value: '2weeks', label: '2 tygodnie' },
-                    { value: '1month', label: '1 miesiąc' },
-                    { value: '3months', label: '3 miesiące' },
-                    { value: 'more3months', label: 'Więcej niż 3 miesiące' },
-                  ].map((option) => (
-                    <label key={option.value} className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="startDate"
-                        value={option.value}
-                        checked={formData.startDate === option.value}
-                        onChange={handleInputChange}
-                        className="w-4 h-4 text-blue-600"
-                        required
-                      />
-                      <span className="text-gray-700">{option.label}</span>
-                    </label>
-                  ))}
+            <div style={sectionStyle}>
+              <p style={sectionTitleStyle}>
+                <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>3</span>
+                Warunki pracy
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+                <div>
+                  <label style={labelStyle}>Termin rozpoczęcia *</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { value: 'immediately', label: 'Od zaraz' },
+                      { value: '2weeks', label: '2 tygodnie' },
+                      { value: '1month', label: '1 miesiąc' },
+                      { value: '3months', label: '3 miesiące' },
+                      { value: 'more3months', label: 'Powyżej 3 miesięcy' },
+                    ].map(opt => (
+                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                        <input
+                          type="radio" name="startDate" value={opt.value}
+                          checked={formData.startDate === opt.value}
+                          onChange={handleInputChange} required
+                          style={{ width: 16, height: 16, accentColor: '#0f1923' }}
+                        />
+                        <span style={{ fontSize: 14, color: '#374151' }}>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-3">
-                  Wybierz oczekiwaną formę współpracy *
-                </label>
-                <div className="space-y-3">
-                  {[
-                    { value: 'UOP', label: 'UOP (Umowa o pracę)' },
-                    { value: 'UZ', label: 'UZ (Umowa zlecenie)' },
-                    { value: 'B2B', label: 'B2B' },
-                  ].map((option) => (
-                    <label key={option.value} className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="contractType"
-                        value={option.value}
-                        checked={formData.contractType === option.value}
-                        onChange={handleInputChange}
-                        className="w-4 h-4 text-blue-600"
-                        required
-                      />
-                      <span className="text-gray-700">{option.label}</span>
-                    </label>
-                  ))}
+                <div>
+                  <label style={labelStyle}>Forma współpracy *</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { value: 'UOP', label: 'Umowa o pracę (UOP)' },
+                      { value: 'UZ', label: 'Umowa zlecenie (UZ)' },
+                      { value: 'B2B', label: 'B2B' },
+                    ].map(opt => (
+                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                        <input
+                          type="radio" name="contractType" value={opt.value}
+                          checked={formData.contractType === opt.value}
+                          onChange={handleInputChange} required
+                          style={{ width: 16, height: 16, accentColor: '#0f1923' }}
+                        />
+                        <span style={{ fontSize: 14, color: '#374151' }}>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* OCZEKIWANIA */}
-            <div className="border-b-2 border-gray-200 pb-6">
-              <label className="block text-sm font-bold text-gray-800 mb-3">
-                Jakie są Twoje miesięczne oczekiwania finansowe brutto (PLN)? *
-              </label>
-              <input
-                type="number"
-                name="expectedSalary"
-                value={formData.expectedSalary}
-                onChange={handleInputChange}
-                placeholder="np. 15000"
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                required
-              />
+            {/* OCZEKIWANIA FINANSOWE */}
+            <div style={sectionStyle}>
+              <p style={sectionTitleStyle}>
+                <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>4</span>
+                Oczekiwania finansowe
+              </p>
+              <div style={{ maxWidth: 280 }}>
+                <label style={labelStyle}>Oczekiwane wynagrodzenie brutto (PLN/mies.) *</label>
+                <input
+                  type="number" name="expectedSalary"
+                  value={formData.expectedSalary}
+                  onChange={handleInputChange}
+                  placeholder="np. 15 000"
+                  required style={inputStyle}
+                  onFocus={e => { e.target.style.borderColor = '#0f1923'; e.target.style.background = '#fff'; }}
+                  onBlur={e => { e.target.style.borderColor = '#e8e5df'; e.target.style.background = '#f8f7f4'; }}
+                />
+              </div>
             </div>
 
             {/* WIADOMOŚĆ */}
-            <div className="border-b-2 border-gray-200 pb-6">
-              <label className="block text-sm font-bold text-gray-800 mb-3">
-                Miejsce na Twoją wiadomość
-              </label>
+            <div style={sectionStyle}>
+              <p style={sectionTitleStyle}>
+                <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>5</span>
+                Wiadomość do pracodawcy
+              </p>
               <textarea
-                name="message"
-                value={formData.message}
+                name="message" value={formData.message}
                 onChange={handleInputChange}
-                placeholder="Podziel się dodatkowymi informacjami na Twój temat..."
-                maxLength={500}
+                placeholder="Napisz coś o sobie, swoim doświadczeniu lub dlaczego chcesz pracować w tej firmie..."
                 rows={5}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all resize-none"
+                style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }}
+                onFocus={e => { e.target.style.borderColor = '#0f1923'; e.target.style.background = '#fff'; }}
+                onBlur={e => { e.target.style.borderColor = '#e8e5df'; e.target.style.background = '#f8f7f4'; }}
               />
-              <p className="text-xs text-gray-500 mt-2">{messageCount}/500</p>
+              <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 6, textAlign: 'right' }}>
+                {messageCount} / 500
+              </p>
             </div>
 
-            {/* ZGODA */}
-            <div className="mb-6">
-              <label className="flex items-start gap-3 cursor-pointer">
+            {/* ZGODA + AKCJE */}
+            <div>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', marginBottom: 28 }}>
                 <input
-                  type="checkbox"
-                  name="agreedToTerms"
+                  type="checkbox" name="agreedToTerms"
                   checked={formData.agreedToTerms}
-                  onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 mt-1"
-                  required
+                  onChange={handleInputChange} required
+                  style={{ width: 18, height: 18, marginTop: 2, accentColor: '#0f1923', flexShrink: 0 }}
                 />
-                <span className="text-gray-700 text-sm">
-                  Zapoznałem(am) się z treścią Klauzuli Informacyjnej. (*)
+                <span style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.5 }}>
+                  Zapoznałem/am się z treścią Klauzuli Informacyjnej dotyczącej przetwarzania danych osobowych i wyrażam zgodę na ich przetwarzanie w celu przeprowadzenia rekrutacji. *
                 </span>
               </label>
-            </div>
 
-            {/* AKCJE */}
-            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-6">
-              <Link
-                to="/"
-                className="w-full sm:w-auto px-8 py-3 text-center text-gray-700 font-semibold hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all border border-gray-300 hover:border-gray-400"
-              >
-                Anuluj
-              </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-300 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Wysyłanie...' : '✓ Wyślij aplikację'}
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <Link to="/" style={{
+                  padding: '11px 24px', borderRadius: 8, border: '1px solid #e8e5df',
+                  fontSize: 14, fontWeight: 600, color: '#6b7280', textDecoration: 'none',
+                  transition: 'all 0.15s',
+                }}>
+                  Anuluj
+                </Link>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    padding: '11px 28px', background: loading ? '#6b7280' : '#0f1923',
+                    color: '#fff', border: 'none', borderRadius: 8,
+                    fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.15s', fontFamily: 'inherit',
+                  }}
+                  onMouseEnter={e => { if (!loading) (e.currentTarget.style.background = '#1e3a5f'); }}
+                  onMouseLeave={e => { if (!loading) (e.currentTarget.style.background = '#0f1923'); }}
+                >
+                  {loading ? 'Wysyłanie...' : 'Wyślij aplikację →'}
+                </button>
+              </div>
             </div>
 
           </form>
         </div>
       </div>
     </div>
-    </>
   );
 };

@@ -1,4 +1,3 @@
-// Eksportujemy interfejs, by móc go użyć również w głównym widoku
 export interface JobOffer {
   id: number;
   title: string;
@@ -10,47 +9,105 @@ export interface JobOffer {
     companyName: string;
     logoUrl: string | null;
   };
+  category?: {
+    name: string;
+  };
   createdAt: string;
 }
 
 interface JobOfferCardProps {
   offer: JobOffer;
-  // Opcjonalna funkcja, jeśli chcemy mieć przycisk akcji (np. "Aplikuj" lub "Edytuj")
-  onActionClick?: (offerId: number) => void; 
+  onActionClick?: (offerId: number) => void;
   actionLabel?: string;
 }
 
-export const JobOfferCard = ({ offer, onActionClick, actionLabel = "Aplikuj" }: JobOfferCardProps) => {
+export const JobOfferCard = ({ offer, onActionClick, actionLabel = 'Aplikuj' }: JobOfferCardProps) => {
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      
-      <div>
-        <h4 className="text-lg font-bold text-blue-700 mb-1">{offer.title}</h4>
-        <p className="font-semibold text-gray-800 mb-1">{offer.company?.companyName || 'Brak nazwy firmy'}</p>
-        <p className="text-sm text-gray-500 flex items-center gap-1">
-          <span>📍</span> {offer.location}
+    <div
+      style={{
+        background: '#fff',
+        borderRadius: 14,
+        border: '1px solid #e8e5df',
+        padding: '18px 22px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 16,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        transition: 'box-shadow 0.15s, border-color 0.15s',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)';
+        (e.currentTarget as HTMLDivElement).style.borderColor = '#c9c5be';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+        (e.currentTarget as HTMLDivElement).style.borderColor = '#e8e5df';
+      }}
+    >
+      {/* LEWA: info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h4 style={{
+          fontSize: 16, fontWeight: 700, color: '#0f1923',
+          margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+        }}>
+          {offer.title}
+        </h4>
+        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px', fontWeight: 500 }}>
+          {offer.company?.companyName || 'Brak nazwy firmy'}
         </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{
+            fontSize: 12, padding: '3px 10px', borderRadius: 6,
+            background: '#f1f5f9', color: '#475569', fontWeight: 500
+          }}>
+            📍 {offer.location}
+          </span>
+          {offer.category && (
+            <span style={{
+              fontSize: 12, padding: '3px 10px', borderRadius: 6,
+              background: '#ede9fe', color: '#5b21b6', fontWeight: 600
+            }}>
+              {offer.category.name}
+            </span>
+          )}
+          {offer.salaryMin && offer.salaryMax ? (
+            <span style={{
+              fontSize: 12, padding: '3px 10px', borderRadius: 6,
+              background: '#dcfce7', color: '#166534', fontWeight: 600
+            }}>
+              {offer.salaryMin.toLocaleString('pl-PL')} – {offer.salaryMax.toLocaleString('pl-PL')} {offer.currency}
+            </span>
+          ) : (
+            <span style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
+              Wynagrodzenie do negocjacji
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="flex flex-col sm:items-end w-full sm:w-auto gap-3">
-        {offer.salaryMin && offer.salaryMax ? (
-          <p className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm inline-block">
-            {offer.salaryMin} - {offer.salaryMax} {offer.currency}
-          </p>
-        ) : (
-          <p className="text-gray-400 text-sm italic">Wynagrodzenie do negocjacji</p>
-        )}
-        
+      {/* PRAWA: data + przycisk */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
+        <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>
+          {new Date(offer.createdAt).toLocaleDateString('pl-PL')}
+        </span>
         {onActionClick && (
-          <button 
+          <button
             onClick={() => onActionClick(offer.id)}
-            className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-medium py-2 px-6 rounded-md transition-colors w-full sm:w-auto"
+            style={{
+              background: '#0f1923', color: '#fff',
+              border: 'none', borderRadius: 8,
+              padding: '9px 20px', fontSize: 13, fontWeight: 700,
+              cursor: 'pointer', transition: 'background 0.15s',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#1e3a5f')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#0f1923')}
           >
-            {actionLabel}
+            {actionLabel} →
           </button>
         )}
       </div>
-
     </div>
   );
 };
