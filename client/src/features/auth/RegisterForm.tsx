@@ -1,143 +1,287 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const RegisterForm = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // Nowe stany dla roli i firmy
   const [role, setRole] = useState<'CANDIDATE' | 'EMPLOYER'>('CANDIDATE');
   const [companyName, setCompanyName] = useState('');
-  
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess(false);
-
+    setLoading(true);
     try {
       await axios.post('http://localhost:3000/auth/register', {
-        firstName,
-        lastName,
-        email,
-        password,
-        role,
-        // Jeśli to pracodawca, dołączamy nazwę firmy do payloadu
-        ...(role === 'EMPLOYER' && { companyName }), 
+        firstName, lastName, email, password, role,
+        ...(role === 'EMPLOYER' && { companyName }),
       });
-
       setSuccess(true);
-      // Czyszczenie formularza
-      setFirstName('');
-      setLastName('');
-      setEmail('');
-      setPassword('');
-      setRole('CANDIDATE');
-      setCompanyName('');
-      
     } catch (err: any) {
       setError(err.response?.data?.message || 'Błąd podczas rejestracji');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (success) {
-    return (
-      <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
-        <h2>Rejestracja zakończona sukcesem!</h2>
-        <p>Możesz się teraz zalogować.</p>
-        <Link 
-          to="/login" 
-          className="inline-block w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded hover:bg-blue-700 transition-colors"
-        >
-          Przejdź do logowania
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#0f1923',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
+    }}>
+      {/* TOP BAR */}
+      <div style={{ padding: '20px 32px' }}>
+        <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <div style={{
+            width: 32, height: 32, background: '#7dd3b0', borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 800, fontSize: 14, color: '#0f1923',
+          }}>WP</div>
+          <span style={{ fontSize: 16, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
+            Work<span style={{ color: '#7dd3b0' }}>Portal</span>
+          </span>
         </Link>
       </div>
-    );
-  }
 
-  return (
-    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
-      <h2>Rejestracja Konta</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      
-      <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        
-        {/* WYBÓR ROLI (Radio Buttons) */}
-        <div style={{ display: 'flex', gap: '15px', padding: '10px 0' }}>
-          <label style={{ cursor: 'pointer' }}>
-            <input 
-              type="radio" 
-              name="role" 
-              value="CANDIDATE" 
-              checked={role === 'CANDIDATE'} 
-              onChange={() => setRole('CANDIDATE')} 
-            /> Szukam pracy (Kandydat)
-          </label>
-          <label style={{ cursor: 'pointer' }}>
-            <input 
-              type="radio" 
-              name="role" 
-              value="EMPLOYER" 
-              checked={role === 'EMPLOYER'} 
-              onChange={() => setRole('EMPLOYER')} 
-            /> Szukam pracownika (Firma)
-          </label>
+      {/* MAIN */}
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '32px 16px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 460 }}>
+
+          {success ? (
+            /* SUCCESS STATE */
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 20, padding: '48px 32px',
+              textAlign: 'center',
+              boxShadow: '0 24px 48px rgba(0,0,0,0.3)',
+            }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: '50%',
+                background: 'rgba(125,211,176,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 28, margin: '0 auto 20px',
+              }}>✓</div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
+                Konto zostało utworzone!
+              </h2>
+              <p style={{ fontSize: 15, color: '#64748b', margin: '0 0 32px' }}>
+                Możesz teraz zalogować się i korzystać z platformy.
+              </p>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  background: '#7dd3b0', color: '#0f1923',
+                  border: 'none', borderRadius: 10,
+                  padding: '14px 32px', fontWeight: 800, fontSize: 15,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Przejdź do logowania →
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* HEADING */}
+              <div style={{ marginBottom: 32 }}>
+                <p style={{
+                  fontSize: 12, fontWeight: 700, letterSpacing: '0.12em',
+                  color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10,
+                }}>Nowe konto</p>
+                <h1 style={{
+                  fontSize: 32, fontWeight: 800, color: '#fff',
+                  letterSpacing: '-0.02em', margin: 0,
+                }}>Zarejestruj się</h1>
+                <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>
+                  Masz już konto?{' '}
+                  <Link to="/login" style={{ color: '#7dd3b0', fontWeight: 600, textDecoration: 'none' }}>
+                    Zaloguj się
+                  </Link>
+                </p>
+              </div>
+
+              {/* CARD */}
+              <div style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.09)',
+                borderRadius: 20, padding: '32px',
+                boxShadow: '0 24px 48px rgba(0,0,0,0.3)',
+              }}>
+                {error && (
+                  <div style={{
+                    background: 'rgba(248,113,113,0.1)',
+                    border: '1px solid rgba(248,113,113,0.25)',
+                    borderRadius: 10, padding: '12px 16px',
+                    marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10,
+                  }}>
+                    <span style={{ fontSize: 16 }}>⚠️</span>
+                    <p style={{ color: '#fca5a5', fontSize: 14, margin: 0, fontWeight: 500 }}>{error}</p>
+                  </div>
+                )}
+
+                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                  {/* ROLE SELECTOR */}
+                  <div>
+                    <label style={labelStyle}>Jestem…</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      {([
+                        { value: 'CANDIDATE', icon: '🎯', label: 'Kandydatem', sub: 'Szukam pracy' },
+                        { value: 'EMPLOYER',  icon: '🏢', label: 'Pracodawcą', sub: 'Szukam pracownika' },
+                      ] as const).map(opt => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setRole(opt.value)}
+                          style={{
+                            padding: '14px 12px',
+                            borderRadius: 10,
+                            border: role === opt.value
+                              ? '1.5px solid rgba(125,211,176,0.6)'
+                              : '1.5px solid rgba(255,255,255,0.08)',
+                            background: role === opt.value
+                              ? 'rgba(125,211,176,0.1)'
+                              : 'rgba(255,255,255,0.03)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.15s',
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          <div style={{ fontSize: 18, marginBottom: 4 }}>{opt.icon}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: role === opt.value ? '#7dd3b0' : '#cbd5e1' }}>
+                            {opt.label}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{opt.sub}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* NAME ROW */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={labelStyle}>Imię</label>
+                      <input
+                        type="text" required
+                        value={firstName} onChange={e => setFirstName(e.target.value)}
+                        placeholder="Jan"
+                        style={inputStyle}
+                        onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                        onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Nazwisko</label>
+                      <input
+                        type="text" required
+                        value={lastName} onChange={e => setLastName(e.target.value)}
+                        placeholder="Kowalski"
+                        style={inputStyle}
+                        onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                        onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* COMPANY (employer only) */}
+                  {role === 'EMPLOYER' && (
+                    <div>
+                      <label style={labelStyle}>Nazwa firmy</label>
+                      <input
+                        type="text" required
+                        value={companyName} onChange={e => setCompanyName(e.target.value)}
+                        placeholder="Acme Sp. z o.o."
+                        style={inputStyle}
+                        onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                        onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label style={labelStyle}>Adres e-mail</label>
+                    <input
+                      type="email" required
+                      value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="ty@przyklad.pl"
+                      style={inputStyle}
+                      onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                      onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Hasło</label>
+                    <input
+                      type="password" required minLength={6}
+                      value={password} onChange={e => setPassword(e.target.value)}
+                      placeholder="min. 6 znaków"
+                      style={inputStyle}
+                      onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                      onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      marginTop: 8,
+                      background: loading ? 'rgba(125,211,176,0.5)' : '#7dd3b0',
+                      color: '#0f1923',
+                      border: 'none', borderRadius: 10,
+                      padding: '14px', fontWeight: 800, fontSize: 15,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      transition: 'opacity 0.15s',
+                      fontFamily: 'inherit', letterSpacing: '-0.01em',
+                    }}
+                    onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                  >
+                    {loading ? 'Tworzenie konta…' : 'Utwórz konto →'}
+                  </button>
+                </form>
+              </div>
+            </>
+          )}
         </div>
-
-        <input
-          type="text"
-          placeholder="Imię"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Nazwisko"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          required
-        />
-        
-        {/* WARUNKOWE POLE: Tylko dla pracodawcy */}
-        {role === 'EMPLOYER' && (
-          <input
-            type="text"
-            placeholder="Nazwa firmy"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            required
-          />
-        )}
-
-        <input
-          type="email"
-          placeholder="Adres e-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Hasło"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={6}
-        />
-        <button type="submit" style={{ marginTop: '10px', padding: '10px' }}>Zarejestruj się</button>
-      </form>
-      <div className="mt-6 text-center text-sm text-gray-600">
-        Masz już konto?{' '}
-        <Link to="/login" className="text-blue-600 font-bold hover:underline">
-          Zaloguj się
-        </Link>
       </div>
     </div>
   );
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 13, fontWeight: 600,
+  color: '#94a3b8', marginBottom: 8, letterSpacing: '0.01em',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '12px 14px',
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: 10, color: '#fff',
+  fontSize: 15, fontFamily: 'inherit',
+  outline: 'none', boxSizing: 'border-box',
+  transition: 'border-color 0.15s, background 0.15s',
+};
+
+const inputFocusStyle: React.CSSProperties = {
+  ...inputStyle,
+  background: 'rgba(125,211,176,0.07)',
+  border: '1px solid rgba(125,211,176,0.4)',
 };
