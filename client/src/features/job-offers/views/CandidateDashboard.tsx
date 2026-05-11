@@ -65,7 +65,7 @@ export const CandidateDashboard = () => {
 
       {/* HERO */}
       <div style={{ background: '#0f1923', color: '#fff', padding: '56px 0 48px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 32px' }}>
+        <div style={{ width: '100%', padding: '0 32px' }}>
           <p style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 12 }}>
             WorkPortal — Twoja platforma kariery
           </p>
@@ -93,7 +93,7 @@ export const CandidateDashboard = () => {
       </div>
 
       {/* MAIN LAYOUT */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 32px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: 32, alignItems: 'start' }}>
+       <div style={{ width: '100%', padding: '40px 32px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: 32, alignItems: 'start' }}>
 
         {/* SIDEBAR */}
         <aside style={{ position: 'sticky', top: 24 }}>

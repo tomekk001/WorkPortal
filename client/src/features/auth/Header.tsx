@@ -33,8 +33,7 @@ export const Header = () => {
       fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
     }}>
       <div style={{
-        maxWidth: 1100,
-        margin: '0 auto',
+        width: '100%',
         padding: '0 32px',
         height: 60,
         display: 'flex',
