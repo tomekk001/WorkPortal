@@ -131,6 +131,112 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
   );
 };
 
+interface CandidateApplication {
+  id: number;
+  appliedAt: string;
+  status: 'NEW' | 'REVIEWING' | 'REJECTED' | 'HIRED';
+  expectedSalary: number | null;
+  jobOffer: {
+    id: number;
+    title: string;
+    location: string;
+    company: { companyName: string; logoUrl: string | null };
+  };
+}
+
+const STATUS_LABELS: Record<CandidateApplication['status'], string> = {
+  NEW: 'Wysłane',
+  REVIEWING: 'W trakcie oceny',
+  REJECTED: 'Odrzucone',
+  HIRED: 'Zaakceptowane',
+};
+
+const STATUS_COLORS: Record<CandidateApplication['status'], { bg: string; color: string }> = {
+  NEW: { bg: '#eff6ff', color: '#3b82f6' },
+  REVIEWING: { bg: '#fefce8', color: '#ca8a04' },
+  REJECTED: { bg: '#fef2f2', color: '#ef4444' },
+  HIRED: { bg: '#f0fdf4', color: '#16a34a' },
+};
+
+const ApplicationHistoryTab = ({ token }: { token: string }) => {
+  const [applications, setApplications] = useState<CandidateApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get('http://localhost:3000/job-offers/candidate-applications', {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(res => setApplications(Array.isArray(res.data) ? res.data : []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+      <div style={{ width: 32, height: 32, border: '3px solid #e8e5df', borderTopColor: '#0f1923', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+
+  if (applications.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+        <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak aplikacji</p>
+        <p style={{ color: '#9ca3af', fontSize: 14 }}>Nie aplikowałeś jeszcze na żadną ofertę.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      {/* Table header */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px 140px 130px', gap: 0, padding: '12px 24px', borderBottom: '1px solid #f0ece6', background: '#faf9f7' }}>
+        {['Oferta', 'Firma', 'Data wysłania', 'Status'].map(h => (
+          <span key={h} style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af' }}>{h}</span>
+        ))}
+      </div>
+
+      {applications.map((app, i) => {
+        const { bg, color } = STATUS_COLORS[app.status];
+        return (
+          <div
+            key={app.id}
+            style={{
+              display: 'grid', gridTemplateColumns: '1fr 180px 140px 130px', gap: 0,
+              padding: '18px 24px', alignItems: 'center',
+              borderBottom: i < applications.length - 1 ? '1px solid #f3f4f6' : 'none',
+            }}
+          >
+            {/* Job title + location */}
+            <div>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#0f1923' }}>{app.jobOffer.title}</p>
+              {app.jobOffer.location && (
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9ca3af' }}>{app.jobOffer.location}</p>
+              )}
+            </div>
+
+            {/* Company */}
+            <p style={{ margin: 0, fontSize: 14, color: '#374151', fontWeight: 500 }}>{app.jobOffer.company.companyName}</p>
+
+            {/* Date */}
+            <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
+              {new Date(app.appliedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            </p>
+
+            {/* Status badge */}
+            <span style={{
+              display: 'inline-block', padding: '4px 10px', borderRadius: 20,
+              fontSize: 12, fontWeight: 600, background: bg, color,
+            }}>
+              {STATUS_LABELS[app.status]}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,11 +337,13 @@ export const CandidateDashboard = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') === 'messages' ? 'messages' : 'offers';
+  const rawTab = searchParams.get('tab');
+  const activeTab: 'offers' | 'messages' | 'history' =
+    rawTab === 'messages' ? 'messages' : rawTab === 'history' ? 'history' : 'offers';
 
-  const setTab = (tab: 'offers' | 'messages') => {
+  const setTab = (tab: 'offers' | 'messages' | 'history') => {
     if (tab === 'offers') setSearchParams({});
-    else setSearchParams({ tab: 'messages' });
+    else setSearchParams({ tab });
   };
 
   const fetchOffers = async (title?: string, location?: string, categoryId?: string) => {
@@ -288,6 +396,7 @@ export const CandidateDashboard = () => {
           <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
             {([
               { key: 'offers', label: 'Oferty pracy' },
+              { key: 'history', label: 'Historia aplikacji' },
               { key: 'messages', label: `Wiadomości${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
             ] as const).map(tab => (
               <button
@@ -358,6 +467,16 @@ export const CandidateDashboard = () => {
                 </div>
               )}
             </section>
+          </div>
+        )}
+
+        {activeTab === 'history' && token && (
+          <div style={{ maxWidth: 960 }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Historia aplikacji</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Lista ofert, na które aplikowałeś</p>
+            </div>
+            <ApplicationHistoryTab token={token} />
           </div>
         )}
 

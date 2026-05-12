@@ -62,6 +62,12 @@ export class JobOffersController {
     return this.jobOffersService.getEmployerApplications(decoded.sub);
   }
 
+  @Get('candidate-applications')
+  async getCandidateApplications(@Headers('authorization') authHeader: string) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.getCandidateApplications(decoded.sub);
+  }
+
   @Post()
   async create(@Headers('authorization') authHeader: string, @Body() data: any) {
     const decoded = verifyToken(authHeader);

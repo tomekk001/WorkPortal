@@ -92,6 +92,23 @@ export class JobOffersService {
     });
   }
 
+  async getCandidateApplications(userId: number) {
+    return this.prisma.application.findMany({
+      where: { userId: Number(userId) },
+      include: {
+        jobOffer: {
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            company: { select: { companyName: true, logoUrl: true } },
+          },
+        },
+      },
+      orderBy: { appliedAt: 'desc' },
+    });
+  }
+
   async submitApplicationForm(userId: number, jobOfferId: number, formData: any, files: any) {
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
       throw new BadRequestException('Brakują wymagane dane osobowe.');
