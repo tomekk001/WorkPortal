@@ -333,15 +333,20 @@ export const CandidateDashboard = () => {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [myId, setMyId] = useState(0);
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
+  const [savedOffers, setSavedOffers] = useState<JobOffer[]>([]);
 
   const { token } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get('tab');
-  const activeTab: 'offers' | 'messages' | 'history' =
-    rawTab === 'messages' ? 'messages' : rawTab === 'history' ? 'history' : 'offers';
+  const activeTab: 'offers' | 'messages' | 'history' | 'saved' =
+    rawTab === 'messages' ? 'messages'
+    : rawTab === 'history' ? 'history'
+    : rawTab === 'saved' ? 'saved'
+    : 'offers';
 
-  const setTab = (tab: 'offers' | 'messages' | 'history') => {
+  const setTab = (tab: 'offers' | 'messages' | 'history' | 'saved') => {
     if (tab === 'offers') setSearchParams({});
     else setSearchParams({ tab });
   };
@@ -357,6 +362,44 @@ export const CandidateDashboard = () => {
     finally { setLoadingOffers(false); }
   };
 
+  const fetchSaved = async () => {
+    if (!token) return;
+    try {
+      const [idsRes, offersRes] = await Promise.all([
+        axios.get('http://localhost:3000/job-offers/saved-ids', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('http://localhost:3000/job-offers/saved', { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      setSavedIds(new Set(Array.isArray(idsRes.data) ? idsRes.data : []));
+      setSavedOffers(Array.isArray(offersRes.data) ? offersRes.data : []);
+    } catch { /* ignore */ }
+  };
+
+  const handleSaveToggle = async (offerId: number) => {
+    if (!token) return;
+    const wasSaved = savedIds.has(offerId);
+    // optimistic update
+    setSavedIds(prev => {
+      const next = new Set(prev);
+      wasSaved ? next.delete(offerId) : next.add(offerId);
+      return next;
+    });
+    if (wasSaved) {
+      setSavedOffers(prev => prev.filter(o => o.id !== offerId));
+    } else {
+      const offer = offers.find(o => o.id === offerId);
+      if (offer) setSavedOffers(prev => [offer, ...prev.filter(o => o.id !== offerId)]);
+    }
+    try {
+      await axios.post(
+        `http://localhost:3000/job-offers/save/${offerId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+    } catch {
+      fetchSaved(); // revert on error
+    }
+  };
+
   useEffect(() => {
     fetchOffers();
     axios.get('http://localhost:3000/job-offers/search').then(r => { if (Array.isArray(r.data)) setTotalOffers(r.data.length); }).catch(() => {});
@@ -366,6 +409,7 @@ export const CandidateDashboard = () => {
       setMyId(payload.sub);
       axios.get('http://localhost:3000/messages/unread-count', { headers: { Authorization: `Bearer ${token}` } })
         .then(r => setUnreadCount(r.data.count ?? 0)).catch(() => {});
+      fetchSaved();
     }
   }, []);
 
@@ -396,6 +440,7 @@ export const CandidateDashboard = () => {
           <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
             {([
               { key: 'offers', label: 'Oferty pracy' },
+              { key: 'saved', label: `Zapisane${savedIds.size > 0 ? ` (${savedIds.size})` : ''}` },
               { key: 'history', label: 'Historia aplikacji' },
               { key: 'messages', label: `Wiadomości${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
             ] as const).map(tab => (
@@ -462,11 +507,52 @@ export const CandidateDashboard = () => {
               {!loadingOffers && offers.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {offers.map(offer => (
-                    <JobOfferCard key={offer.id} offer={offer} onActionClick={handleApply} actionLabel="Aplikuj" />
+                    <JobOfferCard
+                      key={offer.id}
+                      offer={offer}
+                      onActionClick={handleApply}
+                      actionLabel="Aplikuj"
+                      isSaved={savedIds.has(offer.id)}
+                      onSaveToggle={token ? handleSaveToggle : undefined}
+                    />
                   ))}
                 </div>
               )}
             </section>
+          </div>
+        )}
+
+        {activeTab === 'saved' && (
+          <div style={{ maxWidth: 860 }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Zapisane oferty</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
+                Oferty oznaczone gwiazdką — wróć do nich w dowolnej chwili
+              </p>
+            </div>
+
+            {savedOffers.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
+                <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak zapisanych ofert</p>
+                <p style={{ color: '#9ca3af', fontSize: 14 }}>
+                  Kliknij gwiazdkę ☆ na dowolnej ofercie, żeby ją tutaj zapisać.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {savedOffers.map(offer => (
+                  <JobOfferCard
+                    key={offer.id}
+                    offer={offer}
+                    onActionClick={handleApply}
+                    actionLabel="Aplikuj"
+                    isSaved={true}
+                    onSaveToggle={handleSaveToggle}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

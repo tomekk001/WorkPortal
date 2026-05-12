@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Headers, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Headers, Param, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JobOffersService } from './job-offers.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -66,6 +66,27 @@ export class JobOffersController {
   async getCandidateApplications(@Headers('authorization') authHeader: string) {
     const decoded = verifyToken(authHeader);
     return this.jobOffersService.getCandidateApplications(decoded.sub);
+  }
+
+  @Get('saved')
+  async getSaved(@Headers('authorization') authHeader: string) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.getSavedOffers(decoded.sub);
+  }
+
+  @Get('saved-ids')
+  async getSavedIds(@Headers('authorization') authHeader: string) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.getSavedOfferIds(decoded.sub);
+  }
+
+  @Post('save/:jobOfferId')
+  async toggleSave(
+    @Headers('authorization') authHeader: string,
+    @Param('jobOfferId') jobOfferId: string,
+  ) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.toggleSaveOffer(decoded.sub, Number(jobOfferId));
   }
 
   @Post()

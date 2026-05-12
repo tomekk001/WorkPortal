@@ -92,6 +92,61 @@ export class JobOffersService {
     });
   }
 
+  async getSavedOffers(userId: number) {
+    const saved = await this.prisma.savedOffer.findMany({
+      where: { userId: Number(userId) },
+      include: {
+        jobOffer: {
+          include: {
+            company: { select: { companyName: true, logoUrl: true } },
+            category: true,
+          },
+        },
+      },
+      orderBy: { savedAt: 'desc' },
+    });
+    return saved.map(s => s.jobOffer);
+  }
+
+  async getSavedOfferIds(userId: number) {
+    const saved = await this.prisma.savedOffer.findMany({
+      where: { userId: Number(userId) },
+      select: { jobOfferId: true },
+    });
+    return saved.map(s => s.jobOfferId);
+  }
+
+  async toggleSaveOffer(userId: number, jobOfferId: number) {
+    const existing = await this.prisma.savedOffer.findUnique({
+      where: { userId_jobOfferId: { userId: Number(userId), jobOfferId: Number(jobOfferId) } },
+    });
+    if (existing) {
+      await this.prisma.savedOffer.delete({ where: { id: existing.id } });
+      return { saved: false };
+    }
+    await this.prisma.savedOffer.create({
+      data: { userId: Number(userId), jobOfferId: Number(jobOfferId) },
+    });
+    return { saved: true };
+  }
+
+  async getCompanyProfile(userId: number) {
+    return this.prisma.companyProfile.findUnique({
+      where: { userId: Number(userId) },
+    });
+  }
+
+  async setupCompanyProfile(userId: number, companyName: string) {
+    if (!companyName?.trim()) {
+      throw new BadRequestException('Nazwa firmy jest wymagana.');
+    }
+    return this.prisma.companyProfile.upsert({
+      where: { userId: Number(userId) },
+      update: { companyName: companyName.trim() },
+      create: { userId: Number(userId), companyName: companyName.trim() },
+    });
+  }
+
   async getCandidateApplications(userId: number) {
     return this.prisma.application.findMany({
       where: { userId: Number(userId) },

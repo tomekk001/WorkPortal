@@ -19,9 +19,17 @@ interface JobOfferCardProps {
   offer: JobOffer;
   onActionClick?: (offerId: number) => void;
   actionLabel?: string;
+  isSaved?: boolean;
+  onSaveToggle?: (offerId: number) => void;
 }
 
-export const JobOfferCard = ({ offer, onActionClick, actionLabel = 'Aplikuj' }: JobOfferCardProps) => {
+export const JobOfferCard = ({
+  offer,
+  onActionClick,
+  actionLabel = 'Aplikuj',
+  isSaved = false,
+  onSaveToggle,
+}: JobOfferCardProps) => {
   return (
     <div
       style={{
@@ -86,11 +94,39 @@ export const JobOfferCard = ({ offer, onActionClick, actionLabel = 'Aplikuj' }: 
         </div>
       </div>
 
-      {/* PRAWA: data + przycisk */}
+      {/* PRAWA: gwiazdka + data + przycisk */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
-        <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>
-          {new Date(offer.createdAt).toLocaleDateString('pl-PL')}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {onSaveToggle && (
+            <button
+              onClick={e => { e.stopPropagation(); onSaveToggle(offer.id); }}
+              title={isSaved ? 'Usuń z zapisanych' : 'Zapisz ofertę'}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px 4px',
+                fontSize: 20,
+                lineHeight: 1,
+                color: isSaved ? '#f59e0b' : '#d1d5db',
+                transition: 'color 0.15s, transform 0.1s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = isSaved ? '#d97706' : '#f59e0b';
+                e.currentTarget.style.transform = 'scale(1.2)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = isSaved ? '#f59e0b' : '#d1d5db';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              {isSaved ? '★' : '☆'}
+            </button>
+          )}
+          <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>
+            {new Date(offer.createdAt).toLocaleDateString('pl-PL')}
+          </span>
+        </div>
         {onActionClick && (
           <button
             onClick={() => onActionClick(offer.id)}
