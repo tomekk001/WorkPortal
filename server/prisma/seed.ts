@@ -1,4 +1,4 @@
-import { PrismaClient, Role, ContractType, WorkMode } from '@prisma/client';
+import { PrismaClient, Role, WorkMode } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -142,7 +142,7 @@ async function main() {
           salaryMin: o.salMin,
           salaryMax: o.salMax,
           currency: 'PLN',
-          contract: ContractType.B2B,
+          contract: 'B2B',
           workMode: o.mode,
           isActive: true,
           validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),

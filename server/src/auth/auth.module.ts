@@ -8,7 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ',
-      signOptions: { expiresIn: '1d' }, // Token wygasa po 1 dniu
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   providers: [AuthService],

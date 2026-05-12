@@ -9,10 +9,16 @@ export const CreateJobOffer = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [customCategory, setCustomCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '', location: '', categoryId: '',
     salaryMin: '', salaryMax: '', description: '',
   });
+
+  const toggleContract = (type: string) =>
+    setContractTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
 
   useEffect(() => {
     axios.get('http://localhost:3000/job-offers/categories')
@@ -24,7 +30,27 @@ export const CreateJobOffer = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:3000/job-offers', formData, {
+      let categoryId = formData.categoryId;
+
+      if (customCategory) {
+        if (!newCategoryName.trim()) {
+          alert('Podaj nazwę nowej kategorii.');
+          setLoading(false);
+          return;
+        }
+        const res = await axios.post('http://localhost:3000/job-offers/categories', {
+          name: newCategoryName.trim(),
+        });
+        categoryId = res.data.id;
+      }
+
+      if (contractTypes.length === 0) {
+        alert('Wybierz co najmniej jedną formę współpracy.');
+        setLoading(false);
+        return;
+      }
+
+      await axios.post('http://localhost:3000/job-offers', { ...formData, categoryId, contract: contractTypes.join(',') }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       navigate('/');
@@ -105,20 +131,45 @@ export const CreateJobOffer = () => {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Kategoria *</label>
-                  <select
-                    required
-                    value={formData.categoryId}
-                    onChange={set('categoryId')}
-                    style={{ ...inputStyle, cursor: 'pointer' }}
-                    onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                    onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}
-                  >
-                    <option value="" disabled>Wybierz kategorię…</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <label style={{ ...labelStyle, marginBottom: 0 }}>Kategoria *</label>
+                    <button
+                      type="button"
+                      onClick={() => { setCustomCategory(prev => !prev); setNewCategoryName(''); setFormData(prev => ({ ...prev, categoryId: '' })); }}
+                      style={{
+                        fontSize: 12, fontWeight: 700, color: '#7dd3b0',
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontFamily: 'inherit', padding: 0,
+                      }}
+                    >
+                      {customCategory ? '← Wybierz z listy' : '+ Nowa kategoria'}
+                    </button>
+                  </div>
+                  {customCategory ? (
+                    <input
+                      required
+                      placeholder="np. Cyberbezpieczeństwo"
+                      value={newCategoryName}
+                      onChange={e => setNewCategoryName(e.target.value)}
+                      style={inputStyle}
+                      onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                      onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                    />
+                  ) : (
+                    <select
+                      required
+                      value={formData.categoryId}
+                      onChange={set('categoryId')}
+                      style={{ ...inputStyle, cursor: 'pointer' }}
+                      onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                      onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}
+                    >
+                      <option value="" disabled>Wybierz kategorię…</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
 
@@ -141,6 +192,45 @@ export const CreateJobOffer = () => {
                     onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                     onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
                   />
+                </div>
+              </div>
+
+              {/* FORMA WSPÓŁPRACY */}
+              <div>
+                <label style={labelStyle}>Forma współpracy *</label>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {[
+                    { value: 'UOP', label: 'Umowa o pracę', sub: 'UOP' },
+                    { value: 'UZ',  label: 'Umowa zlecenie', sub: 'UZ' },
+                    { value: 'B2B', label: 'Kontrakt',       sub: 'B2B' },
+                  ].map(opt => {
+                    const checked = contractTypes.includes(opt.value);
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => toggleContract(opt.value)}
+                        style={{
+                          flex: 1, padding: '14px 12px', borderRadius: 10, cursor: 'pointer',
+                          border: checked ? '1.5px solid #7dd3b0' : '1.5px solid #e8e5df',
+                          background: checked ? 'rgba(125,211,176,0.08)' : '#f9f8f6',
+                          textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.15s',
+                        }}
+                      >
+                        <div style={{ fontSize: 13, fontWeight: 700, color: checked ? '#0a7a5a' : '#0f1923', marginBottom: 2 }}>
+                          {opt.sub}
+                        </div>
+                        <div style={{ fontSize: 11, color: checked ? '#7dd3b0' : '#9ca3af' }}>
+                          {opt.label}
+                        </div>
+                        {checked && (
+                          <div style={{ marginTop: 6, display: 'inline-block', background: '#7dd3b0', color: '#0f1923', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>
+                            ✓ Wybrano
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

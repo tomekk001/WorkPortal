@@ -16,11 +16,12 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  /* USUNIĘTO: display:flex i place-items:center - psują layout grid/column */
+  background: #f8f7f4;
 }
 
 #root {
   min-height: 100vh;
+  background: #f8f7f4;
 }
 
 a {

@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export const Header = () => {
-  const { logout, role } = useAuth();
+  const { logout, role, token } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const roleLabel = role === 'EMPLOYER' ? 'Pracodawca' : 'Kandydat';
   const roleInitial = role === 'EMPLOYER' ? 'P' : 'K';
@@ -22,6 +24,22 @@ export const Header = () => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  // Polling powiadomień co 30 sekund
+  useEffect(() => {
+    if (!token) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await axios.get('http://localhost:3000/messages/unread-count', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUnreadCount(res.data.count ?? 0);
+      } catch {}
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   return (
     <header style={{
@@ -87,6 +105,38 @@ export const Header = () => {
             </button>
           </nav>
         )}
+
+        {/* NOTIFICATION BELL */}
+        <button
+          onClick={() => { navigate('/?tab=messages'); setUnreadCount(0); }}
+          style={{
+            position: 'relative', background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
+            width: 40, height: 40, display: 'flex', alignItems: 'center',
+            justifyContent: 'center', cursor: 'pointer', transition: 'background 0.15s',
+            flexShrink: 0,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+          title="Wiadomości"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute', top: -4, right: -4,
+              background: '#f87171', color: '#fff',
+              fontSize: 10, fontWeight: 800, lineHeight: 1,
+              padding: '3px 5px', borderRadius: 20,
+              minWidth: 16, textAlign: 'center',
+              border: '2px solid #0f1923',
+            }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
 
         {/* USER MENU */}
         <div ref={menuRef} style={{ position: 'relative' }}>

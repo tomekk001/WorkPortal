@@ -1,61 +1,268 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { SearchBar } from '../components/SearchBar';
 import { JobOfferCard, type JobOffer } from '../components/JobOfferCard';
 import { useAuth } from '../../auth/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../../auth/Header';
+
+interface Message {
+  id: number;
+  content: string;
+  createdAt: string;
+  sender: { id: number; firstName: string; lastName: string; role: string };
+}
+
+interface Conversation {
+  id: number;
+  createdAt: string;
+  employer: { id: number; firstName: string; lastName: string };
+  candidate: { id: number; firstName: string; lastName: string };
+  application?: { id: number; jobOffer: { title: string } };
+  messages: Message[];
+}
+
+const ConversationChat = ({ conv, token, myId, onBack }: {
+  conv: Conversation; token: string; myId: number; onBack: () => void;
+}) => {
+  const [messages, setMessages] = useState<Message[]>(conv.messages);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    axios.get(`http://localhost:3000/messages/conversations/${conv.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(res => setMessages(res.data.messages)).catch(console.error);
+  }, [conv.id]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || sending) return;
+    setSending(true);
+    try {
+      const res = await axios.post(
+        `http://localhost:3000/messages/conversations/${conv.id}/send`,
+        { content: input.trim() },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setMessages(prev => [...prev, res.data]);
+      setInput('');
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Błąd wysyłania');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: 560, background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+      {/* Header */}
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0ece6', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7dd3b0', fontSize: 18, lineHeight: 1, padding: 0 }}>←</button>
+        <div>
+          <p style={{ fontSize: 15, fontWeight: 700, color: '#0f1923', margin: 0 }}>
+            {conv.employer.firstName} {conv.employer.lastName}
+          </p>
+          {conv.application && (
+            <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+              {conv.application.jobOffer.title}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, background: '#faf9f7' }}>
+        {messages.length === 0 && (
+          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, margin: 'auto 0' }}>Brak wiadomości</p>
+        )}
+        {messages.map(msg => {
+          const isMe = msg.sender.id === myId;
+          return (
+            <div key={msg.id} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
+              <div style={{
+                maxWidth: '75%', padding: '10px 14px',
+                borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                background: isMe ? '#0f1923' : '#fff',
+                color: isMe ? '#fff' : '#0f1923',
+                fontSize: 14, lineHeight: 1.5,
+                border: isMe ? 'none' : '1px solid #e8e5df',
+              }}>
+                <p style={{ margin: 0 }}>{msg.content}</p>
+                <p style={{ margin: '4px 0 0', fontSize: 11, color: isMe ? 'rgba(255,255,255,0.45)' : '#9ca3af' }}>
+                  {new Date(msg.createdAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{ padding: '12px 16px', borderTop: '1px solid #f0ece6', display: 'flex', gap: 10, alignItems: 'flex-end', flexShrink: 0 }}>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+          placeholder="Napisz odpowiedź… (Enter = wyślij)"
+          rows={2}
+          style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e8e5df', background: '#fff', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none' }}
+        />
+        <button
+          onClick={handleSend}
+          disabled={sending || !input.trim()}
+          style={{
+            padding: '10px 18px', borderRadius: 10, border: 'none',
+            background: input.trim() ? '#7dd3b0' : '#e8e5df',
+            color: input.trim() ? '#0f1923' : '#9ca3af',
+            fontWeight: 700, fontSize: 14, cursor: input.trim() ? 'pointer' : 'default',
+            fontFamily: 'inherit', transition: 'all 0.15s',
+          }}
+        >
+          {sending ? '…' : 'Wyślij'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Conversation | null>(null);
+
+  useEffect(() => {
+    axios.get('http://localhost:3000/messages/conversations', {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(res => setConversations(Array.isArray(res.data) ? res.data : []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+      <div style={{ width: 32, height: 32, border: '3px solid #e8e5df', borderTopColor: '#0f1923', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+
+  if (selected) {
+    return <ConversationChat conv={selected} token={token} myId={myId} onBack={() => setSelected(null)} />;
+  }
+
+  if (conversations.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
+        <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak wiadomości</p>
+        <p style={{ color: '#9ca3af', fontSize: 14 }}>Gdy pracodawca napisze do Ciebie, wiadomości pojawią się tutaj.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      {conversations.map((conv, i) => {
+        const lastMsg = conv.messages?.[0];
+        const isUnread = lastMsg && lastMsg.sender?.id !== myId;
+        return (
+          <div
+            key={conv.id}
+            onClick={() => setSelected(conv)}
+            style={{
+              padding: '18px 24px',
+              borderBottom: i < conversations.length - 1 ? '1px solid #f3f4f6' : 'none',
+              display: 'flex', alignItems: 'center', gap: 16,
+              cursor: 'pointer', transition: 'background 0.12s',
+              background: isUnread ? '#f0fdf9' : 'transparent',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#faf9f7')}
+            onMouseLeave={e => (e.currentTarget.style.background = isUnread ? '#f0fdf9' : 'transparent')}
+          >
+            {/* Avatar */}
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#e0f2fe', color: '#0369a1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
+              {conv.employer.firstName[0]}{conv.employer.lastName[0]}
+            </div>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <p style={{ fontWeight: 700, color: '#0f1923', margin: 0, fontSize: 15 }}>
+                  {conv.employer.firstName} {conv.employer.lastName}
+                </p>
+                <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>
+                  {lastMsg ? new Date(lastMsg.createdAt).toLocaleDateString('pl-PL') : ''}
+                </span>
+              </div>
+              {conv.application && (
+                <p style={{ fontSize: 12, color: '#7dd3b0', fontWeight: 600, margin: '0 0 4px' }}>
+                  {conv.application.jobOffer.title}
+                </p>
+              )}
+              {lastMsg && (
+                <p style={{ fontSize: 13, color: isUnread ? '#0f1923' : '#9ca3af', margin: 0, fontWeight: isUnread ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {lastMsg.sender.id === myId ? 'Ty: ' : ''}{lastMsg.content}
+                </p>
+              )}
+            </div>
+
+            {isUnread && (
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#7dd3b0', flexShrink: 0 }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export const CandidateDashboard = () => {
   const [offers, setOffers] = useState<JobOffer[]>([]);
   const [totalOffers, setTotalOffers] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loadingOffers, setLoadingOffers] = useState(false);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [myId, setMyId] = useState(0);
 
   const { token } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'messages' ? 'messages' : 'offers';
+
+  const setTab = (tab: 'offers' | 'messages') => {
+    if (tab === 'offers') setSearchParams({});
+    else setSearchParams({ tab: 'messages' });
+  };
 
   const fetchOffers = async (title?: string, location?: string, categoryId?: string) => {
-    setLoading(true);
+    setLoadingOffers(true);
     try {
       const params: Record<string, string | undefined> = { title, location };
       if (categoryId) params.categoryId = categoryId;
       const response = await axios.get('http://localhost:3000/job-offers/search', { params });
       setOffers(Array.isArray(response.data) ? response.data : []);
-    } catch {
-      setOffers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTotalOffers = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/job-offers/search');
-      if (Array.isArray(response.data)) setTotalOffers(response.data.length);
-    } catch {}
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/job-offers/categories');
-      setCategories(Array.isArray(response.data) ? response.data : []);
-    } catch {
-      setCategories([]);
-    }
+    } catch { setOffers([]); }
+    finally { setLoadingOffers(false); }
   };
 
   useEffect(() => {
     fetchOffers();
-    fetchTotalOffers();
-    fetchCategories();
+    axios.get('http://localhost:3000/job-offers/search').then(r => { if (Array.isArray(r.data)) setTotalOffers(r.data.length); }).catch(() => {});
+    axios.get('http://localhost:3000/job-offers/categories').then(r => setCategories(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      setMyId(payload.sub);
+      axios.get('http://localhost:3000/messages/unread-count', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => setUnreadCount(r.data.count ?? 0)).catch(() => {});
+    }
   }, []);
 
   const handleApply = (offerId: number) => {
-    if (!token) {
-      alert('Musisz być zalogowany, aby aplikować na stanowisko.');
-      return;
-    }
+    if (!token) { alert('Musisz być zalogowany, aby aplikować.'); return; }
     navigate(`/apply/${offerId}`);
   };
 
@@ -64,7 +271,7 @@ export const CandidateDashboard = () => {
       <Header />
 
       {/* HERO */}
-      <div style={{ background: '#0f1923', color: '#fff', padding: '56px 0 48px' }}>
+      <div style={{ background: '#0f1923', color: '#fff', padding: '48px 0 0' }}>
         <div style={{ width: '100%', padding: '0 32px' }}>
           <p style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 12 }}>
             WorkPortal — Twoja platforma kariery
@@ -74,88 +281,95 @@ export const CandidateDashboard = () => {
             <span style={{ color: '#7dd3b0' }}>która Cię nakręca.</span>
           </h1>
           <p style={{ fontSize: 17, color: '#94a3b8', margin: '0 0 32px', maxWidth: 480 }}>
-            {totalOffers} aktywnych ofert od sprawdzonych pracodawców. Filtruj, szukaj, aplikuj.
+            {totalOffers} aktywnych ofert od sprawdzonych pracodawców.
           </p>
-          {/* Stats row */}
-          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-            {[
-              { label: 'Wszystkich ofert', value: totalOffers },
-              { label: 'Wyświetlanych', value: offers.length },
-              { label: 'Kategorii', value: categories.length },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, fontWeight: 500 }}>{label}</div>
-              </div>
+
+          {/* TABS */}
+          <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+            {([
+              { key: 'offers', label: 'Oferty pracy' },
+              { key: 'messages', label: `Wiadomości${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
+            ] as const).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setTab(tab.key)}
+                style={{
+                  padding: '12px 24px', border: 'none', cursor: 'pointer', borderRadius: '8px 8px 0 0',
+                  fontWeight: 600, fontSize: 14, transition: 'all 0.15s', fontFamily: 'inherit',
+                  background: activeTab === tab.key ? '#f8f7f4' : 'transparent',
+                  color: activeTab === tab.key ? '#0f1923' : (tab.key === 'messages' && unreadCount > 0 ? '#7dd3b0' : '#64748b'),
+                }}
+              >
+                {tab.label}
+              </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* MAIN LAYOUT */}
-       <div style={{ width: '100%', padding: '40px 32px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: 32, alignItems: 'start' }}>
+      {/* CONTENT */}
+      <div style={{ width: '100%', padding: '40px 32px' }}>
 
-        {/* SIDEBAR */}
-        <aside style={{ position: 'sticky', top: 24 }}>
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>
-              Filtruj oferty
-            </p>
-            <SearchBar
-              categories={categories}
-              onSearch={(title, location, categoryId) => fetchOffers(title, location, categoryId)}
-            />
-          </div>
-        </aside>
-
-        {/* OFFERS */}
-        <section>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-            <div>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Dostępne oferty</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
-                {loading ? 'Ładowanie...' : `Znaleziono ${offers.length} ofert`}
-              </p>
-            </div>
-          </div>
-
-          {loading && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 0', gap: 12 }}>
-              <div style={{
-                width: 36, height: 36, border: '3px solid #e8e5df',
-                borderTopColor: '#0f1923', borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite'
-              }} />
-              <p style={{ color: '#9ca3af', fontSize: 14 }}>Ładowanie ofert...</p>
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            </div>
-          )}
-
-          {!loading && offers.length === 0 && (
-            <div style={{
-              textAlign: 'center', padding: '64px 32px',
-              background: '#fff', borderRadius: 16,
-              border: '2px dashed #e8e5df'
-            }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-              <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak wyników</p>
-              <p style={{ color: '#9ca3af', fontSize: 14 }}>Spróbuj zmienić filtry lub poczekaj na nowe ogłoszenia.</p>
-            </div>
-          )}
-
-          {!loading && offers.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {offers.map((offer) => (
-                <JobOfferCard
-                  key={offer.id}
-                  offer={offer}
-                  onActionClick={handleApply}
-                  actionLabel="Aplikuj"
+        {activeTab === 'offers' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 32, alignItems: 'start' }}>
+            {/* SIDEBAR */}
+            <aside style={{ position: 'sticky', top: 24 }}>
+              <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>Filtruj oferty</p>
+                <SearchBar
+                  categories={categories}
+                  onSearch={(title, location, categoryId) => fetchOffers(title, location, categoryId)}
                 />
-              ))}
+              </div>
+            </aside>
+
+            {/* OFFERS */}
+            <section>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                <div>
+                  <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Dostępne oferty</h2>
+                  <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
+                    {loadingOffers ? 'Ładowanie...' : `Znaleziono ${offers.length} ofert`}
+                  </p>
+                </div>
+              </div>
+
+              {loadingOffers && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 0', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, border: '3px solid #e8e5df', borderTopColor: '#0f1923', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                  <p style={{ color: '#9ca3af', fontSize: 14 }}>Ładowanie ofert...</p>
+                </div>
+              )}
+
+              {!loadingOffers && offers.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+                  <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak wyników</p>
+                  <p style={{ color: '#9ca3af', fontSize: 14 }}>Spróbuj zmienić filtry lub poczekaj na nowe ogłoszenia.</p>
+                </div>
+              )}
+
+              {!loadingOffers && offers.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {offers.map(offer => (
+                    <JobOfferCard key={offer.id} offer={offer} onActionClick={handleApply} actionLabel="Aplikuj" />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {activeTab === 'messages' && token && (
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Wiadomości</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Konwersacje z pracodawcami</p>
             </div>
-          )}
-        </section>
+            <MessagesTab token={token} myId={myId} />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -53,9 +53,13 @@ export const ApplicationForm = () => {
 
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
-    startDate: '', contractType: '', expectedSalary: '',
+    startDate: '', expectedSalary: '',
     message: '', agreedToTerms: false,
   });
+
+  const [contractTypes, setContractTypes] = useState<string[]>([]);
+  const toggleContract = (type: string) =>
+    setContractTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
 
   const [files, setFiles] = useState<{ cv: File | null; additional: File | null }>({
     cv: null, additional: null,
@@ -99,7 +103,7 @@ export const ApplicationForm = () => {
       alert('Wypełnij wszystkie wymagane pola.');
       return;
     }
-    if (!formData.startDate || !formData.contractType || !formData.expectedSalary || !formData.agreedToTerms) {
+    if (!formData.startDate || contractTypes.length === 0 || !formData.expectedSalary || !formData.agreedToTerms) {
       alert('Wypełnij wszystkie wymagane pola i zaakceptuj warunki.');
       return;
     }
@@ -108,7 +112,7 @@ export const ApplicationForm = () => {
       await axios.post('http://localhost:3000/job-offers/submit-application', {
         firstName: formData.firstName, lastName: formData.lastName,
         email: formData.email, phone: formData.phone,
-        startDate: formData.startDate, contractType: formData.contractType,
+        startDate: formData.startDate, contractType: contractTypes.join(','),
         expectedSalary: formData.expectedSalary, message: formData.message,
         jobOfferId, cvFileName: files.cv?.name || null,
         additionalFileName: files.additional?.name || null,
@@ -261,22 +265,36 @@ export const ApplicationForm = () => {
                 </div>
                 <div>
                   <label style={labelStyle}>Forma współpracy *</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {[
-                      { value: 'UOP', label: 'Umowa o pracę (UOP)' },
-                      { value: 'UZ', label: 'Umowa zlecenie (UZ)' },
-                      { value: 'B2B', label: 'B2B' },
-                    ].map(opt => (
-                      <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                        <input
-                          type="radio" name="contractType" value={opt.value}
-                          checked={formData.contractType === opt.value}
-                          onChange={handleInputChange} required
-                          style={{ width: 16, height: 16, accentColor: '#0f1923' }}
-                        />
-                        <span style={{ fontSize: 14, color: '#374151' }}>{opt.label}</span>
-                      </label>
-                    ))}
+                      { value: 'UOP', label: 'Umowa o pracę', sub: 'UOP' },
+                      { value: 'UZ',  label: 'Umowa zlecenie', sub: 'UZ' },
+                      { value: 'B2B', label: 'Kontrakt', sub: 'B2B' },
+                    ].map(opt => {
+                      const checked = contractTypes.includes(opt.value);
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => toggleContract(opt.value)}
+                          style={{
+                            padding: '10px 14px', borderRadius: 8, cursor: 'pointer',
+                            border: checked ? '1.5px solid #0f1923' : '1.5px solid #e8e5df',
+                            background: checked ? 'rgba(15,25,35,0.06)' : '#f8f7f4',
+                            textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.15s',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          }}
+                        >
+                          <div>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#0f1923' }}>{opt.sub}</span>
+                            <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 8 }}>{opt.label}</span>
+                          </div>
+                          {checked && (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: '#0f1923', background: '#e2e8f0', padding: '2px 8px', borderRadius: 4 }}>✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
