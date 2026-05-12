@@ -335,6 +335,7 @@ export const CandidateDashboard = () => {
   const [myId, setMyId] = useState(0);
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [savedOffers, setSavedOffers] = useState<JobOffer[]>([]);
+  const [sortKey, setSortKey] = useState<'newest' | 'oldest' | 'salary' | 'alpha'>('newest');
 
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -413,6 +414,22 @@ export const CandidateDashboard = () => {
     }
   }, []);
 
+  const sortOptions = [
+    { value: 'newest', label: 'Od najnowszych' },
+    { value: 'oldest', label: 'Od najstarszych' },
+    { value: 'salary', label: 'Najwyższe wynagrodzenie' },
+    { value: 'alpha',  label: 'Alfabetycznie (A–Z)' },
+  ] as const;
+
+  const sortedOffers = [...offers].sort((a, b) => {
+    switch (sortKey) {
+      case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case 'salary': return (b.salaryMax ?? b.salaryMin ?? -1) - (a.salaryMax ?? a.salaryMin ?? -1);
+      case 'alpha':  return a.title.localeCompare(b.title, 'pl');
+    }
+  });
+
   const handleApply = (offerId: number) => {
     if (!token) { alert('Musisz być zalogowany, aby aplikować.'); return; }
     navigate(`/apply/${offerId}`);
@@ -486,6 +503,20 @@ export const CandidateDashboard = () => {
                     {loadingOffers ? 'Ładowanie...' : `Znaleziono ${offers.length} ofert`}
                   </p>
                 </div>
+                <select
+                  value={sortKey}
+                  onChange={e => setSortKey(e.target.value as typeof sortKey)}
+                  style={{
+                    padding: '8px 12px', borderRadius: 8,
+                    border: '1.5px solid #e8e5df', background: '#fff',
+                    fontSize: 13, fontWeight: 600, color: '#374151',
+                    cursor: 'pointer', fontFamily: 'inherit', outline: 'none',
+                  }}
+                >
+                  {sortOptions.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
               </div>
 
               {loadingOffers && (
@@ -506,7 +537,7 @@ export const CandidateDashboard = () => {
 
               {!loadingOffers && offers.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {offers.map(offer => (
+                  {sortedOffers.map(offer => (
                     <JobOfferCard
                       key={offer.id}
                       offer={offer}
