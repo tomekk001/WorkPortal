@@ -109,15 +109,21 @@ export const ApplicationForm = () => {
     }
     setLoading(true);
     try {
-      await axios.post('http://localhost:3000/job-offers/submit-application', {
-        firstName: formData.firstName, lastName: formData.lastName,
-        email: formData.email, phone: formData.phone,
-        startDate: formData.startDate, contractType: contractTypes.join(','),
-        expectedSalary: formData.expectedSalary, message: formData.message,
-        jobOfferId, cvFileName: files.cv?.name || null,
-        additionalFileName: files.additional?.name || null,
-      }, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      const fd = new FormData();
+      fd.append('jobOfferId', String(jobOfferId));
+      fd.append('firstName', formData.firstName);
+      fd.append('lastName', formData.lastName);
+      fd.append('email', formData.email);
+      fd.append('phone', formData.phone);
+      fd.append('startDate', formData.startDate);
+      fd.append('contractType', contractTypes.join(','));
+      fd.append('expectedSalary', formData.expectedSalary);
+      fd.append('message', formData.message);
+      if (files.cv)         fd.append('cv', files.cv);
+      if (files.additional) fd.append('additional', files.additional);
+
+      await axios.post('http://localhost:3000/job-offers/submit-application', fd, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       alert('Aplikacja przesłana pomyślnie!');
       navigate('/');

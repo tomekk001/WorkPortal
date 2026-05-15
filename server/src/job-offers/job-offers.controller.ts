@@ -1,4 +1,10 @@
-import { Controller, Get, Post, Body, Query, Headers, Param, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Controller, Get, Post, Patch, Body, Query, Headers, Param,
+  Res, UseInterceptors, UploadedFiles,
+  UnauthorizedException, BadRequestException,
+} from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { JobOffersService } from './job-offers.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -39,15 +45,25 @@ export class JobOffersController {
     return this.jobOffersService.createCategory(body.name.trim());
   }
 
-  // submit-application musi być przed @Post() aby router nie potraktował go jako :id
   @Post('submit-application')
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'cv', maxCount: 1 },
+    { name: 'additional', maxCount: 1 },
+  ]))
   async submitApplication(
     @Headers('authorization') authHeader: string,
     @Body() body: any,
+    @UploadedFiles() files: { cv?: Express.Multer.File[]; additional?: Express.Multer.File[] },
   ) {
     const decoded = verifyToken(authHeader);
     if (!body?.jobOfferId) throw new BadRequestException('Brak ID oferty w request body.');
-    return this.jobOffersService.submitApplicationForm(decoded.sub, body.jobOfferId, body, {});
+    const cvFileName = files?.cv?.[0]?.filename ?? null;
+    const additionalFileName = files?.additional?.[0]?.filename ?? null;
+    return this.jobOffersService.submitApplicationForm(
+      decoded.sub, body.jobOfferId,
+      { ...body, cvFileName, additionalFileName },
+      {},
+    );
   }
 
   @Get('my-offers')
@@ -80,6 +96,21 @@ export class JobOffersController {
     return this.jobOffersService.getSavedOfferIds(decoded.sub);
   }
 
+  @Get('applications/:applicationId/download-cv')
+  async downloadCv(
+    @Headers('authorization') authHeader: string,
+    @Param('applicationId') applicationId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const decoded = verifyToken(authHeader);
+    const { stream, filename } = await this.jobOffersService.downloadCv(decoded.sub, Number(applicationId));
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+    return stream;
+  }
+
   @Post('save/:jobOfferId')
   async toggleSave(
     @Headers('authorization') authHeader: string,
@@ -98,6 +129,16 @@ export class JobOffersController {
     const decoded = verifyToken(authHeader);
     if (!body?.reason?.trim()) throw new BadRequestException('Powód zgłoszenia jest wymagany.');
     return this.jobOffersService.reportOffer(decoded.sub, Number(jobOfferId), body.reason, body.description);
+  }
+
+  @Patch(':offerId')
+  async updateOffer(
+    @Headers('authorization') authHeader: string,
+    @Param('offerId') offerId: string,
+    @Body() data: any,
+  ) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.updateOffer(decoded.sub, Number(offerId), data);
   }
 
   @Post()

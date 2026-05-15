@@ -162,18 +162,18 @@ npx prisma db seed
 | `npm run preview` | Podgląd zbudowanej wersji produkcyjnej |
 
 ### Moduł I: Dla Kandydata (Poszukującego pracy)
-- [ ] **1. Prosta wyszukiwarka ofert** - Umożliwia wyszukiwanie ogłoszeń po wpisaniu frazy (tytuł stanowiska) oraz wybraniu lokalizacji z listy rozwijanej (województwo lub miasto). Działa w oparciu o proste zapytania do bazy danych.
-- [ ] **2. Filtrowanie wyników wyszukiwania** - Pozwala zawęzić listę ofert za pomocą checkboxów: kategoria (IT, Marketing, Budownictwo), widełki wynagrodzenia (od-do), rodzaj umowy (B2B/UoP) oraz wymiar etatu.
-- [ ] **3. Rejestracja i logowanie (E-mail)** - Standardowy system zakładania konta przy użyciu adresu e-mail i hasła, z funkcją weryfikacji adresu poprzez kliknięcie w link aktywacyjny.
-- [ ] **4. Profil użytkownika z wgrywaniem CV** - Formularz, w którym kandydat uzupełnia podstawowe dane (imię, nazwisko, telefon) i wgrywa gotowy plik CV (w formacie PDF lub DOC) z dysku komputera. Plik jest zapisywany na serwerze.
-- [ ] **5. Aplikowanie na ofertę (Formularz kontaktowy)** - Przycisk "Aplikuj" przy ogłoszeniu, który automatycznie wysyła dane kandydata i załączone CV do pracodawcy (jako wiadomość w systemie lub e-mail) i zapisuje zgłoszenie w bazie danych.
-- [ ] **6. Historia aplikacji** - Prosta tabela w panelu użytkownika wyświetlająca listę ofert, na które użytkownik już aplikował, wraz z datą wysłania zgłoszenia.
-- [ ] **7. Schowek (Ulubione ogłoszenia)** - Możliwość oznaczenia oferty "gwiazdką". Takie oferty trafiają na osobną listę "Zapisane", co pozwala kandydatowi wrócić do nich później.
-- [ ] **8. Sortowanie ofert** - Możliwość zmiany kolejności wyświetlania listy ogłoszeń: od najnowszych, od najstarszych, po najwyższym wynagrodzeniu lub alfabetycznie.
-- [ ] **9. Zgłaszanie nadużyć (Raportowanie)** - Przycisk przy ogłoszeniu pozwalający zgłosić ofertę do administratora, jeśli wydaje się podejrzana lub zawiera błędy (prosty formularz z powodem zgłoszenia).
+- [✔️] **1. Prosta wyszukiwarka ofert** - Umożliwia wyszukiwanie ogłoszeń po wpisaniu frazy (tytuł stanowiska) oraz wybraniu lokalizacji z listy rozwijanej (województwo lub miasto). Działa w oparciu o proste zapytania do bazy danych.
+- [✔️] **2. Filtrowanie wyników wyszukiwania** - Pozwala zawęzić listę ofert za pomocą checkboxów: kategoria (IT, Marketing, Budownictwo), widełki wynagrodzenia (od-do), rodzaj umowy (B2B/UoP) oraz wymiar etatu.
+- [✔️] **3. Rejestracja i logowanie (E-mail)** - Standardowy system zakładania konta przy użyciu adresu e-mail i hasła, z funkcją weryfikacji adresu poprzez kliknięcie w link aktywacyjny.
+- [✔️] **4. Profil użytkownika z wgrywaniem CV** - Formularz, w którym kandydat uzupełnia podstawowe dane (imię, nazwisko, telefon) i wgrywa gotowy plik CV (w formacie PDF lub DOC) z dysku komputera. Plik jest zapisywany na serwerze.
+- [✔️] **5. Aplikowanie na ofertę (Formularz kontaktowy)** - Przycisk "Aplikuj" przy ogłoszeniu, który automatycznie wysyła dane kandydata i załączone CV do pracodawcy (jako wiadomość w systemie lub e-mail) i zapisuje zgłoszenie w bazie danych.
+- [✔️] **6. Historia aplikacji** - Prosta tabela w panelu użytkownika wyświetlająca listę ofert, na które użytkownik już aplikował, wraz z datą wysłania zgłoszenia.
+- [✔️] **7. Schowek (Ulubione ogłoszenia)** - Możliwość oznaczenia oferty "gwiazdką". Takie oferty trafiają na osobną listę "Zapisane", co pozwala kandydatowi wrócić do nich później.
+- [✔️] **8. Sortowanie ofert** - Możliwość zmiany kolejności wyświetlania listy ogłoszeń: od najnowszych, od najstarszych, po najwyższym wynagrodzeniu lub alfabetycznie.
+- [✔️] **9. Zgłaszanie nadużyć (Raportowanie)** - Przycisk przy ogłoszeniu pozwalający zgłosić ofertę do administratora, jeśli wydaje się podejrzana lub zawiera błędy (prosty formularz z powodem zgłoszenia).
 
 ### Moduł II: Dla Pracodawcy (Rekrutera)
-- [ ] **10. Panel Pracodawcy** - Osobny widok po zalogowaniu dla firm, pozwalający zarządzać danymi firmy, dodawać logo oraz edytować opis działalności wyświetlany przy ofertach.
+- [✔️] **10. Panel Pracodawcy** - Osobny widok po zalogowaniu dla firm, pozwalający zarządzać danymi firmy, dodawać logo oraz edytować opis działalności wyświetlany przy ofertach.
 - [ ] **11. Dodawanie ogłoszenia (Formularz)** - Prosty kreator, w którym pracodawca wpisuje tytuł, treść ogłoszenia, wybiera kategorię z listy, wpisuje wynagrodzenie i okres ważności ogłoszenia (np. 30 dni).
 - [ ] **12. Lista otrzymanych aplikacji** - Widok tabelaryczny dla pracodawcy przy każdym aktywnym ogłoszeniu, pokazujący listę osób, które przesłały CV. Umożliwia pobranie pliku CV na dysk.
 - [ ] **13. Zmiana statusu kandydata** - Możliwość oznaczenia kandydata na liście prostym statusem: "Nowy", "Odrzucony", "Zaproszony na rozmowę". Pozwala to pracodawcy utrzymać porządek w rekrutacji.

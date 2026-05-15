@@ -7,6 +7,7 @@ import { EmployerDashboard } from './features/job-offers/views/EmployerDashboard
 import { CreateJobOffer } from './features/job-offers/views/CreateJobOffer';
 import { ApplicationForm } from './features/job-offers/views/ApplicationForm';
 import { AdminDashboard } from './features/admin/AdminDashboard';
+import { EditJobOffer } from './features/job-offers/views/EditJobOffer';
 import './App.css';
 
 const ProtectedRoute = () => {
@@ -33,6 +34,7 @@ function App() {
           <Route path="/register" element={<AuthLayout><RegisterForm /></AuthLayout>} />
           <Route path="/" element={<ProtectedRoute />} />
           <Route path="/add-offer" element={<CreateJobOffer />} />
+          <Route path="/edit-offer/:offerId" element={<EditJobOffer />} />
           <Route path="/apply/:jobId" element={<ApplicationForm />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

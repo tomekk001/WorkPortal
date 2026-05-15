@@ -1,4 +1,6 @@
-import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, StreamableFile } from '@nestjs/common';
+import { createReadStream, existsSync } from 'fs';
+import { join } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -28,6 +30,10 @@ export class JobOffersService {
 
     if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
 
+    const months = Math.min(Math.max(Number(data.durationMonths) || 1, 1), 4);
+    const validUntil = new Date();
+    validUntil.setMonth(validUntil.getMonth() + months);
+
     return this.prisma.jobOffer.create({
       data: {
         title: data.title,
@@ -39,11 +45,62 @@ export class JobOffersService {
         contract: data.contract || 'B2B',
         workMode: data.workMode || 'REMOTE',
         isActive: true,
-        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        validUntil,
         companyId: company.id,
         categoryId: Number(data.categoryId),
       },
     });
+  }
+
+  async updateOffer(userId: number, offerId: number, data: any) {
+    const company = await this.prisma.companyProfile.findUnique({
+      where: { userId: Number(userId) },
+    });
+    if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+
+    const offer = await this.prisma.jobOffer.findUnique({ where: { id: Number(offerId) } });
+    if (!offer) throw new NotFoundException('Oferta nie istnieje.');
+    if (offer.companyId !== company.id) throw new UnauthorizedException('Brak dostępu do tej oferty.');
+
+    const months = data.durationMonths ? Math.min(Math.max(Number(data.durationMonths), 1), 4) : null;
+    const validUntil = months ? (() => { const d = new Date(); d.setMonth(d.getMonth() + months); return d; })() : undefined;
+
+    return this.prisma.jobOffer.update({
+      where: { id: Number(offerId) },
+      data: {
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        salaryMin: data.salaryMin ? Number(data.salaryMin) : null,
+        salaryMax: data.salaryMax ? Number(data.salaryMax) : null,
+        currency: data.currency || 'PLN',
+        contract: data.contract || 'B2B',
+        workMode: data.workMode || 'REMOTE',
+        categoryId: Number(data.categoryId),
+        ...(validUntil ? { validUntil } : {}),
+      },
+    });
+  }
+
+  async downloadCv(employerUserId: number, applicationId: number): Promise<{ stream: StreamableFile; filename: string }> {
+    const company = await this.prisma.companyProfile.findUnique({ where: { userId: Number(employerUserId) } });
+    if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+
+    const application = await this.prisma.application.findUnique({
+      where: { id: Number(applicationId) },
+      include: { jobOffer: true },
+    });
+    if (!application) throw new NotFoundException('Aplikacja nie istnieje.');
+    if (application.jobOffer.companyId !== company.id) throw new UnauthorizedException('Brak dostępu.');
+    if (!application.cvFileName) throw new NotFoundException('Kandydat nie dołączył CV.');
+
+    const filePath = join(process.cwd(), 'uploads', 'cv', application.cvFileName);
+    if (!existsSync(filePath)) throw new NotFoundException('Plik CV nie został znaleziony na serwerze.');
+
+    return {
+      stream: new StreamableFile(createReadStream(filePath)),
+      filename: application.cvFileName,
+    };
   }
 
   async findAllCategories() {

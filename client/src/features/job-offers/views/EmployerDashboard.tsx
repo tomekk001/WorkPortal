@@ -1,6 +1,6 @@
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
@@ -225,7 +225,23 @@ const ApplicationModal = ({ application, token, myId, onClose }: {
             )}
 
             <Section title="📎 Dokumenty">
-              <Row label="CV" value={application.cvFileName ?? 'Nie dołączono'} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 13, color: '#9ca3af', minWidth: 190, flexShrink: 0 }}>CV</span>
+                {application.cvFileName ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 13, color: '#0f1923', fontWeight: 600 }}>{application.cvFileName}</span>
+                    <button
+                      onClick={e => handleDownloadCv(application.id, e)}
+                      disabled={downloadingId === application.id}
+                      style={{ padding: '5px 14px', borderRadius: 7, border: 'none', background: '#0f1923', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                    >
+                      {downloadingId === application.id ? '⏳' : '⬇ Pobierz'}
+                    </button>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>Nie dołączono</span>
+                )}
+              </div>
               <Row label="Dodatkowy plik" value={application.additionalFileName ?? 'Nie dołączono'} />
             </Section>
 
@@ -264,12 +280,37 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 
 export const EmployerDashboard = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [offers, setOffers] = useState<any[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'offers' | 'applications'>('offers');
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [myId, setMyId] = useState<number>(0);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const handleDownloadCv = async (applicationId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDownloadingId(applicationId);
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/job-offers/applications/${applicationId}/download-cv`,
+        { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' },
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `CV_${applicationId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert('Nie udało się pobrać CV. Kandydat mógł nie dołączyć pliku.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -360,9 +401,26 @@ export const EmployerDashboard = () => {
                         </span>
                       )}
                     </div>
-                    <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 20px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: '#1d4ed8', lineHeight: 1 }}>{offer.applications?.length ?? 0}</div>
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>aplikacji</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 20px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 28, fontWeight: 800, color: '#1d4ed8', lineHeight: 1 }}>{offer.applications?.length ?? 0}</div>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>aplikacji</div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <button
+                          onClick={() => navigate(`/edit-offer/${offer.id}`)}
+                          style={{ padding: '8px 18px', borderRadius: 8, border: '1.5px solid #e8e5df', background: '#fff', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#7dd3b0'; e.currentTarget.style.color = '#0a7a5a'; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e5df'; e.currentTarget.style.color = '#374151'; }}
+                        >
+                          ✏️ Edytuj
+                        </button>
+                        {offer.validUntil && (
+                          <span style={{ fontSize: 11, color: new Date(offer.validUntil) < new Date() ? '#ef4444' : '#9ca3af', textAlign: 'center', fontWeight: 500 }}>
+                            {new Date(offer.validUntil) < new Date() ? '⚠ Wygasła' : `Ważna do ${new Date(offer.validUntil).toLocaleDateString('pl-PL')}`}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

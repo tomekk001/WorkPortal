@@ -1,0 +1,213 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthContext';
+import { Header } from '../../auth/Header';
+
+export const EditJobOffer = () => {
+  const { token } = useAuth();
+  const navigate = useNavigate();
+  const { offerId } = useParams<{ offerId: string }>();
+
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingOffer, setLoadingOffer] = useState(true);
+  const [contractTypes, setContractTypes] = useState<string[]>([]);
+  const [durationMonths, setDurationMonths] = useState<number>(1);
+  const [formData, setFormData] = useState({
+    title: '', location: '', categoryId: '',
+    salaryMin: '', salaryMax: '', description: '',
+  });
+
+  const toggleContract = (type: string) =>
+    setContractTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+
+  useEffect(() => {
+    axios.get('http://localhost:3000/job-offers/categories')
+      .then(res => setCategories(res.data))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!offerId || !token) return;
+    // Load offer data from my-offers list
+    axios.get('http://localhost:3000/job-offers/my-offers', {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(res => {
+      const offer = res.data.find((o: any) => o.id === Number(offerId));
+      if (!offer) { alert('Nie znaleziono oferty.'); navigate('/'); return; }
+      setFormData({
+        title: offer.title ?? '',
+        location: offer.location ?? '',
+        categoryId: offer.categoryId ? String(offer.categoryId) : '',
+        salaryMin: offer.salaryMin ? String(offer.salaryMin) : '',
+        salaryMax: offer.salaryMax ? String(offer.salaryMax) : '',
+        description: offer.description ?? '',
+      });
+      if (offer.contract) setContractTypes(offer.contract.split(','));
+    }).catch(console.error)
+      .finally(() => setLoadingOffer(false));
+  }, [offerId, token]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (contractTypes.length === 0) {
+        alert('Wybierz co najmniej jedną formę współpracy.');
+        setLoading(false);
+        return;
+      }
+      await axios.patch(
+        `http://localhost:3000/job-offers/${offerId}`,
+        { ...formData, contract: contractTypes.join(','), durationMonths },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      navigate('/');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Błąd zapisu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const set = (field: keyof typeof formData) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setFormData(prev => ({ ...prev, [field]: e.target.value }));
+
+  if (loadingOffer) return (
+    <div style={{ minHeight: '100vh', background: '#f8f7f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
+      <Header />
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+        <div style={{ width: 36, height: 36, border: '3px solid #e8e5df', borderTopColor: '#0f1923', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f8f7f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
+      <Header />
+
+      <div style={{ background: '#0f1923', padding: '40px 0 48px' }}>
+        <div style={{ width: '100%', padding: '0 32px' }}>
+          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>
+            Panel Pracodawcy
+          </p>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
+            Edytuj ogłoszenie
+          </h1>
+        </div>
+      </div>
+
+      <div style={{ width: '100%', padding: '40px 32px' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', background: '#fff', borderRadius: 20, border: '1px solid #e8e5df', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ padding: '36px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+              {/* TYTUŁ */}
+              <div>
+                <label style={labelStyle}>Tytuł stanowiska *</label>
+                <input required value={formData.title} onChange={set('title')} placeholder="np. Senior Frontend Developer" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+              </div>
+
+              {/* LOKALIZACJA + KATEGORIA */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div>
+                  <label style={labelStyle}>Lokalizacja *</label>
+                  <input required value={formData.location} onChange={set('location')} placeholder="np. Warszawa" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Kategoria *</label>
+                  <select required value={formData.categoryId} onChange={set('categoryId')} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}>
+                    <option value="" disabled>Wybierz kategorię…</option>
+                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* WYNAGRODZENIE */}
+              <div>
+                <label style={labelStyle}>Wynagrodzenie (PLN)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'center' }}>
+                  <input type="number" value={formData.salaryMin} onChange={set('salaryMin')} placeholder="Min" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+                  <span style={{ color: '#9ca3af', fontWeight: 600 }}>—</span>
+                  <input type="number" value={formData.salaryMax} onChange={set('salaryMax')} placeholder="Max" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+                </div>
+              </div>
+
+              {/* FORMA WSPÓŁPRACY */}
+              <div>
+                <label style={labelStyle}>Forma współpracy *</label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {[
+                    { value: 'UOP', label: 'Umowa o pracę', sub: 'UOP' },
+                    { value: 'UZ',  label: 'Umowa zlecenie', sub: 'UZ' },
+                    { value: 'B2B', label: 'Kontrakt',       sub: 'B2B' },
+                  ].map(opt => {
+                    const checked = contractTypes.includes(opt.value);
+                    return (
+                      <button key={opt.value} type="button" onClick={() => toggleContract(opt.value)} style={{ flex: 1, padding: '14px 12px', borderRadius: 10, cursor: 'pointer', border: checked ? '1.5px solid #7dd3b0' : '1.5px solid #e8e5df', background: checked ? 'rgba(125,211,176,0.08)' : '#f9f8f6', textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.15s' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: checked ? '#0a7a5a' : '#0f1923', marginBottom: 2 }}>{opt.sub}</div>
+                        <div style={{ fontSize: 11, color: checked ? '#7dd3b0' : '#9ca3af' }}>{opt.label}</div>
+                        {checked && <div style={{ marginTop: 6, display: 'inline-block', background: '#7dd3b0', color: '#0f1923', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>✓ Wybrano</div>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* PRZEDŁUŻ CZAS (opcjonalnie) */}
+              <div>
+                <label style={labelStyle}>Przedłuż ofertę o <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(opcjonalnie, max. 4 miesiące)</span></label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {[1, 2, 3, 4].map(m => (
+                    <button key={m} type="button" onClick={() => setDurationMonths(prev => prev === m ? 0 : m)} style={{ flex: 1, padding: '12px 8px', borderRadius: 10, cursor: 'pointer', border: durationMonths === m ? '1.5px solid #7dd3b0' : '1.5px solid #e8e5df', background: durationMonths === m ? 'rgba(125,211,176,0.08)' : '#f9f8f6', fontFamily: 'inherit', transition: 'all 0.15s', textAlign: 'center' }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: durationMonths === m ? '#0a7a5a' : '#0f1923' }}>{m}</div>
+                      <div style={{ fontSize: 11, color: durationMonths === m ? '#7dd3b0' : '#9ca3af', marginTop: 2 }}>{m === 1 ? 'miesiąc' : 'miesiące'}</div>
+                    </button>
+                  ))}
+                </div>
+                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>Wybierz aby przesunąć datę ważności oferty od teraz.</p>
+              </div>
+
+              {/* OPIS */}
+              <div>
+                <label style={labelStyle}>Opis stanowiska *</label>
+                <textarea required rows={8} value={formData.description} onChange={set('description')} placeholder="Opisz wymagania, obowiązki, benefity…" style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} onFocus={e => Object.assign(e.currentTarget.style, { ...inputFocusStyle, resize: 'vertical', lineHeight: '1.6' })} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, resize: 'vertical', lineHeight: '1.6' })} />
+              </div>
+            </div>
+
+            <div style={{ padding: '20px 40px', borderTop: '1px solid #f0ece6', background: '#faf9f7', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+              <button type="button" onClick={() => navigate('/')} style={{ padding: '11px 24px', borderRadius: 10, border: '1px solid #e2ddd6', background: 'transparent', color: '#6b7280', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Anuluj
+              </button>
+              <button type="submit" disabled={loading} style={{ padding: '11px 28px', borderRadius: 10, border: 'none', background: loading ? 'rgba(125,211,176,0.5)' : '#7dd3b0', color: '#0f1923', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                {loading ? 'Zapisywanie…' : 'Zapisz zmiany'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 700,
+  color: '#6b7280', marginBottom: 8,
+  letterSpacing: '0.06em', textTransform: 'uppercase',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '12px 14px',
+  background: '#f9f8f6', border: '1.5px solid #e8e5df',
+  borderRadius: 10, color: '#0f1923',
+  fontSize: 15, fontFamily: 'inherit',
+  outline: 'none', boxSizing: 'border-box',
+  transition: 'border-color 0.15s, background 0.15s',
+};
+
+const inputFocusStyle: React.CSSProperties = {
+  ...inputStyle, background: '#fff', border: '1.5px solid #7dd3b0',
+};

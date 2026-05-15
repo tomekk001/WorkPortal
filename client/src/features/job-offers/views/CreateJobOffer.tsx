@@ -12,6 +12,7 @@ export const CreateJobOffer = () => {
   const [customCategory, setCustomCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [contractTypes, setContractTypes] = useState<string[]>([]);
+  const [durationMonths, setDurationMonths] = useState<number>(1);
   const [formData, setFormData] = useState({
     title: '', location: '', categoryId: '',
     salaryMin: '', salaryMax: '', description: '',
@@ -50,7 +51,7 @@ export const CreateJobOffer = () => {
         return;
       }
 
-      await axios.post('http://localhost:3000/job-offers', { ...formData, categoryId, contract: contractTypes.join(',') }, {
+      await axios.post('http://localhost:3000/job-offers', { ...formData, categoryId, contract: contractTypes.join(','), durationMonths }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       navigate('/');
@@ -231,6 +232,31 @@ export const CreateJobOffer = () => {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* CZAS WYSTAWIENIA */}
+              <div>
+                <label style={labelStyle}>Czas wystawienia oferty * <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(max. 4 miesiące)</span></label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {[1, 2, 3, 4].map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setDurationMonths(m)}
+                      style={{
+                        flex: 1, padding: '12px 8px', borderRadius: 10, cursor: 'pointer',
+                        border: durationMonths === m ? '1.5px solid #7dd3b0' : '1.5px solid #e8e5df',
+                        background: durationMonths === m ? 'rgba(125,211,176,0.08)' : '#f9f8f6',
+                        fontFamily: 'inherit', transition: 'all 0.15s', textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: 18, fontWeight: 800, color: durationMonths === m ? '#0a7a5a' : '#0f1923' }}>{m}</div>
+                      <div style={{ fontSize: 11, color: durationMonths === m ? '#7dd3b0' : '#9ca3af', marginTop: 2 }}>
+                        {m === 1 ? 'miesiąc' : 'miesiące'}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
