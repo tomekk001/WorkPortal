@@ -4,7 +4,7 @@ import {
   UnauthorizedException, BadRequestException,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { JobOffersService } from './job-offers.service';
 import { JwtService } from '@nestjs/jwt';
 

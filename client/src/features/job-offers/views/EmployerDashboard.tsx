@@ -173,8 +173,10 @@ const ChatPanel = ({ application, token, myId, onClose }: {
   );
 };
 
-const ApplicationModal = ({ application, token, myId, onClose }: {
+const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, downloadingId }: {
   application: Application; token: string; myId: number; onClose: () => void;
+  onDownloadCv: (id: number, e: React.MouseEvent) => void;
+  downloadingId: number | null;
 }) => {
   const [showChat, setShowChat] = useState(false);
 
@@ -231,7 +233,7 @@ const ApplicationModal = ({ application, token, myId, onClose }: {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 13, color: '#0f1923', fontWeight: 600 }}>{application.cvFileName}</span>
                     <button
-                      onClick={e => handleDownloadCv(application.id, e)}
+                      onClick={e => onDownloadCv(application.id, e)}
                       disabled={downloadingId === application.id}
                       style={{ padding: '5px 14px', borderRadius: 7, border: 'none', background: '#0f1923', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
                     >
@@ -475,7 +477,7 @@ export const EmployerDashboard = () => {
       </div>
 
       {selectedApp && token && (
-        <ApplicationModal application={selectedApp} token={token} myId={myId} onClose={() => setSelectedApp(null)} />
+        <ApplicationModal application={selectedApp} token={token} myId={myId} onClose={() => setSelectedApp(null)} onDownloadCv={handleDownloadCv} downloadingId={downloadingId} />
       )}
     </div>
   );

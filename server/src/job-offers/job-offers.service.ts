@@ -34,13 +34,17 @@ export class JobOffersService {
     const validUntil = new Date();
     validUntil.setMonth(validUntil.getMonth() + months);
 
+    const MAX_SALARY = 2_147_483_647;
+    const salaryMin = data.salaryMin ? Math.min(Number(data.salaryMin), MAX_SALARY) : null;
+    const salaryMax = data.salaryMax ? Math.min(Number(data.salaryMax), MAX_SALARY) : null;
+
     return this.prisma.jobOffer.create({
       data: {
         title: data.title,
         description: data.description,
         location: data.location,
-        salaryMin: data.salaryMin ? Number(data.salaryMin) : null,
-        salaryMax: data.salaryMax ? Number(data.salaryMax) : null,
+        salaryMin,
+        salaryMax,
         currency: data.currency || 'PLN',
         contract: data.contract || 'B2B',
         workMode: data.workMode || 'REMOTE',
@@ -65,14 +69,15 @@ export class JobOffersService {
     const months = data.durationMonths ? Math.min(Math.max(Number(data.durationMonths), 1), 4) : null;
     const validUntil = months ? (() => { const d = new Date(); d.setMonth(d.getMonth() + months); return d; })() : undefined;
 
+    const MAX_SALARY = 2_147_483_647;
     return this.prisma.jobOffer.update({
       where: { id: Number(offerId) },
       data: {
         title: data.title,
         description: data.description,
         location: data.location,
-        salaryMin: data.salaryMin ? Number(data.salaryMin) : null,
-        salaryMax: data.salaryMax ? Number(data.salaryMax) : null,
+        salaryMin: data.salaryMin ? Math.min(Number(data.salaryMin), MAX_SALARY) : null,
+        salaryMax: data.salaryMax ? Math.min(Number(data.salaryMax), MAX_SALARY) : null,
         currency: data.currency || 'PLN',
         contract: data.contract || 'B2B',
         workMode: data.workMode || 'REMOTE',

@@ -180,6 +180,7 @@ export const CreateJobOffer = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'center' }}>
                   <input
                     type="number" placeholder="Min, np. 8 000"
+                    min={0} max={999999}
                     onChange={set('salaryMin')}
                     style={inputStyle}
                     onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
@@ -188,6 +189,7 @@ export const CreateJobOffer = () => {
                   <span style={{ color: '#9ca3af', fontWeight: 600, textAlign: 'center' }}>—</span>
                   <input
                     type="number" placeholder="Max, np. 15 000"
+                    min={0} max={999999}
                     onChange={set('salaryMax')}
                     style={inputStyle}
                     onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
