@@ -6,19 +6,15 @@ import { CandidateDashboard } from './features/job-offers/views/CandidateDashboa
 import { EmployerDashboard } from './features/job-offers/views/EmployerDashboard';
 import { CreateJobOffer } from './features/job-offers/views/CreateJobOffer';
 import { ApplicationForm } from './features/job-offers/views/ApplicationForm';
+import { AdminDashboard } from './features/admin/AdminDashboard';
 import './App.css';
 
 const ProtectedRoute = () => {
   const { token, role } = useAuth();
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (role === 'EMPLOYER') {
-    return <EmployerDashboard />;
-  }
-
+  if (!token) return <Navigate to="/login" replace />;
+  if (role === 'ADMIN')     return <AdminDashboard />;
+  if (role === 'EMPLOYER')  return <EmployerDashboard />;
   return <CandidateDashboard />;
 };
 

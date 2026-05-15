@@ -130,6 +130,25 @@ export class JobOffersService {
     return { saved: true };
   }
 
+  async reportOffer(userId: number, jobOfferId: number, reason: string, description?: string) {
+    const jobOffer = await this.prisma.jobOffer.findUnique({ where: { id: Number(jobOfferId) } });
+    if (!jobOffer) throw new NotFoundException('Oferta nie została znaleziona.');
+
+    const existing = await this.prisma.report.findUnique({
+      where: { userId_jobOfferId: { userId: Number(userId), jobOfferId: Number(jobOfferId) } },
+    });
+    if (existing) throw new BadRequestException('Już zgłosiłeś tę ofertę.');
+
+    return this.prisma.report.create({
+      data: {
+        userId: Number(userId),
+        jobOfferId: Number(jobOfferId),
+        reason,
+        description: description?.trim() || null,
+      },
+    });
+  }
+
   async getCompanyProfile(userId: number) {
     return this.prisma.companyProfile.findUnique({
       where: { userId: Number(userId) },

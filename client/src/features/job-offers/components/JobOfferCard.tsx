@@ -21,6 +21,7 @@ interface JobOfferCardProps {
   actionLabel?: string;
   isSaved?: boolean;
   onSaveToggle?: (offerId: number) => void;
+  onReport?: (offerId: number) => void;
 }
 
 export const JobOfferCard = ({
@@ -29,6 +30,7 @@ export const JobOfferCard = ({
   actionLabel = 'Aplikuj',
   isSaved = false,
   onSaveToggle,
+  onReport,
 }: JobOfferCardProps) => {
   return (
     <div
@@ -141,6 +143,22 @@ export const JobOfferCard = ({
             onMouseLeave={e => (e.currentTarget.style.background = '#0f1923')}
           >
             {actionLabel} →
+          </button>
+        )}
+        {onReport && (
+          <button
+            onClick={e => { e.stopPropagation(); onReport(offer.id); }}
+            title="Zgłoś ofertę"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 12, color: '#d1d5db', fontWeight: 500,
+              fontFamily: 'inherit', padding: '2px 0',
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}
+          >
+            ⚑ Zgłoś
           </button>
         )}
       </div>

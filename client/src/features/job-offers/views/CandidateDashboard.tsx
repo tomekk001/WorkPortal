@@ -336,6 +336,11 @@ export const CandidateDashboard = () => {
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [savedOffers, setSavedOffers] = useState<JobOffer[]>([]);
   const [sortKey, setSortKey] = useState<'newest' | 'oldest' | 'salary' | 'alpha'>('newest');
+  const [reportOfferId, setReportOfferId] = useState<number | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDesc, setReportDesc] = useState('');
+  const [reportSending, setReportSending] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
 
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -430,14 +435,196 @@ export const CandidateDashboard = () => {
     }
   });
 
+  const openReport = (offerId: number) => {
+    setReportOfferId(offerId);
+    setReportReason('');
+    setReportDesc('');
+    setReportDone(false);
+  };
+
+  const closeReport = () => {
+    setReportOfferId(null);
+    setReportReason('');
+    setReportDesc('');
+    setReportDone(false);
+  };
+
+  const submitReport = async () => {
+    if (!reportReason || !token || !reportOfferId) return;
+    setReportSending(true);
+    try {
+      await axios.post(
+        `http://localhost:3000/job-offers/${reportOfferId}/report`,
+        { reason: reportReason, description: reportDesc },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setReportDone(true);
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Błąd podczas zgłaszania.');
+    } finally {
+      setReportSending(false);
+    }
+  };
+
   const handleApply = (offerId: number) => {
     if (!token) { alert('Musisz być zalogowany, aby aplikować.'); return; }
     navigate(`/apply/${offerId}`);
   };
 
+  const REPORT_REASONS = [
+    'Podejrzana oferta',
+    'Fałszywe informacje',
+    'Nieodpowiednie treści',
+    'Duplikat ogłoszenia',
+    'Błędne dane kontaktowe',
+    'Inne',
+  ];
+
   return (
     <div style={{ minHeight: '100vh', background: '#f8f7f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
       <Header />
+
+      {/* MODAL ZGŁOSZENIA */}
+      {reportOfferId !== null && (
+        <div
+          onClick={closeReport}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(15,25,35,0.55)', backdropFilter: 'blur(2px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#fff', borderRadius: 20, padding: '32px',
+              width: '100%', maxWidth: 460,
+              boxShadow: '0 24px 48px rgba(0,0,0,0.18)',
+            }}
+          >
+            {reportDone ? (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ fontSize: 44, marginBottom: 16 }}>✅</div>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f1923', margin: '0 0 8px' }}>
+                  Zgłoszenie wysłane
+                </h3>
+                <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>
+                  Dziękujemy. Administrator sprawdzi ofertę i podejmie odpowiednie działania.
+                </p>
+                <button
+                  onClick={closeReport}
+                  style={{
+                    background: '#0f1923', color: '#fff', border: 'none',
+                    borderRadius: 10, padding: '11px 28px',
+                    fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Zamknij
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f1923', margin: '0 0 4px' }}>
+                      Zgłoś ofertę
+                    </h3>
+                    <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+                      Pomóż nam utrzymać jakość ogłoszeń
+                    </p>
+                  </div>
+                  <button
+                    onClick={closeReport}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#9ca3af', lineHeight: 1, padding: 0 }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                    Powód zgłoszenia *
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {REPORT_REASONS.map(reason => (
+                      <label
+                        key={reason}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
+                          border: `1.5px solid ${reportReason === reason ? '#ef4444' : '#e8e5df'}`,
+                          background: reportReason === reason ? '#fff5f5' : '#faf9f7',
+                          transition: 'all 0.12s',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="reason"
+                          value={reason}
+                          checked={reportReason === reason}
+                          onChange={() => setReportReason(reason)}
+                          style={{ accentColor: '#ef4444' }}
+                        />
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{reason}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                    Dodatkowy opis (opcjonalnie)
+                  </label>
+                  <textarea
+                    value={reportDesc}
+                    onChange={e => setReportDesc(e.target.value)}
+                    placeholder="Opisz dokładniej co jest nie tak z tą ofertą…"
+                    rows={3}
+                    maxLength={500}
+                    style={{
+                      width: '100%', padding: '10px 12px', borderRadius: 10,
+                      border: '1.5px solid #e8e5df', background: '#faf9f7',
+                      fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none',
+                      boxSizing: 'border-box', color: '#374151',
+                    }}
+                  />
+                  <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right', margin: '4px 0 0' }}>
+                    {reportDesc.length}/500
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={closeReport}
+                    style={{
+                      padding: '10px 20px', borderRadius: 10,
+                      border: '1px solid #e8e5df', background: 'transparent',
+                      color: '#6b7280', fontWeight: 600, fontSize: 14,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    Anuluj
+                  </button>
+                  <button
+                    onClick={submitReport}
+                    disabled={!reportReason || reportSending}
+                    style={{
+                      padding: '10px 24px', borderRadius: 10, border: 'none',
+                      background: reportReason && !reportSending ? '#ef4444' : '#f1f5f9',
+                      color: reportReason && !reportSending ? '#fff' : '#9ca3af',
+                      fontWeight: 700, fontSize: 14,
+                      cursor: reportReason && !reportSending ? 'pointer' : 'not-allowed',
+                      fontFamily: 'inherit', transition: 'all 0.15s',
+                    }}
+                  >
+                    {reportSending ? 'Wysyłanie…' : 'Wyślij zgłoszenie'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* HERO */}
       <div style={{ background: '#0f1923', color: '#fff', padding: '48px 0 0' }}>
@@ -545,6 +732,7 @@ export const CandidateDashboard = () => {
                       actionLabel="Aplikuj"
                       isSaved={savedIds.has(offer.id)}
                       onSaveToggle={token ? handleSaveToggle : undefined}
+                      onReport={token ? openReport : undefined}
                     />
                   ))}
                 </div>
@@ -580,6 +768,7 @@ export const CandidateDashboard = () => {
                     actionLabel="Aplikuj"
                     isSaved={true}
                     onSaveToggle={handleSaveToggle}
+                    onReport={openReport}
                   />
                 ))}
               </div>

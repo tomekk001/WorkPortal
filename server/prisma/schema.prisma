@@ -26,6 +26,12 @@ enum WorkMode {
   ONSITE
 }
 
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -45,6 +51,7 @@ model User {
   employerConversations  Conversation[] @relation("EmployerConversations")
   candidateConversations Conversation[] @relation("CandidateConversations")
   sentMessages           Message[]      @relation("SentMessages")
+  reports                Report[]
 }
 
 model CandidateProfile {
@@ -104,6 +111,7 @@ model JobOffer {
 
   applications Application[]
   savedBy      SavedOffer[]
+  reports      Report[]
 }
 
 model Application {
@@ -158,6 +166,22 @@ model Message {
 
   conversationId Int
   conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model Report {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now())
+  reason      String
+  description String?      @db.Text
+  status      ReportStatus @default(PENDING)
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+
+  jobOfferId Int
+  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id])
+
+  @@unique([userId, jobOfferId])
 }
 
 model SavedOffer {

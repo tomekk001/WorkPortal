@@ -89,6 +89,17 @@ export class JobOffersController {
     return this.jobOffersService.toggleSaveOffer(decoded.sub, Number(jobOfferId));
   }
 
+  @Post(':jobOfferId/report')
+  async reportOffer(
+    @Headers('authorization') authHeader: string,
+    @Param('jobOfferId') jobOfferId: string,
+    @Body() body: { reason: string; description?: string },
+  ) {
+    const decoded = verifyToken(authHeader);
+    if (!body?.reason?.trim()) throw new BadRequestException('Powód zgłoszenia jest wymagany.');
+    return this.jobOffersService.reportOffer(decoded.sub, Number(jobOfferId), body.reason, body.description);
+  }
+
   @Post()
   async create(@Headers('authorization') authHeader: string, @Body() data: any) {
     const decoded = verifyToken(authHeader);

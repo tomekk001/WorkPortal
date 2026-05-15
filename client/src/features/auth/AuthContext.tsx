@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface AuthState {
   token: string | null;
-  role: 'CANDIDATE' | 'EMPLOYER' | null;
+  role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN' | null;
 }
 
 interface AuthContextType extends AuthState {
-  login: (token: string, role: 'CANDIDATE' | 'EMPLOYER') => void;
+  login: (token: string, role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN') => void;
   logout: () => void;
 }
 
@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     role: localStorage.getItem('role') as 'CANDIDATE' | 'EMPLOYER' | null,
   }));
 
-  const login = (token: string, role: 'CANDIDATE' | 'EMPLOYER') => {
+  const login = (token: string, role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN') => {
     localStorage.setItem('token', token);
     localStorage.setItem('role', role);
     setAuthState({ token, role });
