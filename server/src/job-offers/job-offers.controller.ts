@@ -38,8 +38,15 @@ export class JobOffersController {
     @Query('title') title?: string,
     @Query('location') location?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('skill') skill?: string,
+    @Query('seniority') seniority?: string,
   ) {
-    return this.jobOffersService.searchOffers(title, location, categoryId);
+    return this.jobOffersService.searchOffers(title, location, categoryId, skill, seniority);
+  }
+
+  @Get('company/:companyId')
+  async getCompanyPublicProfile(@Param('companyId') companyId: string) {
+    return this.jobOffersService.getCompanyPublicProfile(Number(companyId));
   }
 
   @Get('categories')
@@ -211,6 +218,16 @@ export class JobOffersController {
     const decoded = verifyToken(authHeader);
     if (!file) throw new BadRequestException('Brak pliku logo.');
     return this.jobOffersService.updateCompanyLogo(decoded.sub, `/uploads/logos/${file.filename}`);
+  }
+
+  @Get(':offerId/similar')
+  async getSimilarOffers(@Param('offerId') offerId: string) {
+    return this.jobOffersService.getSimilarOffers(Number(offerId));
+  }
+
+  @Get(':offerId')
+  async getOfferById(@Param('offerId') offerId: string) {
+    return this.jobOffersService.getOfferById(Number(offerId));
   }
 
   @Patch(':offerId/toggle-active')

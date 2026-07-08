@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class JobOffersService {
   constructor(private prisma: PrismaService) {}
 
-  async searchOffers(title?: string, location?: string, categoryId?: string) {
+  async searchOffers(title?: string, location?: string, categoryId?: string, skill?: string, seniority?: string) {
     return this.prisma.jobOffer.findMany({
       where: {
         isActive: true,
@@ -15,13 +15,63 @@ export class JobOffersService {
         title: title ? { contains: title, mode: 'insensitive' } : undefined,
         location: location ? { contains: location, mode: 'insensitive' } : undefined,
         categoryId: categoryId ? Number(categoryId) : undefined,
+        skills: skill ? { has: skill } : undefined,
+        seniority: seniority ? (seniority as any) : undefined,
       },
       orderBy: [{ isPromoted: 'desc' }, { createdAt: 'desc' }],
       include: {
-        company: { select: { companyName: true, logoUrl: true } },
+        company: { select: { id: true, companyName: true, logoUrl: true } },
         category: true,
       },
     });
+  }
+
+  async getOfferById(offerId: number) {
+    const offer = await this.prisma.jobOffer.findUnique({
+      where: { id: Number(offerId) },
+      include: {
+        company: { select: { id: true, companyName: true, logoUrl: true, description: true, website: true, location: true } },
+        category: true,
+      },
+    });
+    if (!offer) throw new NotFoundException('Oferta nie istnieje.');
+    return offer;
+  }
+
+  async getSimilarOffers(offerId: number, limit = 4) {
+    const offer = await this.prisma.jobOffer.findUnique({ where: { id: Number(offerId) } });
+    if (!offer) throw new NotFoundException('Oferta nie istnieje.');
+    return this.prisma.jobOffer.findMany({
+      where: {
+        id: { not: offer.id },
+        categoryId: offer.categoryId,
+        isActive: true,
+        isApproved: true,
+      },
+      take: limit,
+      orderBy: [{ isPromoted: 'desc' }, { createdAt: 'desc' }],
+      include: {
+        company: { select: { id: true, companyName: true, logoUrl: true } },
+        category: true,
+      },
+    });
+  }
+
+  async getCompanyPublicProfile(companyId: number) {
+    const company = await this.prisma.companyProfile.findUnique({
+      where: { id: Number(companyId) },
+      select: { id: true, companyName: true, logoUrl: true, description: true, website: true, location: true },
+    });
+    if (!company) throw new NotFoundException('Firma nie istnieje.');
+    const offers = await this.prisma.jobOffer.findMany({
+      where: { companyId: Number(companyId), isActive: true, isApproved: true },
+      orderBy: [{ isPromoted: 'desc' }, { createdAt: 'desc' }],
+      include: {
+        company: { select: { id: true, companyName: true, logoUrl: true } },
+        category: true,
+      },
+    });
+    return { company, offers };
   }
 
   async createOffer(userId: number, data: any) {
@@ -53,6 +103,8 @@ export class JobOffersService {
         validUntil,
         companyId: company.id,
         categoryId: Number(data.categoryId),
+        skills: Array.isArray(data.skills) ? data.skills : [],
+        seniority: data.seniority || null,
       },
     });
   }
@@ -83,6 +135,8 @@ export class JobOffersService {
         contract: data.contract || 'B2B',
         workMode: data.workMode || 'REMOTE',
         categoryId: Number(data.categoryId),
+        skills: Array.isArray(data.skills) ? data.skills : [],
+        seniority: data.seniority || null,
         ...(validUntil ? { validUntil } : {}),
         ...(data.isActive !== undefined ? { isActive: Boolean(data.isActive) } : {}),
       },
