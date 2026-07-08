@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 
 export const CreateJobOffer = () => {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
@@ -40,7 +42,7 @@ export const CreateJobOffer = () => {
     setLoading(true);
     try {
       if (contractTypes.length === 0) {
-        alert('Wybierz co najmniej jedną formę współpracy.');
+        alert(t('jobOfferForm.selectContractError'));
         setLoading(false);
         return;
       }
@@ -50,7 +52,7 @@ export const CreateJobOffer = () => {
       });
       navigate('/');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Błąd zapisu');
+      alert(error.response?.data?.message || t('companyProfile.saveError'));
     } finally {
       setLoading(false);
     }
@@ -71,16 +73,16 @@ export const CreateJobOffer = () => {
             fontSize: 12, fontWeight: 700, letterSpacing: '0.12em',
             color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10,
           }}>
-            Panel Pracodawcy
+            {t('companyProfile.eyebrow')}
           </p>
           <h1 style={{
             fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 800,
             color: '#fff', margin: 0, letterSpacing: '-0.02em',
           }}>
-            Nowe ogłoszenie
+            {t('jobOfferForm.createTitle')}
           </h1>
           <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>
-            Wypełnij formularz, aby opublikować ofertę pracy
+            {t('jobOfferForm.createSubtitle')}
           </p>
         </div>
       </div>
@@ -103,9 +105,9 @@ export const CreateJobOffer = () => {
 
               {/* TYTUŁ */}
               <div>
-                <label style={labelStyle}>Tytuł stanowiska *</label>
+                <label style={labelStyle}>{t('jobOfferForm.positionTitle')}</label>
                 <input
-                  required placeholder="np. Senior Frontend Developer"
+                  required placeholder={t('jobOfferForm.positionTitlePlaceholder')}
                   onChange={set('title')}
                   style={inputStyle}
                   onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
@@ -116,9 +118,9 @@ export const CreateJobOffer = () => {
               {/* LOKALIZACJA + KATEGORIA */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <div>
-                  <label style={labelStyle}>Lokalizacja *</label>
+                  <label style={labelStyle}>{t('jobOfferForm.locationLabel')}</label>
                   <input
-                    required placeholder="np. Warszawa, Zdalnie"
+                    required placeholder={t('jobOfferForm.locationPlaceholder')}
                     onChange={set('location')}
                     style={inputStyle}
                     onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
@@ -126,7 +128,7 @@ export const CreateJobOffer = () => {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Kategoria *</label>
+                  <label style={labelStyle}>{t('jobOfferForm.categoryLabel')}</label>
                   <select
                     required
                     value={formData.categoryId}
@@ -135,7 +137,7 @@ export const CreateJobOffer = () => {
                     onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                     onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}
                   >
-                    <option value="" disabled>Wybierz kategorię…</option>
+                    <option value="" disabled>{t('jobOfferForm.categoryPlaceholder')}</option>
                     {categories.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
@@ -145,10 +147,10 @@ export const CreateJobOffer = () => {
 
               {/* WYNAGRODZENIE */}
               <div>
-                <label style={labelStyle}>Wynagrodzenie (PLN)</label>
+                <label style={labelStyle}>{t('jobOfferForm.salaryLabel')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'center' }}>
                   <input
-                    type="number" placeholder="Min, np. 8 000"
+                    type="number" placeholder={t('jobOfferForm.salaryMinPlaceholder')}
                     min={0} max={999999}
                     onChange={set('salaryMin')}
                     style={inputStyle}
@@ -157,7 +159,7 @@ export const CreateJobOffer = () => {
                   />
                   <span style={{ color: '#9ca3af', fontWeight: 600, textAlign: 'center' }}>—</span>
                   <input
-                    type="number" placeholder="Max, np. 15 000"
+                    type="number" placeholder={t('jobOfferForm.salaryMaxPlaceholder')}
                     min={0} max={999999}
                     onChange={set('salaryMax')}
                     style={inputStyle}
@@ -169,12 +171,12 @@ export const CreateJobOffer = () => {
 
               {/* FORMA WSPÓŁPRACY */}
               <div>
-                <label style={labelStyle}>Forma współpracy *</label>
+                <label style={labelStyle}>{t('applicationForm.contractForm')}</label>
                 <div style={{ display: 'flex', gap: 12 }}>
                   {[
-                    { value: 'UOP', label: 'Umowa o pracę', sub: 'UOP' },
-                    { value: 'UZ',  label: 'Umowa zlecenie', sub: 'UZ' },
-                    { value: 'B2B', label: 'Kontrakt',       sub: 'B2B' },
+                    { value: 'UOP', label: t('applicationForm.contractUOP'), sub: 'UOP' },
+                    { value: 'UZ',  label: t('applicationForm.contractUZ'), sub: 'UZ' },
+                    { value: 'B2B', label: t('applicationForm.contractB2B'), sub: 'B2B' },
                   ].map(opt => {
                     const checked = contractTypes.includes(opt.value);
                     return (
@@ -197,7 +199,7 @@ export const CreateJobOffer = () => {
                         </div>
                         {checked && (
                           <div style={{ marginTop: 6, display: 'inline-block', background: '#7dd3b0', color: '#0f1923', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>
-                            ✓ Wybrano
+                            ✓ {t('jobOfferForm.selected')}
                           </div>
                         )}
                       </button>
@@ -208,9 +210,9 @@ export const CreateJobOffer = () => {
 
               {/* SENIORITY + UMIEJĘTNOŚCI */}
               <div>
-                <label style={labelStyle}>Poziom doświadczenia</label>
+                <label style={labelStyle}>{t('searchBar.seniority')}</label>
                 <select value={seniority} onChange={e => setSeniority(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}>
-                  <option value="">Nie określono</option>
+                  <option value="">{t('jobOfferForm.seniorityNotSet')}</option>
                   <option value="JUNIOR">Junior</option>
                   <option value="MID">Mid</option>
                   <option value="SENIOR">Senior</option>
@@ -219,13 +221,13 @@ export const CreateJobOffer = () => {
               </div>
 
               <div>
-                <label style={labelStyle}>Umiejętności / stos technologiczny <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(Enter, aby dodać)</span></label>
+                <label style={labelStyle}>{t('jobOfferForm.skillsLabel')} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>({t('jobOfferForm.skillsHint')})</span></label>
                 <input
                   type="text"
                   value={skillInput}
                   onChange={e => setSkillInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
-                  placeholder="np. React, TypeScript, Docker"
+                  placeholder={t('jobOfferForm.skillsPlaceholder')}
                   style={inputStyle}
                   onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                   onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
@@ -246,7 +248,7 @@ export const CreateJobOffer = () => {
 
               {/* CZAS WYSTAWIENIA */}
               <div>
-                <label style={labelStyle}>Czas wystawienia oferty * <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(max. 4 miesiące)</span></label>
+                <label style={labelStyle}>{t('jobOfferForm.durationLabel')} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>({t('jobOfferForm.durationHint')})</span></label>
                 <div style={{ display: 'flex', gap: 10 }}>
                   {[1, 2, 3, 4].map(m => (
                     <button
@@ -262,7 +264,7 @@ export const CreateJobOffer = () => {
                     >
                       <div style={{ fontSize: 18, fontWeight: 800, color: durationMonths === m ? '#0a7a5a' : '#0f1923' }}>{m}</div>
                       <div style={{ fontSize: 11, color: durationMonths === m ? '#7dd3b0' : '#9ca3af', marginTop: 2 }}>
-                        {m === 1 ? 'miesiąc' : 'miesiące'}
+                        {m === 1 ? t('jobOfferForm.month') : t('jobOfferForm.months')}
                       </div>
                     </button>
                   ))}
@@ -271,10 +273,10 @@ export const CreateJobOffer = () => {
 
               {/* OPIS */}
               <div>
-                <label style={labelStyle}>Opis stanowiska *</label>
+                <label style={labelStyle}>{t('jobOfferForm.descriptionLabel')}</label>
                 <textarea
                   required rows={8}
-                  placeholder="Opisz wymagania, obowiązki, benefity i wymagane doświadczenie…"
+                  placeholder={t('jobOfferForm.descriptionPlaceholder')}
                   onChange={set('description')}
                   style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
                   onFocus={e => Object.assign(e.currentTarget.style, { ...inputFocusStyle, resize: 'vertical', lineHeight: '1.6' })}
@@ -303,7 +305,7 @@ export const CreateJobOffer = () => {
                 onMouseEnter={e => { e.currentTarget.style.background = '#f0ece6'; e.currentTarget.style.color = '#374151'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}
               >
-                Anuluj
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
@@ -320,7 +322,7 @@ export const CreateJobOffer = () => {
                 onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.85'; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
               >
-                {loading ? 'Publikowanie…' : '+ Opublikuj ogłoszenie'}
+                {loading ? t('jobOfferForm.publishing') : t('jobOfferForm.publish')}
               </button>
             </div>
 

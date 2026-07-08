@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../auth/Header';
 import { JobOfferCard, type JobOffer } from '../components/JobOfferCard';
 
@@ -14,6 +15,7 @@ interface CompanyPublicData {
 }
 
 export const CompanyPublicPage = () => {
+  const { t } = useTranslation();
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   const [company, setCompany] = useState<CompanyPublicData | null>(null);
@@ -49,8 +51,8 @@ export const CompanyPublicPage = () => {
       <Header />
       <div style={{ textAlign: 'center', padding: '96px 32px' }}>
         <div style={{ fontSize: 44, marginBottom: 16 }}>🏢</div>
-        <p style={{ fontSize: 18, fontWeight: 700, color: '#0f1923' }}>Firma nie została znaleziona</p>
-        <Link to="/" style={{ color: '#0a7a5a', fontWeight: 600 }}>← Wróć do listy ofert</Link>
+        <p style={{ fontSize: 18, fontWeight: 700, color: '#0f1923' }}>{t('companyPublicPage.notFound')}</p>
+        <Link to="/" style={{ color: '#0a7a5a', fontWeight: 600 }}>← {t('jobOfferDetails.backToList')}</Link>
       </div>
     </div>
   );
@@ -67,7 +69,7 @@ export const CompanyPublicPage = () => {
             <div style={{ width: 72, height: 72, borderRadius: 14, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🏢</div>
           )}
           <div>
-            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 6 }}>Profil firmy</p>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 6 }}>{t('header.companyProfile')}</p>
             <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.4rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>{company.companyName}</h1>
             {company.location && <p style={{ fontSize: 14, color: '#94a3b8', margin: '6px 0 0' }}>📍 {company.location}</p>}
           </div>
@@ -89,13 +91,13 @@ export const CompanyPublicPage = () => {
         )}
 
         <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: '0 0 16px' }}>
-          Aktywne oferty ({offers.length})
+          {t('companyPublicPage.activeOffers', { count: offers.length })}
         </h2>
 
         {offers.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-            <p style={{ color: '#374151', fontWeight: 600, fontSize: 16 }}>Brak aktywnych ofert tej firmy</p>
+            <p style={{ color: '#374151', fontWeight: 600, fontSize: 16 }}>{t('companyPublicPage.noOffers')}</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

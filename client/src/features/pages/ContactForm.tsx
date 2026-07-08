@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../auth/Header';
 
 const inputStyle: React.CSSProperties = {
@@ -16,6 +17,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 export const ContactForm = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
@@ -33,7 +35,7 @@ export const ContactForm = () => {
       await axios.post('http://localhost:3000/contact', formData);
       setDone(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Błąd wysyłania wiadomości.');
+      setError(err.response?.data?.message || t('contactForm.sendError'));
     } finally {
       setSending(false);
     }
@@ -45,9 +47,9 @@ export const ContactForm = () => {
 
       <div style={{ background: '#0f1923', padding: '40px 0 48px' }}>
         <div style={{ width: '100%', padding: '0 32px' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>Wsparcie</p>
-          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Kontakt</h1>
-          <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>Masz pytanie? Napisz do nas.</p>
+          <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>{t('footer.support')}</p>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>{t('footer.contact')}</h1>
+          <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>{t('contactForm.subtitle')}</p>
         </div>
       </div>
 
@@ -56,27 +58,27 @@ export const ContactForm = () => {
           {done ? (
             <div style={{ textAlign: 'center', padding: '16px 0' }}>
               <div style={{ fontSize: 44, marginBottom: 16 }}>✅</div>
-              <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f1923', margin: '0 0 8px' }}>Wiadomość wysłana</h3>
-              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Odpowiemy najszybciej jak to możliwe.</p>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f1923', margin: '0 0 8px' }}>{t('contactForm.sent')}</h3>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{t('contactForm.sentDetail')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
-                  <label style={labelStyle}>Imię i nazwisko *</label>
+                  <label style={labelStyle}>{t('employerDashboard.modal.fullName')} *</label>
                   <input required value={formData.name} onChange={set('name')} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>E-mail *</label>
+                  <label style={labelStyle}>{t('common.email')} *</label>
                   <input required type="email" value={formData.email} onChange={set('email')} style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>Temat *</label>
+                <label style={labelStyle}>{t('contactForm.subject')} *</label>
                 <input required value={formData.subject} onChange={set('subject')} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Wiadomość *</label>
+                <label style={labelStyle}>{t('contactForm.message')} *</label>
                 <textarea required rows={6} value={formData.message} onChange={set('message')} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
               </div>
               {error && <p style={{ color: '#ef4444', fontSize: 13, margin: 0 }}>{error}</p>}
@@ -85,7 +87,7 @@ export const ContactForm = () => {
                 disabled={sending}
                 style={{ alignSelf: 'flex-end', padding: '11px 28px', borderRadius: 10, border: 'none', background: sending ? 'rgba(125,211,176,0.5)' : '#7dd3b0', color: '#0f1923', fontWeight: 800, fontSize: 14, cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
               >
-                {sending ? 'Wysyłanie…' : 'Wyślij wiadomość'}
+                {sending ? t('common.sending') : t('contactForm.submit')}
               </button>
             </form>
           )}

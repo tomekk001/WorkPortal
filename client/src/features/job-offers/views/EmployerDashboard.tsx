@@ -4,6 +4,7 @@ import { Footer } from '../../layout/Footer';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 interface Application {
   id: number;
@@ -35,11 +36,12 @@ interface Conversation {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
+  const { t } = useTranslation();
   const map: Record<string, { label: string; bg: string; color: string }> = {
-    NEW:       { label: 'Nowa',         bg: '#e0f2fe', color: '#0369a1' },
-    REVIEWING: { label: 'Przegląd',    bg: '#fef9c3', color: '#92400e' },
-    REJECTED:  { label: 'Odrzucona',   bg: '#fee2e2', color: '#991b1b' },
-    HIRED:     { label: 'Zatrudniona', bg: '#dcfce7', color: '#166534' },
+    NEW:       { label: t('employerDashboard.status.new'),       bg: '#e0f2fe', color: '#0369a1' },
+    REVIEWING: { label: t('employerDashboard.status.reviewing'), bg: '#fef9c3', color: '#92400e' },
+    REJECTED:  { label: t('employerDashboard.status.rejected'),  bg: '#fee2e2', color: '#991b1b' },
+    HIRED:     { label: t('employerDashboard.status.hired'),     bg: '#dcfce7', color: '#166534' },
   };
   const s = map[status] ?? { label: status, bg: '#f3f4f6', color: '#374151' };
   return (
@@ -49,14 +51,11 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const startDateLabel: Record<string, string> = {
-  immediately: 'Od zaraz', '2weeks': '2 tygodnie',
-  '1month': '1 miesiąc', '3months': '3 miesiące', 'more3months': 'Powyżej 3 miesięcy',
-};
-
 const ChatPanel = ({ application, token, myId, onClose }: {
   application: Application; token: string; myId: number; onClose: () => void;
 }) => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -97,7 +96,7 @@ const ChatPanel = ({ application, token, myId, onClose }: {
       }
       setInput('');
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd wysyłania');
+      alert(e.response?.data?.message || t('chat.sendError'));
     } finally {
       setSending(false);
     }
@@ -120,7 +119,7 @@ const ChatPanel = ({ application, token, myId, onClose }: {
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, background: '#faf9f7' }}>
         {!conversation && (
           <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, margin: 'auto 0' }}>
-            Napisz pierwszą wiadomość do kandydata.
+            {t('employerDashboard.chat.startPrompt')}
           </p>
         )}
         {conversation?.messages.map(msg => {
@@ -137,7 +136,7 @@ const ChatPanel = ({ application, token, myId, onClose }: {
               }}>
                 <p style={{ margin: 0 }}>{msg.content}</p>
                 <p style={{ margin: '4px 0 0', fontSize: 11, color: isMe ? 'rgba(255,255,255,0.45)' : '#9ca3af' }}>
-                  {new Date(msg.createdAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.createdAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>
@@ -152,7 +151,7 @@ const ChatPanel = ({ application, token, myId, onClose }: {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-          placeholder="Napisz wiadomość… (Enter = wyślij)"
+          placeholder={t('employerDashboard.chat.inputPlaceholder')}
           rows={2}
           style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e8e5df', background: '#fff', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none' }}
         />
@@ -167,19 +166,12 @@ const ChatPanel = ({ application, token, myId, onClose }: {
             fontFamily: 'inherit', transition: 'all 0.15s',
           }}
         >
-          {sending ? '…' : 'Wyślij'}
+          {sending ? '…' : t('common.send')}
         </button>
       </div>
     </div>
   );
 };
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: 'NEW', label: 'Nowa' },
-  { value: 'REVIEWING', label: 'Przegląd' },
-  { value: 'REJECTED', label: 'Odrzucona' },
-  { value: 'HIRED', label: 'Zatrudniona' },
-];
 
 const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, downloadingId, onStatusChange, updatingStatus }: {
   application: Application; token: string; myId: number; onClose: () => void;
@@ -188,6 +180,21 @@ const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, dow
   onStatusChange: (applicationId: number, status: string) => void;
   updatingStatus: boolean;
 }) => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
+  const STATUS_OPTIONS: { value: string; label: string }[] = [
+    { value: 'NEW', label: t('employerDashboard.status.new') },
+    { value: 'REVIEWING', label: t('employerDashboard.status.reviewing') },
+    { value: 'REJECTED', label: t('employerDashboard.status.rejected') },
+    { value: 'HIRED', label: t('employerDashboard.status.hired') },
+  ];
+  const startDateLabel: Record<string, string> = {
+    immediately: t('applicationForm.startImmediately'),
+    '2weeks': t('applicationForm.start2weeks'),
+    '1month': t('applicationForm.start1month'),
+    '3months': t('applicationForm.start3months'),
+    'more3months': t('applicationForm.startMore3months'),
+  };
   const [showChat, setShowChat] = useState(false);
 
   return (
@@ -201,8 +208,8 @@ const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, dow
               {application.user.firstName} {application.user.lastName}
             </h2>
             <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 0' }}>
-              Aplikacja na: <strong style={{ color: '#0f1923' }}>{application.jobOffer.title}</strong>
-              {' · '}{new Date(application.appliedAt).toLocaleDateString('pl-PL')}
+              {t('employerDashboard.modal.applicationFor')} <strong style={{ color: '#0f1923' }}>{application.jobOffer.title}</strong>
+              {' · '}{new Date(application.appliedAt).toLocaleDateString(dateLocale)}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -216,7 +223,7 @@ const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, dow
 
           {/* Details */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <Section title="🔖 Status kandydata">
+            <Section title={`🔖 ${t('employerDashboard.modal.candidateStatus')}`}>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {STATUS_OPTIONS.map(opt => (
                   <button
@@ -239,27 +246,27 @@ const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, dow
               </div>
             </Section>
 
-            <Section title="📋 Dane kontaktowe">
-              <Row label="Imię i nazwisko" value={`${application.user.firstName} ${application.user.lastName}`} />
-              <Row label="E-mail" value={application.user.email} />
-              <Row label="Telefon" value={application.user.phone || '—'} />
+            <Section title={`📋 ${t('employerDashboard.modal.contactData')}`}>
+              <Row label={t('employerDashboard.modal.fullName')} value={`${application.user.firstName} ${application.user.lastName}`} />
+              <Row label={t('common.email')} value={application.user.email} />
+              <Row label={t('common.phone')} value={application.user.phone || '—'} />
             </Section>
 
-            <Section title="💼 Oczekiwania">
-              <Row label="Termin rozpoczęcia" value={startDateLabel[application.startDate ?? ''] ?? application.startDate ?? '—'} />
-              <Row label="Forma współpracy" value={application.contractType ?? '—'} />
-              <Row label="Oczekiwane wynagrodzenie" value={application.expectedSalary ? `${application.expectedSalary.toLocaleString()} PLN / mies.` : '—'} />
+            <Section title={`💼 ${t('employerDashboard.modal.expectations')}`}>
+              <Row label={t('employerDashboard.modal.startDateLabel')} value={startDateLabel[application.startDate ?? ''] ?? application.startDate ?? '—'} />
+              <Row label={t('employerDashboard.modal.contractTypeLabel')} value={application.contractType ?? '—'} />
+              <Row label={t('employerDashboard.modal.expectedSalaryLabel')} value={application.expectedSalary ? t('employerDashboard.modal.perMonthValue', { amount: application.expectedSalary.toLocaleString(dateLocale) }) : '—'} />
             </Section>
 
             {application.coverMessage && (
-              <Section title="✉️ Wiadomość od kandydata">
+              <Section title={`✉️ ${t('employerDashboard.modal.messageFromCandidate')}`}>
                 <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap', background: '#faf9f7', padding: '14px 16px', borderRadius: 10, border: '1px solid #f0ece6' }}>
                   {application.coverMessage}
                 </p>
               </Section>
             )}
 
-            <Section title="📎 Dokumenty">
+            <Section title={`📎 ${t('employerDashboard.modal.documents')}`}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 13, color: '#9ca3af', minWidth: 190, flexShrink: 0 }}>CV</span>
                 {application.cvFileName ? (
@@ -270,19 +277,19 @@ const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, dow
                       disabled={downloadingId === application.id}
                       style={{ padding: '5px 14px', borderRadius: 7, border: 'none', background: '#0f1923', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
                     >
-                      {downloadingId === application.id ? '⏳' : '⬇ Pobierz'}
+                      {downloadingId === application.id ? '⏳' : `⬇ ${t('employerDashboard.modal.download')}`}
                     </button>
                   </div>
                 ) : (
-                  <span style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>Nie dołączono</span>
+                  <span style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>{t('employerDashboard.modal.notAttached')}</span>
                 )}
               </div>
-              <Row label="Dodatkowy plik" value={application.additionalFileName ?? 'Nie dołączono'} />
+              <Row label={t('employerDashboard.modal.additionalFileLabel')} value={application.additionalFileName ?? t('employerDashboard.modal.notAttached')} />
             </Section>
 
             {!showChat && (
               <button onClick={() => setShowChat(true)} style={{ alignSelf: 'flex-start', padding: '11px 24px', borderRadius: 10, background: '#0f1923', color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}>
-                💬 Napisz do kandydata
+                💬 {t('employerDashboard.modal.messageCandidate')}
               </button>
             )}
           </div>
@@ -314,6 +321,8 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const EmployerDashboard = () => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
   const { token } = useAuth();
   const navigate = useNavigate();
   const [offers, setOffers] = useState<any[]>([]);
@@ -336,7 +345,7 @@ export const EmployerDashboard = () => {
       );
       setOffers(prev => prev.map(o => o.id === offerId ? { ...o, isActive: res.data.isActive } : o));
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd zmiany statusu oferty');
+      alert(e.response?.data?.message || t('employerDashboard.toggleActiveError'));
     } finally {
       setTogglingOfferId(null);
     }
@@ -353,7 +362,7 @@ export const EmployerDashboard = () => {
       setApplications(prev => prev.map(a => a.id === applicationId ? { ...a, status } : a));
       setSelectedApp(prev => prev && prev.id === applicationId ? { ...prev, status } : prev);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd zmiany statusu');
+      alert(e.response?.data?.message || t('employerDashboard.statusChangeError'));
     } finally {
       setUpdatingStatus(false);
     }
@@ -376,7 +385,7 @@ export const EmployerDashboard = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch {
-      alert('Nie udało się pobrać CV. Kandydat mógł nie dołączyć pliku.');
+      alert(t('employerDashboard.cvDownloadError'));
     } finally {
       setDownloadingId(null);
     }
@@ -416,19 +425,19 @@ export const EmployerDashboard = () => {
         <div style={{ width: '100%', padding: '0 32px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 8 }}>Panel Pracodawcy</p>
-              <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.6rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Zarządzaj rekrutacją</h1>
+              <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 8 }}>{t('companyProfile.eyebrow')}</p>
+              <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.6rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>{t('employerDashboard.heading')}</h1>
             </div>
             <Link to="/add-offer" style={{ background: '#7dd3b0', color: '#0f1923', padding: '12px 24px', borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
-              + Nowe ogłoszenie
+              + {t('employerDashboard.newOffer')}
             </Link>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
             {[
-              { label: 'Aktywne ogłoszenia', value: loading ? '—' : offers.length, accent: '#7dd3b0' },
-              { label: 'Wszystkie aplikacje', value: loading ? '—' : applications.length, accent: '#60a5fa' },
-              { label: 'Nowe aplikacje', value: loading ? '—' : newAppsCount, accent: '#fbbf24' },
+              { label: t('employerDashboard.stats.activeListings'), value: loading ? '—' : offers.length, accent: '#7dd3b0' },
+              { label: t('employerDashboard.stats.allApplications'), value: loading ? '—' : applications.length, accent: '#60a5fa' },
+              { label: t('employerDashboard.stats.newApplications'), value: loading ? '—' : newAppsCount, accent: '#fbbf24' },
             ].map(({ label, value, accent }) => (
               <div key={label} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: '20px 24px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <p style={{ fontSize: 12, color: '#64748b', fontWeight: 500, margin: '0 0 8px' }}>{label}</p>
@@ -440,7 +449,7 @@ export const EmployerDashboard = () => {
           <div style={{ display: 'flex', gap: 4 }}>
             {(['offers', 'applications'] as const).map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '12px 24px', border: 'none', cursor: 'pointer', borderRadius: '8px 8px 0 0', fontWeight: 600, fontSize: 14, transition: 'all 0.15s', background: activeTab === tab ? '#f8f7f4' : 'transparent', color: activeTab === tab ? '#0f1923' : '#64748b' }}>
-                {tab === 'offers' ? `Ogłoszenia (${offers.length})` : `Aplikacje (${applications.length})`}
+                {tab === 'offers' ? t('employerDashboard.offersTab', { count: offers.length }) : t('employerDashboard.applicationsTab', { count: applications.length })}
               </button>
             ))}
           </div>
@@ -452,7 +461,7 @@ export const EmployerDashboard = () => {
 
         {activeTab === 'offers' && (
           loading ? <LoadingSpinner color="#0f1923" /> : offers.length === 0 ? (
-            <EmptyState icon="📭" title="Brak ogłoszeń" desc="Dodaj pierwsze ogłoszenie, aby zacząć rekrutować." action={<Link to="/add-offer" style={linkBtnStyle}>Dodaj ogłoszenie</Link>} />
+            <EmptyState icon="📭" title={t('employerDashboard.noOffers')} desc={t('employerDashboard.noOffersDetail')} action={<Link to="/add-offer" style={linkBtnStyle}>{t('employerDashboard.addOffer')}</Link>} />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {offers.map(offer => (
@@ -462,34 +471,34 @@ export const EmployerDashboard = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                         <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f1923', margin: 0 }}>{offer.title}</h3>
                         {!offer.isActive && (
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#f3f4f6', color: '#6b7280' }}>Zamknięta</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#f3f4f6', color: '#6b7280' }}>{t('employerDashboard.closedBadge')}</span>
                         )}
                         {!offer.isApproved && (
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef9c3', color: '#92400e' }}>Oczekuje na zatwierdzenie</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef9c3', color: '#92400e' }}>{t('employerDashboard.pendingApprovalBadge')}</span>
                         )}
                         {offer.isPromoted && (
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#b45309' }}>⭐ Wyróżniona</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#b45309' }}>⭐ {t('jobOfferCard.promoted')}</span>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         <span style={metaStyle}>📍 {offer.location}</span>
-                        <span style={metaStyle}>📅 {new Date(offer.createdAt).toLocaleDateString('pl-PL')}</span>
+                        <span style={metaStyle}>📅 {new Date(offer.createdAt).toLocaleDateString(dateLocale)}</span>
                         {offer.category && <span style={metaStyle}>🏷 {offer.category.name}</span>}
                       </div>
                       {offer.salaryMin && offer.salaryMax && (
                         <span style={{ display: 'inline-block', marginTop: 8, background: '#dcfce7', color: '#166534', fontSize: 13, fontWeight: 600, padding: '3px 10px', borderRadius: 6 }}>
-                          {offer.salaryMin.toLocaleString()} – {offer.salaryMax.toLocaleString()} {offer.currency}
+                          {offer.salaryMin.toLocaleString(dateLocale)} – {offer.salaryMax.toLocaleString(dateLocale)} {offer.currency}
                         </span>
                       )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ background: '#f5f3ff', borderRadius: 10, padding: '12px 20px', textAlign: 'center' }}>
                         <div style={{ fontSize: 28, fontWeight: 800, color: '#7c3aed', lineHeight: 1 }}>👁 {offer.views ?? 0}</div>
-                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>wyświetleń</div>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>{t('employerDashboard.views')}</div>
                       </div>
                       <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 20px', textAlign: 'center' }}>
                         <div style={{ fontSize: 28, fontWeight: 800, color: '#1d4ed8', lineHeight: 1 }}>{offer.applications?.length ?? 0}</div>
-                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>aplikacji</div>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>{t('employerDashboard.applicationsCount')}</div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <button
@@ -498,7 +507,7 @@ export const EmployerDashboard = () => {
                           onMouseEnter={e => { e.currentTarget.style.borderColor = '#7dd3b0'; e.currentTarget.style.color = '#0a7a5a'; }}
                           onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e5df'; e.currentTarget.style.color = '#374151'; }}
                         >
-                          ✏️ Edytuj
+                          ✏️ {t('common.edit')}
                         </button>
                         <button
                           onClick={() => handleToggleActive(offer.id)}
@@ -511,11 +520,11 @@ export const EmployerDashboard = () => {
                             opacity: togglingOfferId === offer.id ? 0.6 : 1,
                           }}
                         >
-                          {offer.isActive ? '⏸ Zamknij' : '▶ Aktywuj'}
+                          {offer.isActive ? `⏸ ${t('employerDashboard.close')}` : `▶ ${t('employerDashboard.activate')}`}
                         </button>
                         {offer.validUntil && (
                           <span style={{ fontSize: 11, color: new Date(offer.validUntil) < new Date() ? '#ef4444' : '#9ca3af', textAlign: 'center', fontWeight: 500 }}>
-                            {new Date(offer.validUntil) < new Date() ? '⚠ Wygasła' : `Ważna do ${new Date(offer.validUntil).toLocaleDateString('pl-PL')}`}
+                            {new Date(offer.validUntil) < new Date() ? `⚠ ${t('employerDashboard.expired')}` : t('employerDashboard.validUntil', { date: new Date(offer.validUntil).toLocaleDateString(dateLocale) })}
                           </span>
                         )}
                       </div>
@@ -529,7 +538,7 @@ export const EmployerDashboard = () => {
 
         {activeTab === 'applications' && (
           loading ? <LoadingSpinner color="#0f1923" /> : applications.length === 0 ? (
-            <EmptyState icon="📨" title="Brak aplikacji" desc="Gdy kandydaci zaaplikują na Twoje oferty, pojawią się tutaj." />
+            <EmptyState icon="📨" title={t('candidateDashboard.applicationHistory.noApplications')} desc={t('employerDashboard.noApplicationsDetail')} />
           ) : (
             <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               {applications.map((app, i) => (
@@ -553,7 +562,7 @@ export const EmployerDashboard = () => {
                       </p>
                       <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>
                         {app.jobOffer?.title}
-                        {app.expectedSalary && <> &nbsp;·&nbsp; <span style={{ color: '#166534', fontWeight: 600 }}>{app.expectedSalary.toLocaleString()} PLN</span></>}
+                        {app.expectedSalary && <> &nbsp;·&nbsp; <span style={{ color: '#166534', fontWeight: 600 }}>{app.expectedSalary.toLocaleString(dateLocale)} PLN</span></>}
                       </p>
                     </div>
                   </div>
@@ -561,7 +570,7 @@ export const EmployerDashboard = () => {
                     {app.conversations?.length > 0 && (
                       <span style={{ fontSize: 12, color: '#7dd3b0', fontWeight: 600 }}>💬</span>
                     )}
-                    <span style={{ fontSize: 12, color: '#9ca3af' }}>{new Date(app.appliedAt).toLocaleDateString('pl-PL')}</span>
+                    <span style={{ fontSize: 12, color: '#9ca3af' }}>{new Date(app.appliedAt).toLocaleDateString(dateLocale)}</span>
                     <StatusBadge status={app.status} />
                     <span style={{ color: '#d1d5db', fontSize: 14 }}>›</span>
                   </div>
@@ -584,13 +593,16 @@ const cardStyle: React.CSSProperties = { background: '#fff', borderRadius: 14, b
 const metaStyle: React.CSSProperties = { fontSize: 13, color: '#6b7280', display: 'inline-flex', alignItems: 'center', gap: 4 };
 const linkBtnStyle: React.CSSProperties = { display: 'inline-block', marginTop: 12, padding: '10px 24px', background: '#0f1923', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 14, textDecoration: 'none' };
 
-const LoadingSpinner = ({ color }: { color: string }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 0', gap: 12 }}>
-    <div style={{ width: 36, height: 36, border: '3px solid #e8e5df', borderTopColor: color, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    <p style={{ color: '#9ca3af', fontSize: 14 }}>Ładowanie...</p>
-  </div>
-);
+const LoadingSpinner = ({ color }: { color: string }) => {
+  const { t } = useTranslation();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 0', gap: 12 }}>
+      <div style={{ width: 36, height: 36, border: '3px solid #e8e5df', borderTopColor: color, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <p style={{ color: '#9ca3af', fontSize: 14 }}>{t('common.loading')}</p>
+    </div>
+  );
+};
 
 const EmptyState = ({ icon, title, desc, action }: { icon: string; title: string; desc: string; action?: React.ReactNode }) => (
   <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>

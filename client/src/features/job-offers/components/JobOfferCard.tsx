@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export interface JobOffer {
   id: number;
@@ -40,11 +41,13 @@ interface JobOfferCardProps {
 export const JobOfferCard = ({
   offer,
   onActionClick,
-  actionLabel = 'Zobacz ofertę',
+  actionLabel,
   isSaved = false,
   onSaveToggle,
   onReport,
 }: JobOfferCardProps) => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
   return (
     <div
       style={{
@@ -88,7 +91,7 @@ export const JobOfferCard = ({
           </Link>
           {offer.isPromoted && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fbbf24', color: '#78350f', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              ⭐ Wyróżniona
+              ⭐ {t('jobOfferCard.promoted')}
             </span>
           )}
           {offer.seniority && SENIORITY_LABELS[offer.seniority] && (
@@ -103,7 +106,7 @@ export const JobOfferCard = ({
           </Link>
         ) : (
           <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px', fontWeight: 500 }}>
-            {offer.company?.companyName || 'Brak nazwy firmy'}
+            {offer.company?.companyName || t('jobOfferCard.noCompanyName')}
           </p>
         )}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -126,11 +129,11 @@ export const JobOfferCard = ({
               fontSize: 12, padding: '3px 10px', borderRadius: 6,
               background: '#dcfce7', color: '#166534', fontWeight: 600
             }}>
-              {offer.salaryMin.toLocaleString('pl-PL')} – {offer.salaryMax.toLocaleString('pl-PL')} {offer.currency}
+              {offer.salaryMin.toLocaleString(dateLocale)} – {offer.salaryMax.toLocaleString(dateLocale)} {offer.currency}
             </span>
           ) : (
             <span style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>
-              Wynagrodzenie do negocjacji
+              {t('common.salaryNegotiable')}
             </span>
           )}
         </div>
@@ -155,7 +158,7 @@ export const JobOfferCard = ({
           {onSaveToggle && (
             <button
               onClick={e => { e.stopPropagation(); onSaveToggle(offer.id); }}
-              title={isSaved ? 'Usuń z zapisanych' : 'Zapisz ofertę'}
+              title={isSaved ? t('jobOfferCard.unsave') : t('jobOfferCard.save')}
               style={{
                 background: 'none',
                 border: 'none',
@@ -179,7 +182,7 @@ export const JobOfferCard = ({
             </button>
           )}
           <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>
-            {new Date(offer.createdAt).toLocaleDateString('pl-PL')}
+            {new Date(offer.createdAt).toLocaleDateString(dateLocale)}
           </span>
         </div>
         {onActionClick && (
@@ -195,13 +198,13 @@ export const JobOfferCard = ({
             onMouseEnter={e => (e.currentTarget.style.background = '#1e3a5f')}
             onMouseLeave={e => (e.currentTarget.style.background = '#0f1923')}
           >
-            {actionLabel} →
+            {actionLabel || t('jobOfferCard.viewOffer')} →
           </button>
         )}
         {onReport && (
           <button
             onClick={e => { e.stopPropagation(); onReport(offer.id); }}
-            title="Zgłoś ofertę"
+            title={t('jobOfferCard.reportOffer')}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 12, color: '#d1d5db', fontWeight: 500,
@@ -211,7 +214,7 @@ export const JobOfferCard = ({
             onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
             onMouseLeave={e => (e.currentTarget.style.color = '#d1d5db')}
           >
-            ⚑ Zgłoś
+            ⚑ {t('jobOfferCard.report')}
           </button>
         )}
       </div>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext';
 import { Link } from 'react-router-dom';
 
 export const LoginForm = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,7 +22,7 @@ export const LoginForm = () => {
       const { access_token, role } = response.data;
       login(access_token, role);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Błąd logowania. Sprawdź dane.');
+      setError(err.response?.data?.message || t('login.error'));
     } finally {
       setLoading(false);
     }
@@ -63,15 +65,15 @@ export const LoginForm = () => {
             <p style={{
               fontSize: 12, fontWeight: 700, letterSpacing: '0.12em',
               color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10,
-            }}>Witaj z powrotem</p>
+            }}>{t('login.welcomeBack')}</p>
             <h1 style={{
               fontSize: 32, fontWeight: 800, color: '#fff',
               letterSpacing: '-0.02em', margin: 0,
-            }}>Zaloguj się do konta</h1>
+            }}>{t('login.title')}</h1>
             <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>
-              Nie masz konta?{' '}
+              {t('login.noAccount')}{' '}
               <Link to="/register" style={{ color: '#7dd3b0', fontWeight: 600, textDecoration: 'none' }}>
-                Zarejestruj się
+                {t('login.registerLink')}
               </Link>
             </p>
           </div>
@@ -98,11 +100,11 @@ export const LoginForm = () => {
 
             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={labelStyle}>Adres e-mail</label>
+                <label style={labelStyle}>{t('common.email')}</label>
                 <input
                   type="email" required
                   value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="ty@przyklad.pl"
+                  placeholder="you@example.com"
                   style={inputStyle}
                   onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                   onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
@@ -110,7 +112,7 @@ export const LoginForm = () => {
               </div>
 
               <div>
-                <label style={labelStyle}>Hasło</label>
+                <label style={labelStyle}>{t('login.password')}</label>
                 <input
                   type="password" required
                   value={password} onChange={e => setPassword(e.target.value)}
@@ -122,7 +124,7 @@ export const LoginForm = () => {
               </div>
 
               <Link to="/forgot-password" style={{ alignSelf: 'flex-end', fontSize: 13, color: '#7dd3b0', fontWeight: 600, textDecoration: 'none' }}>
-                Zapomniałeś hasła?
+                {t('login.forgotPassword')}
               </Link>
 
               <button
@@ -141,7 +143,7 @@ export const LoginForm = () => {
                 onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88'; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
               >
-                {loading ? 'Logowanie…' : 'Zaloguj się →'}
+                {loading ? t('login.loggingIn') : t('login.submit')}
               </button>
             </form>
           </div>

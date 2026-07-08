@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 
 export const EditJobOffer = () => {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const navigate = useNavigate();
   const { offerId } = useParams<{ offerId: string }>();
@@ -45,7 +47,7 @@ export const EditJobOffer = () => {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => {
       const offer = res.data.find((o: any) => o.id === Number(offerId));
-      if (!offer) { alert('Nie znaleziono oferty.'); navigate('/'); return; }
+      if (!offer) { alert(t('jobOfferForm.notFound')); navigate('/'); return; }
       setFormData({
         title: offer.title ?? '',
         location: offer.location ?? '',
@@ -66,7 +68,7 @@ export const EditJobOffer = () => {
     setLoading(true);
     try {
       if (contractTypes.length === 0) {
-        alert('Wybierz co najmniej jedną formę współpracy.');
+        alert(t('jobOfferForm.selectContractError'));
         setLoading(false);
         return;
       }
@@ -77,7 +79,7 @@ export const EditJobOffer = () => {
       );
       navigate('/');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Błąd zapisu');
+      alert(error.response?.data?.message || t('companyProfile.saveError'));
     } finally {
       setLoading(false);
     }
@@ -104,10 +106,10 @@ export const EditJobOffer = () => {
       <div style={{ background: '#0f1923', padding: '40px 0 48px' }}>
         <div style={{ width: '100%', padding: '0 32px' }}>
           <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>
-            Panel Pracodawcy
+            {t('companyProfile.eyebrow')}
           </p>
           <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
-            Edytuj ogłoszenie
+            {t('jobOfferForm.editTitle')}
           </h1>
         </div>
       </div>
@@ -119,20 +121,20 @@ export const EditJobOffer = () => {
 
               {/* TYTUŁ */}
               <div>
-                <label style={labelStyle}>Tytuł stanowiska *</label>
-                <input required value={formData.title} onChange={set('title')} placeholder="np. Senior Frontend Developer" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+                <label style={labelStyle}>{t('jobOfferForm.positionTitle')}</label>
+                <input required value={formData.title} onChange={set('title')} placeholder={t('jobOfferForm.positionTitlePlaceholder')} style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
               </div>
 
               {/* LOKALIZACJA + KATEGORIA */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <div>
-                  <label style={labelStyle}>Lokalizacja *</label>
-                  <input required value={formData.location} onChange={set('location')} placeholder="np. Warszawa" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+                  <label style={labelStyle}>{t('jobOfferForm.locationLabel')}</label>
+                  <input required value={formData.location} onChange={set('location')} placeholder={t('companyProfile.locationPlaceholder')} style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Kategoria *</label>
+                  <label style={labelStyle}>{t('jobOfferForm.categoryLabel')}</label>
                   <select required value={formData.categoryId} onChange={set('categoryId')} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}>
-                    <option value="" disabled>Wybierz kategorię…</option>
+                    <option value="" disabled>{t('jobOfferForm.categoryPlaceholder')}</option>
                     {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
@@ -140,7 +142,7 @@ export const EditJobOffer = () => {
 
               {/* WYNAGRODZENIE */}
               <div>
-                <label style={labelStyle}>Wynagrodzenie (PLN)</label>
+                <label style={labelStyle}>{t('jobOfferForm.salaryLabel')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'center' }}>
                   <input type="number" value={formData.salaryMin} onChange={set('salaryMin')} placeholder="Min" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
                   <span style={{ color: '#9ca3af', fontWeight: 600 }}>—</span>
@@ -150,19 +152,19 @@ export const EditJobOffer = () => {
 
               {/* FORMA WSPÓŁPRACY */}
               <div>
-                <label style={labelStyle}>Forma współpracy *</label>
+                <label style={labelStyle}>{t('applicationForm.contractForm')}</label>
                 <div style={{ display: 'flex', gap: 10 }}>
                   {[
-                    { value: 'UOP', label: 'Umowa o pracę', sub: 'UOP' },
-                    { value: 'UZ',  label: 'Umowa zlecenie', sub: 'UZ' },
-                    { value: 'B2B', label: 'Kontrakt',       sub: 'B2B' },
+                    { value: 'UOP', label: t('applicationForm.contractUOP'), sub: 'UOP' },
+                    { value: 'UZ',  label: t('applicationForm.contractUZ'), sub: 'UZ' },
+                    { value: 'B2B', label: t('applicationForm.contractB2B'), sub: 'B2B' },
                   ].map(opt => {
                     const checked = contractTypes.includes(opt.value);
                     return (
                       <button key={opt.value} type="button" onClick={() => toggleContract(opt.value)} style={{ flex: 1, padding: '14px 12px', borderRadius: 10, cursor: 'pointer', border: checked ? '1.5px solid #7dd3b0' : '1.5px solid #e8e5df', background: checked ? 'rgba(125,211,176,0.08)' : '#f9f8f6', textAlign: 'left', fontFamily: 'inherit', transition: 'all 0.15s' }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: checked ? '#0a7a5a' : '#0f1923', marginBottom: 2 }}>{opt.sub}</div>
                         <div style={{ fontSize: 11, color: checked ? '#7dd3b0' : '#9ca3af' }}>{opt.label}</div>
-                        {checked && <div style={{ marginTop: 6, display: 'inline-block', background: '#7dd3b0', color: '#0f1923', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>✓ Wybrano</div>}
+                        {checked && <div style={{ marginTop: 6, display: 'inline-block', background: '#7dd3b0', color: '#0f1923', fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4 }}>✓ {t('jobOfferForm.selected')}</div>}
                       </button>
                     );
                   })}
@@ -171,9 +173,9 @@ export const EditJobOffer = () => {
 
               {/* SENIORITY + UMIEJĘTNOŚCI */}
               <div>
-                <label style={labelStyle}>Poziom doświadczenia</label>
+                <label style={labelStyle}>{t('searchBar.seniority')}</label>
                 <select value={seniority} onChange={e => setSeniority(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}>
-                  <option value="">Nie określono</option>
+                  <option value="">{t('jobOfferForm.seniorityNotSet')}</option>
                   <option value="JUNIOR">Junior</option>
                   <option value="MID">Mid</option>
                   <option value="SENIOR">Senior</option>
@@ -182,13 +184,13 @@ export const EditJobOffer = () => {
               </div>
 
               <div>
-                <label style={labelStyle}>Umiejętności / stos technologiczny <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(Enter, aby dodać)</span></label>
+                <label style={labelStyle}>{t('jobOfferForm.skillsLabel')} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>({t('jobOfferForm.skillsHint')})</span></label>
                 <input
                   type="text"
                   value={skillInput}
                   onChange={e => setSkillInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
-                  placeholder="np. React, TypeScript, Docker"
+                  placeholder={t('jobOfferForm.skillsPlaceholder')}
                   style={inputStyle}
                   onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                   onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
@@ -209,31 +211,31 @@ export const EditJobOffer = () => {
 
               {/* PRZEDŁUŻ CZAS (opcjonalnie) */}
               <div>
-                <label style={labelStyle}>Przedłuż ofertę o <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(opcjonalnie, max. 4 miesiące)</span></label>
+                <label style={labelStyle}>{t('editJobOffer.extendOffer')} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>({t('common.optional')}, {t('jobOfferForm.durationHint')})</span></label>
                 <div style={{ display: 'flex', gap: 10 }}>
                   {[1, 2, 3, 4].map(m => (
                     <button key={m} type="button" onClick={() => setDurationMonths(prev => prev === m ? 0 : m)} style={{ flex: 1, padding: '12px 8px', borderRadius: 10, cursor: 'pointer', border: durationMonths === m ? '1.5px solid #7dd3b0' : '1.5px solid #e8e5df', background: durationMonths === m ? 'rgba(125,211,176,0.08)' : '#f9f8f6', fontFamily: 'inherit', transition: 'all 0.15s', textAlign: 'center' }}>
                       <div style={{ fontSize: 18, fontWeight: 800, color: durationMonths === m ? '#0a7a5a' : '#0f1923' }}>{m}</div>
-                      <div style={{ fontSize: 11, color: durationMonths === m ? '#7dd3b0' : '#9ca3af', marginTop: 2 }}>{m === 1 ? 'miesiąc' : 'miesiące'}</div>
+                      <div style={{ fontSize: 11, color: durationMonths === m ? '#7dd3b0' : '#9ca3af', marginTop: 2 }}>{m === 1 ? t('jobOfferForm.month') : t('jobOfferForm.months')}</div>
                     </button>
                   ))}
                 </div>
-                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>Wybierz aby przesunąć datę ważności oferty od teraz.</p>
+                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>{t('editJobOffer.extendNote')}</p>
               </div>
 
               {/* OPIS */}
               <div>
-                <label style={labelStyle}>Opis stanowiska *</label>
-                <textarea required rows={8} value={formData.description} onChange={set('description')} placeholder="Opisz wymagania, obowiązki, benefity…" style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} onFocus={e => Object.assign(e.currentTarget.style, { ...inputFocusStyle, resize: 'vertical', lineHeight: '1.6' })} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, resize: 'vertical', lineHeight: '1.6' })} />
+                <label style={labelStyle}>{t('jobOfferForm.descriptionLabel')}</label>
+                <textarea required rows={8} value={formData.description} onChange={set('description')} placeholder={t('jobOfferForm.descriptionPlaceholder')} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} onFocus={e => Object.assign(e.currentTarget.style, { ...inputFocusStyle, resize: 'vertical', lineHeight: '1.6' })} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, resize: 'vertical', lineHeight: '1.6' })} />
               </div>
             </div>
 
             <div style={{ padding: '20px 40px', borderTop: '1px solid #f0ece6', background: '#faf9f7', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
               <button type="button" onClick={() => navigate('/')} style={{ padding: '11px 24px', borderRadius: 10, border: '1px solid #e2ddd6', background: 'transparent', color: '#6b7280', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Anuluj
+                {t('common.cancel')}
               </button>
               <button type="submit" disabled={loading} style={{ padding: '11px 28px', borderRadius: 10, border: 'none', background: loading ? 'rgba(125,211,176,0.5)' : '#7dd3b0', color: '#0f1923', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                {loading ? 'Zapisywanie…' : 'Zapisz zmiany'}
+                {loading ? t('common.saving') : t('common.saveChanges')}
               </button>
             </div>
           </form>

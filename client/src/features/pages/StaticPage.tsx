@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../auth/Header';
 
 export const StaticPage = () => {
+  const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const [page, setPage] = useState<{ title: string; content: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,8 +34,8 @@ export const StaticPage = () => {
           )}
           {!loading && notFound && (
             <div style={{ textAlign: 'center', padding: '32px 0' }}>
-              <p style={{ fontSize: 18, fontWeight: 700, color: '#0f1923' }}>Strona nie została znaleziona</p>
-              <Link to="/" style={{ color: '#0a7a5a', fontWeight: 600 }}>← Wróć na stronę główną</Link>
+              <p style={{ fontSize: 18, fontWeight: 700, color: '#0f1923' }}>{t('staticPage.notFound')}</p>
+              <Link to="/" style={{ color: '#0a7a5a', fontWeight: 600 }}>← {t('staticPage.backToHome')}</Link>
             </div>
           )}
           {!loading && page && (

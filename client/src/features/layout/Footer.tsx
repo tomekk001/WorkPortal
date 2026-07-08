@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 export const Footer = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -17,7 +19,7 @@ export const Footer = () => {
       setEmail('');
     } catch (err: any) {
       setStatus('error');
-      setErrorMsg(err.response?.data?.message || 'Błąd zapisu.');
+      setErrorMsg(err.response?.data?.message || t('footer.subscribeError'));
     }
   };
 
@@ -27,10 +29,10 @@ export const Footer = () => {
 
         {/* NEWSLETTER */}
         <div style={{ maxWidth: 360 }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Zapisz się do newslettera</p>
-          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 14px' }}>Nowe oferty pracy prosto na Twoją skrzynkę.</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>{t('footer.newsletterTitle')}</p>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 14px' }}>{t('footer.newsletterSubtitle')}</p>
           {status === 'done' ? (
-            <p style={{ fontSize: 13, color: '#7dd3b0', fontWeight: 600, margin: 0 }}>✓ Zapisano! Dziękujemy.</p>
+            <p style={{ fontSize: 13, color: '#7dd3b0', fontWeight: 600, margin: 0 }}>✓ {t('footer.subscribed')}</p>
           ) : (
             <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: 8 }}>
               <input
@@ -38,7 +40,7 @@ export const Footer = () => {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="twoj@email.pl"
+                placeholder="you@email.com"
                 style={{
                   flex: 1, padding: '9px 12px', borderRadius: 8,
                   border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
@@ -54,7 +56,7 @@ export const Footer = () => {
                   cursor: status === 'sending' ? 'default' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
                 }}
               >
-                {status === 'sending' ? '…' : 'Zapisz'}
+                {status === 'sending' ? '…' : t('common.save')}
               </button>
             </form>
           )}
@@ -64,17 +66,17 @@ export const Footer = () => {
         {/* LINKS */}
         <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
           <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Informacje</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>{t('footer.information')}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Link to="/p/o-nas" style={footerLinkStyle}>O nas</Link>
-              <Link to="/p/regulamin" style={footerLinkStyle}>Regulamin</Link>
-              <Link to="/p/polityka-prywatnosci" style={footerLinkStyle}>Polityka Prywatności</Link>
+              <Link to="/p/o-nas" style={footerLinkStyle}>{t('footer.about')}</Link>
+              <Link to="/p/regulamin" style={footerLinkStyle}>{t('footer.terms')}</Link>
+              <Link to="/p/polityka-prywatnosci" style={footerLinkStyle}>{t('footer.privacyPolicy')}</Link>
             </div>
           </div>
           <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Wsparcie</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>{t('footer.support')}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Link to="/kontakt" style={footerLinkStyle}>Kontakt</Link>
+              <Link to="/kontakt" style={footerLinkStyle}>{t('footer.contact')}</Link>
             </div>
           </div>
         </div>

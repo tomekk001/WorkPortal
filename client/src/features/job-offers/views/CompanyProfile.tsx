@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 
@@ -15,6 +16,7 @@ interface CompanyProfileData {
 }
 
 export const CompanyProfile = () => {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +64,7 @@ export const CompanyProfile = () => {
       });
       navigate('/');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Błąd zapisu');
+      alert(error.response?.data?.message || t('companyProfile.saveError'));
     } finally {
       setSaving(false);
     }
@@ -80,7 +82,7 @@ export const CompanyProfile = () => {
       });
       setLogoUrl(res.data.logoUrl);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Błąd wgrywania logo');
+      alert(error.response?.data?.message || t('companyProfile.logoUploadError'));
     } finally {
       setUploadingLogo(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -104,10 +106,10 @@ export const CompanyProfile = () => {
       <div style={{ background: '#0f1923', padding: '40px 0 48px' }}>
         <div style={{ width: '100%', padding: '0 32px' }}>
           <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>
-            Panel Pracodawcy
+            {t('companyProfile.eyebrow')}
           </p>
           <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>
-            Profil firmy
+            {t('header.companyProfile')}
           </h1>
         </div>
       </div>
@@ -119,7 +121,7 @@ export const CompanyProfile = () => {
 
               {/* LOGO */}
               <div>
-                <label style={labelStyle}>Logo firmy</label>
+                <label style={labelStyle}>{t('companyProfile.logo')}</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <div style={{ width: 72, height: 72, borderRadius: 14, background: '#f9f8f6', border: '1.5px solid #e8e5df', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {logoUrl ? (
@@ -134,7 +136,7 @@ export const CompanyProfile = () => {
                       htmlFor="logo-input"
                       style={{ display: 'inline-block', padding: '9px 18px', borderRadius: 8, border: '1.5px solid #e8e5df', background: '#f9f8f6', color: '#374151', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
                     >
-                      {uploadingLogo ? 'Wgrywanie…' : logoUrl ? 'Zmień logo' : 'Wgraj logo'}
+                      {uploadingLogo ? t('companyProfile.uploading') : logoUrl ? t('companyProfile.changeLogo') : t('companyProfile.uploadLogo')}
                     </label>
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '8px 0 0' }}>PNG/JPG, max 3MB</p>
                   </div>
@@ -143,8 +145,8 @@ export const CompanyProfile = () => {
 
               {/* NAZWA */}
               <div>
-                <label style={labelStyle}>Nazwa firmy *</label>
-                <input required value={formData.companyName} onChange={set('companyName')} placeholder="np. Acme Sp. z o.o." style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+                <label style={labelStyle}>{t('companyProfile.companyName')}</label>
+                <input required value={formData.companyName} onChange={set('companyName')} placeholder={t('companyProfile.companyNamePlaceholder')} style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
               </div>
 
               {/* NIP (readonly) + E-MAIL FIRMOWY */}
@@ -154,14 +156,14 @@ export const CompanyProfile = () => {
                   {nip ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', background: '#f9f8f6', border: '1.5px solid #e8e5df', borderRadius: 10 }}>
                       <span style={{ fontSize: 15, color: '#0f1923', fontWeight: 600 }}>{nip}</span>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#0a7a5a', background: 'rgba(125,211,176,0.15)', padding: '2px 8px', borderRadius: 20 }}>✓ zweryfikowany</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#0a7a5a', background: 'rgba(125,211,176,0.15)', padding: '2px 8px', borderRadius: 20 }}>✓ {t('companyProfile.verified')}</span>
                     </div>
                   ) : (
-                    <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Brak danych NIP.</p>
+                    <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>{t('companyProfile.noNip')}</p>
                   )}
                 </div>
                 <div>
-                  <label style={labelStyle}>E-mail firmowy</label>
+                  <label style={labelStyle}>{t('register.companyEmail')}</label>
                   <input type="email" value={formData.companyEmail} onChange={set('companyEmail')} placeholder="kontakt@twojafirma.pl" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
                 </div>
               </div>
@@ -169,28 +171,28 @@ export const CompanyProfile = () => {
               {/* LOKALIZACJA + STRONA */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <div>
-                  <label style={labelStyle}>Lokalizacja</label>
-                  <input value={formData.location} onChange={set('location')} placeholder="np. Warszawa" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
+                  <label style={labelStyle}>{t('common.location')}</label>
+                  <input value={formData.location} onChange={set('location')} placeholder={t('companyProfile.locationPlaceholder')} style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Strona internetowa</label>
+                  <label style={labelStyle}>{t('companyProfile.website')}</label>
                   <input value={formData.website} onChange={set('website')} placeholder="https://…" style={inputStyle} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)} />
                 </div>
               </div>
 
               {/* OPIS */}
               <div>
-                <label style={labelStyle}>Opis działalności <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(wyświetlany przy ofertach)</span></label>
-                <textarea rows={6} value={formData.description} onChange={set('description')} placeholder="Krótko o firmie…" style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} onFocus={e => Object.assign(e.currentTarget.style, { ...inputFocusStyle, resize: 'vertical', lineHeight: '1.6' })} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, resize: 'vertical', lineHeight: '1.6' })} />
+                <label style={labelStyle}>{t('companyProfile.description')} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>({t('companyProfile.descriptionHint')})</span></label>
+                <textarea rows={6} value={formData.description} onChange={set('description')} placeholder={t('companyProfile.descriptionPlaceholder')} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} onFocus={e => Object.assign(e.currentTarget.style, { ...inputFocusStyle, resize: 'vertical', lineHeight: '1.6' })} onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, resize: 'vertical', lineHeight: '1.6' })} />
               </div>
             </div>
 
             <div style={{ padding: '20px 40px', borderTop: '1px solid #f0ece6', background: '#faf9f7', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
               <button type="button" onClick={() => navigate('/')} style={{ padding: '11px 24px', borderRadius: 10, border: '1px solid #e2ddd6', background: 'transparent', color: '#6b7280', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Anuluj
+                {t('common.cancel')}
               </button>
               <button type="submit" disabled={saving} style={{ padding: '11px 28px', borderRadius: 10, border: 'none', background: saving ? 'rgba(125,211,176,0.5)' : '#7dd3b0', color: '#0f1923', fontWeight: 800, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                {saving ? 'Zapisywanie…' : 'Zapisz zmiany'}
+                {saving ? t('common.saving') : t('common.saveChanges')}
               </button>
             </div>
           </form>

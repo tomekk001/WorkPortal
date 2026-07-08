@@ -1,17 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { LanguageSwitcher } from '../layout/LanguageSwitcher';
 
 export const Header = () => {
+  const { t } = useTranslation();
   const { logout, role, token } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const roleLabel = role === 'EMPLOYER' ? 'Pracodawca' : 'Kandydat';
-  const roleInitial = role === 'EMPLOYER' ? 'P' : 'K';
+  const roleLabel = role === 'EMPLOYER' ? t('header.roleEmployer') : t('header.roleCandidate');
+  const roleInitial = role === 'EMPLOYER' ? t('header.roleEmployerInitial') : t('header.roleCandidateInitial');
   const roleColor = role === 'EMPLOYER' ? '#7dd3b0' : '#60a5fa';
 
   // Zamknij menu po kliknięciu poza nim
@@ -90,7 +93,7 @@ export const Header = () => {
               onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
               onMouseLeave={e => (e.currentTarget.style.color = '#94a3b8')}
             >
-              Moje ogłoszenia
+              {t('header.myOffers')}
             </button>
             <button
               onClick={() => navigate('/add-offer')}
@@ -102,10 +105,13 @@ export const Header = () => {
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(125,211,176,0.2)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'rgba(125,211,176,0.12)')}
             >
-              + Nowe ogłoszenie
+              + {t('header.newOffer')}
             </button>
           </nav>
         )}
+
+        {/* JĘZYK */}
+        <LanguageSwitcher />
 
         {/* NOTIFICATION BELL */}
         <button
@@ -119,7 +125,7 @@ export const Header = () => {
           }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-          title="Wiadomości"
+          title={t('header.messages')}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -167,7 +173,7 @@ export const Header = () => {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>
                 {roleLabel}
               </div>
-              <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.2 }}>Moje konto</div>
+              <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.2 }}>{t('header.myAccount')}</div>
             </div>
             {/* Chevron */}
             <svg
@@ -214,20 +220,20 @@ export const Header = () => {
               {role === 'EMPLOYER' && (
                 <DropdownItem
                   icon="📋"
-                  label="Moje ogłoszenia"
+                  label={t('header.myOffers')}
                   onClick={() => { navigate('/'); setMenuOpen(false); }}
                 />
               )}
               {role === 'EMPLOYER' && (
                 <DropdownItem
                   icon="🏢"
-                  label="Profil firmy"
+                  label={t('header.companyProfile')}
                   onClick={() => { navigate('/company-profile'); setMenuOpen(false); }}
                 />
               )}
               <DropdownItem
                 icon="➕"
-                label={role === 'EMPLOYER' ? 'Nowe ogłoszenie' : 'Przeglądaj oferty'}
+                label={role === 'EMPLOYER' ? t('header.newOffer') : t('header.browseOffers')}
                 onClick={() => { navigate(role === 'EMPLOYER' ? '/add-offer' : '/'); setMenuOpen(false); }}
               />
 
@@ -247,7 +253,7 @@ export const Header = () => {
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span style={{ fontSize: 14 }}>🚪</span>
-                Wyloguj się
+                {t('header.logout')}
               </button>
             </div>
           )}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Category {
   id: number;
@@ -10,13 +11,7 @@ interface SearchBarProps {
   onSearch: (title: string, location: string, categoryId: string, skill: string, seniority: string) => void;
 }
 
-const SENIORITY_OPTIONS = [
-  { value: '', label: 'Wszystkie poziomy' },
-  { value: 'JUNIOR', label: 'Junior' },
-  { value: 'MID', label: 'Mid' },
-  { value: 'SENIOR', label: 'Senior' },
-  { value: 'LEAD', label: 'Lead' },
-];
+const SENIORITY_VALUES = ['', 'JUNIOR', 'MID', 'SENIOR', 'LEAD'];
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -43,6 +38,14 @@ const labelStyle: React.CSSProperties = {
 };
 
 export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
+  const { t } = useTranslation();
+  const seniorityLabels: Record<string, string> = {
+    '': t('searchBar.allLevels'),
+    JUNIOR: 'Junior',
+    MID: 'Mid',
+    SENIOR: 'Senior',
+    LEAD: 'Lead',
+  };
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -67,10 +70,10 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
       <div>
-        <label style={labelStyle}>Stanowisko</label>
+        <label style={labelStyle}>{t('searchBar.position')}</label>
         <input
           type="text"
-          placeholder="np. Frontend Developer"
+          placeholder={t('searchBar.positionPlaceholder')}
           value={title}
           onChange={e => setTitle(e.target.value)}
           onFocus={handleFocus}
@@ -80,7 +83,7 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
       </div>
 
       <div>
-        <label style={labelStyle}>Kategoria</label>
+        <label style={labelStyle}>{t('common.category')}</label>
         <select
           value={categoryId}
           onChange={e => setCategoryId(e.target.value)}
@@ -88,7 +91,7 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
           onBlur={handleBlur}
           style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
         >
-          <option value="">Wszystkie kategorie</option>
+          <option value="">{t('searchBar.allCategories')}</option>
           {categories.map(cat => (
             <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
           ))}
@@ -96,10 +99,10 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
       </div>
 
       <div>
-        <label style={labelStyle}>Umiejętność</label>
+        <label style={labelStyle}>{t('searchBar.skill')}</label>
         <input
           type="text"
-          placeholder="np. React"
+          placeholder={t('searchBar.skillPlaceholder')}
           value={skill}
           onChange={e => setSkill(e.target.value)}
           onFocus={handleFocus}
@@ -109,7 +112,7 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
       </div>
 
       <div>
-        <label style={labelStyle}>Poziom doświadczenia</label>
+        <label style={labelStyle}>{t('searchBar.seniority')}</label>
         <select
           value={seniority}
           onChange={e => setSeniority(e.target.value)}
@@ -117,14 +120,14 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
           onBlur={handleBlur}
           style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
         >
-          {SENIORITY_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          {SENIORITY_VALUES.map(value => (
+            <option key={value} value={value}>{seniorityLabels[value]}</option>
           ))}
         </select>
       </div>
 
       <div>
-        <label style={labelStyle}>Lokalizacja</label>
+        <label style={labelStyle}>{t('common.location')}</label>
         <select
           value={location}
           onChange={e => setLocation(e.target.value)}
@@ -132,14 +135,14 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
           onBlur={handleBlur}
           style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
         >
-          <option value="">Cała Polska</option>
+          <option value="">{t('searchBar.allPoland')}</option>
           <option value="Warszawa">Warszawa</option>
           <option value="Kraków">Kraków</option>
           <option value="Wrocław">Wrocław</option>
           <option value="Gdańsk">Gdańsk</option>
           <option value="Poznań">Poznań</option>
           <option value="Łódź">Łódź</option>
-          <option value="Zdalnie">Zdalnie</option>
+          <option value="Zdalnie">{t('searchBar.remote')}</option>
         </select>
       </div>
 
@@ -162,7 +165,7 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
         onMouseEnter={e => (e.currentTarget.style.background = '#1e3a5f')}
         onMouseLeave={e => (e.currentTarget.style.background = '#0f1923')}
       >
-        Szukaj
+        {t('common.search')}
       </button>
     </form>
   );

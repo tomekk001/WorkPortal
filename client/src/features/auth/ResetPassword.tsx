@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 const labelStyle: React.CSSProperties = {
@@ -17,6 +18,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export const ResetPassword = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token') || '';
@@ -33,7 +35,7 @@ export const ResetPassword = () => {
       await axios.post('http://localhost:3000/auth/reset-password', { token, newPassword });
       setDone(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Błąd resetowania hasła.');
+      setError(err.response?.data?.message || t('resetPassword.error'));
     } finally {
       setLoading(false);
     }
@@ -51,22 +53,22 @@ export const ResetPassword = () => {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
           <div style={{ marginBottom: 32 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>Reset hasła</p>
-            <h1 style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>Ustaw nowe hasło</h1>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>{t('resetPassword.eyebrow')}</p>
+            <h1 style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>{t('resetPassword.title')}</h1>
           </div>
 
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 20, padding: 32, boxShadow: '0 24px 48px rgba(0,0,0,0.3)' }}>
             {!token ? (
-              <p style={{ color: '#fca5a5', fontSize: 14 }}>Brak tokenu resetu w linku. Poproś o nowy link.</p>
+              <p style={{ color: '#fca5a5', fontSize: 14 }}>{t('resetPassword.noToken')}</p>
             ) : done ? (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
-                <p style={{ color: '#fff', fontWeight: 700, fontSize: 16, margin: '0 0 8px' }}>Hasło zmienione</p>
+                <p style={{ color: '#fff', fontWeight: 700, fontSize: 16, margin: '0 0 8px' }}>{t('resetPassword.success')}</p>
                 <button
                   onClick={() => navigate('/login')}
                   style={{ marginTop: 12, background: '#7dd3b0', color: '#0f1923', border: 'none', borderRadius: 10, padding: '12px 24px', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
-                  Przejdź do logowania →
+                  {t('resetPassword.goToLogin')}
                 </button>
               </div>
             ) : (
@@ -77,15 +79,15 @@ export const ResetPassword = () => {
                   </div>
                 )}
                 <div>
-                  <label style={labelStyle}>Nowe hasło</label>
-                  <input type="password" required minLength={6} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="min. 6 znaków" style={inputStyle} />
+                  <label style={labelStyle}>{t('resetPassword.newPassword')}</label>
+                  <input type="password" required minLength={6} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t('resetPassword.passwordPlaceholder')} style={inputStyle} />
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
                   style={{ marginTop: 8, background: loading ? 'rgba(125,211,176,0.5)' : '#7dd3b0', color: '#0f1923', border: 'none', borderRadius: 10, padding: '14px', fontWeight: 800, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
                 >
-                  {loading ? 'Zapisywanie…' : 'Ustaw nowe hasło →'}
+                  {loading ? t('common.saving') : t('resetPassword.submit')}
                 </button>
               </form>
             )}

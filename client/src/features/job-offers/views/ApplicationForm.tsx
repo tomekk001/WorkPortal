@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 import axios from 'axios';
@@ -45,6 +46,7 @@ const sectionTitleStyle: React.CSSProperties = {
 };
 
 export const ApplicationForm = () => {
+  const { t } = useTranslation();
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -86,11 +88,11 @@ export const ApplicationForm = () => {
     if (file) {
       const maxSize = fileType === 'cv' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        alert(`Plik jest za duży. Max. ${fileType === 'cv' ? '10 MB' : '5 MB'}`);
+        alert(t('applicationForm.fileTooLarge', { size: fileType === 'cv' ? '10 MB' : '5 MB' }));
         return;
       }
       if (fileType === 'cv' && file.type !== 'application/pdf') {
-        alert('CV musi być w formacie PDF');
+        alert(t('applicationForm.cvMustBePdf'));
         return;
       }
       setFiles({ ...files, [fileType]: file });
@@ -100,11 +102,11 @@ export const ApplicationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.phone.trim()) {
-      alert('Wypełnij wszystkie wymagane pola.');
+      alert(t('applicationForm.fillRequired'));
       return;
     }
     if (!formData.startDate || contractTypes.length === 0 || !formData.expectedSalary || !formData.agreedToTerms) {
-      alert('Wypełnij wszystkie wymagane pola i zaakceptuj warunki.');
+      alert(t('applicationForm.fillRequiredAndAccept'));
       return;
     }
     setLoading(true);
@@ -125,10 +127,10 @@ export const ApplicationForm = () => {
       await axios.post('http://localhost:3000/job-offers/submit-application', fd, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Aplikacja przesłana pomyślnie!');
+      alert(t('applicationForm.submitSuccess'));
       navigate('/');
     } catch (error: any) {
-      alert(`Błąd: ${error.response?.data?.message || error.message}`);
+      alert(`${t('common.error')}: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
     }
@@ -137,7 +139,7 @@ export const ApplicationForm = () => {
   if (!jobOfferId) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#dc2626', fontSize: 16 }}>Błąd: Brak ID oferty</p>
+        <p style={{ color: '#dc2626', fontSize: 16 }}>{t('applicationForm.missingOfferId')}</p>
       </div>
     );
   }
@@ -154,16 +156,16 @@ export const ApplicationForm = () => {
             display: 'inline-flex', alignItems: 'center', gap: 6,
             marginBottom: 16, textDecoration: 'none'
           }}>
-            ← Wróć do ogłoszeń
+            ← {t('applicationForm.backToOffers')}
           </Link>
           <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 8 }}>
-            Formularz aplikacji
+            {t('applicationForm.eyebrow')}
           </p>
           <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.4rem)', fontWeight: 800, color: '#fff', margin: '0 0 8px', letterSpacing: '-0.02em' }}>
-            Aplikuj na stanowisko
+            {t('applicationForm.title')}
           </h1>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
-            Wypełnij formularz, aby przesłać swoją kandydaturę do pracodawcy.
+            {t('applicationForm.subtitle')}
           </p>
         </div>
       </div>
@@ -182,14 +184,14 @@ export const ApplicationForm = () => {
             <div style={sectionStyle}>
               <p style={sectionTitleStyle}>
                 <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>1</span>
-                Dane osobowe
+                {t('applicationForm.personalData')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 {[
-                  { name: 'firstName', label: 'Imię *', placeholder: 'Twoje imię', type: 'text' },
-                  { name: 'lastName', label: 'Nazwisko *', placeholder: 'Twoje nazwisko', type: 'text' },
-                  { name: 'email', label: 'Email *', placeholder: 'adres@email.com', type: 'email' },
-                  { name: 'phone', label: 'Telefon *', placeholder: '+48 123 456 789', type: 'tel' },
+                  { name: 'firstName', label: t('applicationForm.firstName'), placeholder: t('applicationForm.firstNamePlaceholder'), type: 'text' },
+                  { name: 'lastName', label: t('applicationForm.lastName'), placeholder: t('applicationForm.lastNamePlaceholder'), type: 'text' },
+                  { name: 'email', label: t('applicationForm.emailLabel'), placeholder: t('applicationForm.emailPlaceholder'), type: 'email' },
+                  { name: 'phone', label: t('applicationForm.phoneLabel'), placeholder: t('applicationForm.phonePlaceholder'), type: 'tel' },
                 ].map(field => (
                   <div key={field.name}>
                     <label style={labelStyle}>{field.label}</label>
@@ -213,12 +215,12 @@ export const ApplicationForm = () => {
             <div style={sectionStyle}>
               <p style={sectionTitleStyle}>
                 <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>2</span>
-                Dokumenty
+                {t('applicationForm.documents')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 {[
-                  { key: 'cv' as const, label: 'CV (PDF, max. 10 MB) *', accept: '.pdf' },
-                  { key: 'additional' as const, label: 'Dodatkowy plik (max. 5 MB)', accept: '*' },
+                  { key: 'cv' as const, label: t('applicationForm.cvLabel'), accept: '.pdf' },
+                  { key: 'additional' as const, label: t('applicationForm.additionalFileLabel'), accept: '*' },
                 ].map(({ key, label, accept }) => (
                   <div key={key}>
                     <label style={labelStyle}>{label}</label>
@@ -231,7 +233,7 @@ export const ApplicationForm = () => {
                         transition: 'all 0.15s',
                       }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: files[key] ? '#166534' : '#6b7280', margin: 0 }}>
-                          {files[key] ? `✓ ${files[key]!.name}` : 'Kliknij aby wybrać plik'}
+                          {files[key] ? `✓ ${files[key]!.name}` : t('applicationForm.clickToChoose')}
                         </p>
                       </div>
                     </label>
@@ -244,18 +246,18 @@ export const ApplicationForm = () => {
             <div style={sectionStyle}>
               <p style={sectionTitleStyle}>
                 <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>3</span>
-                Warunki pracy
+                {t('applicationForm.workConditions')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
                 <div>
-                  <label style={labelStyle}>Termin rozpoczęcia *</label>
+                  <label style={labelStyle}>{t('applicationForm.startDate')}</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {[
-                      { value: 'immediately', label: 'Od zaraz' },
-                      { value: '2weeks', label: '2 tygodnie' },
-                      { value: '1month', label: '1 miesiąc' },
-                      { value: '3months', label: '3 miesiące' },
-                      { value: 'more3months', label: 'Powyżej 3 miesięcy' },
+                      { value: 'immediately', label: t('applicationForm.startImmediately') },
+                      { value: '2weeks', label: t('applicationForm.start2weeks') },
+                      { value: '1month', label: t('applicationForm.start1month') },
+                      { value: '3months', label: t('applicationForm.start3months') },
+                      { value: 'more3months', label: t('applicationForm.startMore3months') },
                     ].map(opt => (
                       <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                         <input
@@ -270,12 +272,12 @@ export const ApplicationForm = () => {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Forma współpracy *</label>
+                  <label style={labelStyle}>{t('applicationForm.contractForm')}</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {[
-                      { value: 'UOP', label: 'Umowa o pracę', sub: 'UOP' },
-                      { value: 'UZ',  label: 'Umowa zlecenie', sub: 'UZ' },
-                      { value: 'B2B', label: 'Kontrakt', sub: 'B2B' },
+                      { value: 'UOP', label: t('applicationForm.contractUOP'), sub: 'UOP' },
+                      { value: 'UZ',  label: t('applicationForm.contractUZ'), sub: 'UZ' },
+                      { value: 'B2B', label: t('applicationForm.contractB2B'), sub: 'B2B' },
                     ].map(opt => {
                       const checked = contractTypes.includes(opt.value);
                       return (
@@ -310,15 +312,15 @@ export const ApplicationForm = () => {
             <div style={sectionStyle}>
               <p style={sectionTitleStyle}>
                 <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>4</span>
-                Oczekiwania finansowe
+                {t('applicationForm.financialExpectations')}
               </p>
               <div style={{ maxWidth: 280 }}>
-                <label style={labelStyle}>Oczekiwane wynagrodzenie brutto (PLN/mies.) *</label>
+                <label style={labelStyle}>{t('applicationForm.expectedSalary')}</label>
                 <input
                   type="number" name="expectedSalary"
                   value={formData.expectedSalary}
                   onChange={handleInputChange}
-                  placeholder="np. 15 000"
+                  placeholder={t('applicationForm.expectedSalaryPlaceholder')}
                   required style={inputStyle}
                   onFocus={e => { e.target.style.borderColor = '#0f1923'; e.target.style.background = '#fff'; }}
                   onBlur={e => { e.target.style.borderColor = '#e8e5df'; e.target.style.background = '#f8f7f4'; }}
@@ -330,12 +332,12 @@ export const ApplicationForm = () => {
             <div style={sectionStyle}>
               <p style={sectionTitleStyle}>
                 <span style={{ background: '#0f1923', color: '#7dd3b0', borderRadius: 6, width: 24, height: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>5</span>
-                Wiadomość do pracodawcy
+                {t('applicationForm.messageToEmployer')}
               </p>
               <textarea
                 name="message" value={formData.message}
                 onChange={handleInputChange}
-                placeholder="Napisz coś o sobie, swoim doświadczeniu lub dlaczego chcesz pracować w tej firmie..."
+                placeholder={t('applicationForm.messagePlaceholder')}
                 rows={5}
                 style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }}
                 onFocus={e => { e.target.style.borderColor = '#0f1923'; e.target.style.background = '#fff'; }}
@@ -356,7 +358,7 @@ export const ApplicationForm = () => {
                   style={{ width: 18, height: 18, marginTop: 2, accentColor: '#0f1923', flexShrink: 0 }}
                 />
                 <span style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.5 }}>
-                  Zapoznałem/am się z treścią Klauzuli Informacyjnej dotyczącej przetwarzania danych osobowych i wyrażam zgodę na ich przetwarzanie w celu przeprowadzenia rekrutacji. *
+                  {t('applicationForm.consent')}
                 </span>
               </label>
 
@@ -366,7 +368,7 @@ export const ApplicationForm = () => {
                   fontSize: 14, fontWeight: 600, color: '#6b7280', textDecoration: 'none',
                   transition: 'all 0.15s',
                 }}>
-                  Anuluj
+                  {t('common.cancel')}
                 </Link>
                 <button
                   type="submit"
@@ -380,7 +382,7 @@ export const ApplicationForm = () => {
                   onMouseEnter={e => { if (!loading) (e.currentTarget.style.background = '#1e3a5f'); }}
                   onMouseLeave={e => { if (!loading) (e.currentTarget.style.background = '#0f1923'); }}
                 >
-                  {loading ? 'Wysyłanie...' : 'Wyślij aplikację →'}
+                  {loading ? t('common.sending') : t('applicationForm.submit')}
                 </button>
               </div>
             </div>

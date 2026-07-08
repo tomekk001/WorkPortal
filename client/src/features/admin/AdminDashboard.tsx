@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { Header } from '../auth/Header';
 
@@ -20,13 +21,22 @@ interface Stats {
   pendingReports: number;
 }
 
-const STATUS_META = {
-  PENDING:  { label: 'Oczekujące', bg: '#fef9c3', color: '#92400e' },
-  REVIEWED: { label: 'W trakcie',  bg: '#dbeafe', color: '#1e40af' },
-  RESOLVED: { label: 'Rozwiązane', bg: '#dcfce7', color: '#166534' },
-};
-
 export const AdminDashboard = () => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
+  const STATUS_META = {
+    PENDING:  { label: t('admin.reports.statusPending'),  bg: '#fef9c3', color: '#92400e' },
+    REVIEWED: { label: t('admin.reports.statusReviewed'), bg: '#dbeafe', color: '#1e40af' },
+    RESOLVED: { label: t('admin.reports.statusResolved'), bg: '#dcfce7', color: '#166534' },
+  };
+  const REPORT_REASON_LABELS: Record<string, string> = {
+    'Podejrzana oferta': t('candidateDashboard.reportReasons.suspicious'),
+    'Fałszywe informacje': t('candidateDashboard.reportReasons.fakeInfo'),
+    'Nieodpowiednie treści': t('candidateDashboard.reportReasons.inappropriate'),
+    'Duplikat ogłoszenia': t('candidateDashboard.reportReasons.duplicate'),
+    'Błędne dane kontaktowe': t('candidateDashboard.reportReasons.wrongContact'),
+    'Inne': t('candidateDashboard.reportReasons.other'),
+  };
   const { token } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
@@ -105,7 +115,7 @@ export const AdminDashboard = () => {
       await axios.patch(`http://localhost:3000/admin/contact-messages/${id}/read`, {}, { headers });
       setContactMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'READ' } : m));
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd');
+      alert(e.response?.data?.message || t('common.error'));
     } finally {
       setMarkingReadId(null);
     }
@@ -123,7 +133,7 @@ export const AdminDashboard = () => {
       setPages(prev => prev.map(p => p.slug === slug ? res.data : p));
       setEditingPageSlug(null);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd zapisu strony');
+      alert(e.response?.data?.message || t('admin.pages.saveError'));
     } finally {
       setSavingPage(false);
     }
@@ -134,10 +144,10 @@ export const AdminDashboard = () => {
     setCreatingCategory(true);
     try {
       const res = await axios.post('http://localhost:3000/job-offers/categories', { name: newCategoryName.trim() }, { headers });
-      setCategories(prev => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name, 'pl')));
+      setCategories(prev => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name, i18n.language)));
       setNewCategoryName('');
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd dodawania kategorii');
+      alert(e.response?.data?.message || t('admin.categories.addError'));
     } finally {
       setCreatingCategory(false);
     }
@@ -156,20 +166,20 @@ export const AdminDashboard = () => {
       setCategories(prev => prev.map(c => c.id === id ? res.data : c));
       setEditingCategoryId(null);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd zapisu kategorii');
+      alert(e.response?.data?.message || t('admin.categories.saveError'));
     } finally {
       setCategoryActionId(null);
     }
   };
 
   const deleteCategory = async (id: number) => {
-    if (!window.confirm('Usunąć tę kategorię?')) return;
+    if (!window.confirm(t('admin.categories.deleteConfirm'))) return;
     setCategoryActionId(id);
     try {
       await axios.delete(`http://localhost:3000/job-offers/categories/${id}`, { headers });
       setCategories(prev => prev.filter(c => c.id !== id));
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd usuwania kategorii');
+      alert(e.response?.data?.message || t('admin.categories.deleteError'));
     } finally {
       setCategoryActionId(null);
     }
@@ -181,7 +191,7 @@ export const AdminDashboard = () => {
       await axios.patch(`http://localhost:3000/admin/offers/${offerId}/approve`, {}, { headers });
       setOffers(prev => prev.map(o => o.id === offerId ? { ...o, isApproved: true } : o));
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd zatwierdzania oferty');
+      alert(e.response?.data?.message || t('admin.offers.approveError'));
     } finally {
       setOfferActionId(null);
     }
@@ -193,7 +203,7 @@ export const AdminDashboard = () => {
       const res = await axios.patch(`http://localhost:3000/admin/offers/${offerId}/promote`, {}, { headers });
       setOffers(prev => prev.map(o => o.id === offerId ? { ...o, isPromoted: res.data.isPromoted } : o));
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd wyróżniania oferty');
+      alert(e.response?.data?.message || t('admin.offers.promoteError'));
     } finally {
       setOfferActionId(null);
     }
@@ -205,20 +215,20 @@ export const AdminDashboard = () => {
       const res = await axios.patch(`http://localhost:3000/admin/users/${userId}/ban`, {}, { headers });
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, isBanned: res.data.isBanned } : u));
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd blokowania użytkownika');
+      alert(e.response?.data?.message || t('admin.users.banError'));
     } finally {
       setUserActionId(null);
     }
   };
 
   const deleteUser = async (userId: number) => {
-    if (!window.confirm('Czy na pewno usunąć to konto? Tej operacji nie można cofnąć.')) return;
+    if (!window.confirm(t('admin.users.deleteConfirm'))) return;
     setUserActionId(userId);
     try {
       await axios.delete(`http://localhost:3000/admin/users/${userId}`, { headers });
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd usuwania użytkownika');
+      alert(e.response?.data?.message || t('admin.users.deleteError'));
     } finally {
       setUserActionId(null);
     }
@@ -241,7 +251,7 @@ export const AdminDashboard = () => {
         return { ...prev, pendingReports: prev.pendingReports + (isPending ? 1 : 0) - (wasPending ? 1 : 0) };
       });
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd aktualizacji');
+      alert(e.response?.data?.message || t('admin.reports.updateError'));
     } finally {
       setUpdatingId(null);
     }
@@ -259,20 +269,20 @@ export const AdminDashboard = () => {
       <div style={{ background: '#0f1923', padding: '40px 0 0' }}>
         <div style={{ padding: '0 32px' }}>
           <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#f59e0b', textTransform: 'uppercase', marginBottom: 8 }}>
-            Panel Administratora
+            {t('admin.eyebrow')}
           </p>
           <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.6rem)', fontWeight: 800, color: '#fff', margin: '0 0 32px', letterSpacing: '-0.02em' }}>
-            Zarządzanie platformą
+            {t('admin.heading')}
           </h1>
 
           {/* STATS */}
           {stats && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
               {[
-                { label: 'Użytkownicy',       value: stats.totalUsers,    accent: '#7dd3b0' },
-                { label: 'Ogłoszenia',         value: stats.totalOffers,   accent: '#60a5fa' },
-                { label: 'Wszystkie zgłoszenia', value: stats.totalReports, accent: '#f59e0b' },
-                { label: 'Oczekujące',         value: stats.pendingReports, accent: '#ef4444' },
+                { label: t('admin.stats.users'),       value: stats.totalUsers,    accent: '#7dd3b0' },
+                { label: t('admin.stats.offers'),         value: stats.totalOffers,   accent: '#60a5fa' },
+                { label: t('admin.stats.allReports'), value: stats.totalReports, accent: '#f59e0b' },
+                { label: t('admin.stats.pending'),         value: stats.pendingReports, accent: '#ef4444' },
               ].map(({ label, value, accent }) => (
                 <div key={label} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 12, padding: '20px 24px', border: '1px solid rgba(255,255,255,0.08)' }}>
                   <p style={{ fontSize: 12, color: '#64748b', fontWeight: 500, margin: '0 0 8px' }}>{label}</p>
@@ -285,12 +295,12 @@ export const AdminDashboard = () => {
           {/* TABS */}
           <div style={{ display: 'flex', gap: 4 }}>
             {([
-              { key: 'reports', label: `Zgłoszenia${stats ? ` (${stats.pendingReports} nowych)` : ''}` },
-              { key: 'offers',  label: 'Ogłoszenia' },
-              { key: 'categories', label: 'Kategorie' },
-              { key: 'pages',   label: 'Strony CMS' },
-              { key: 'messages', label: `Wiadomości${contactMessages.filter(m => m.status === 'NEW').length > 0 ? ` (${contactMessages.filter(m => m.status === 'NEW').length})` : ''}` },
-              { key: 'users',   label: 'Użytkownicy' },
+              { key: 'reports', label: stats ? t('admin.tabs.reportsWithCount', { count: stats.pendingReports }) : t('admin.tabs.reports') },
+              { key: 'offers',  label: t('admin.tabs.offers') },
+              { key: 'categories', label: t('admin.tabs.categories') },
+              { key: 'pages',   label: t('admin.tabs.pages') },
+              { key: 'messages', label: contactMessages.filter(m => m.status === 'NEW').length > 0 ? t('admin.tabs.messagesWithCount', { count: contactMessages.filter(m => m.status === 'NEW').length }) : t('admin.tabs.messages') },
+              { key: 'users',   label: t('admin.tabs.users') },
             ] as const).map(tab => (
               <button
                 key={tab.key}
@@ -320,9 +330,9 @@ export const AdminDashboard = () => {
             {/* Filter bar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>Zgłoszenia nadużyć</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('admin.reports.title')}</h2>
                 <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
-                  {loading ? 'Ładowanie…' : `${filteredReports.length} zgłoszeń`}
+                  {loading ? t('admin.reports.loading') : t('admin.reports.count', { count: filteredReports.length })}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -338,7 +348,7 @@ export const AdminDashboard = () => {
                       color: statusFilter === s ? '#fff' : '#6b7280',
                     }}
                   >
-                    {s === 'ALL' ? 'Wszystkie' : STATUS_META[s].label}
+                    {s === 'ALL' ? t('admin.reports.filterAll') : STATUS_META[s].label}
                   </button>
                 ))}
               </div>
@@ -354,7 +364,7 @@ export const AdminDashboard = () => {
             {!loading && filteredReports.length === 0 && (
               <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-                <p style={{ color: '#374151', fontWeight: 600, fontSize: 16 }}>Brak zgłoszeń</p>
+                <p style={{ color: '#374151', fontWeight: 600, fontSize: 16 }}>{t('admin.reports.noReports')}</p>
               </div>
             )}
 
@@ -380,12 +390,12 @@ export const AdminDashboard = () => {
                               {STATUS_META[report.status].label}
                             </span>
                             <span style={{ fontSize: 12, color: '#9ca3af' }}>
-                              #{report.id} · {new Date(report.createdAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              #{report.id} · {new Date(report.createdAt).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
 
                           <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: 15, color: '#0f1923' }}>
-                            {report.reason}
+                            {REPORT_REASON_LABELS[report.reason] ?? report.reason}
                           </p>
                           {report.description && (
                             <p style={{ margin: '0 0 12px', fontSize: 13, color: '#6b7280', lineHeight: 1.5 }}>
@@ -395,14 +405,14 @@ export const AdminDashboard = () => {
 
                           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
                             <div>
-                              <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Zgłoszone ogłoszenie</p>
+                              <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>{t('admin.reports.reportedOffer')}</p>
                               <p style={{ fontSize: 13, color: '#374151', margin: 0, fontWeight: 600 }}>
                                 {report.jobOffer.title}
                                 <span style={{ fontWeight: 400, color: '#9ca3af' }}> · {report.jobOffer.company.companyName}</span>
                               </p>
                             </div>
                             <div>
-                              <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Zgłaszający</p>
+                              <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>{t('admin.reports.reportedBy')}</p>
                               <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>
                                 {report.user.firstName} {report.user.lastName}
                                 <span style={{ color: '#9ca3af' }}> · {report.user.email}</span>
@@ -413,7 +423,7 @@ export const AdminDashboard = () => {
 
                         {/* STATUS ACTIONS */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-                          <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Zmień status</p>
+                          <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>{t('admin.reports.changeStatus')}</p>
                           {(['PENDING', 'REVIEWED', 'RESOLVED'] as const).map(s => (
                             <button
                               key={s}
@@ -448,9 +458,9 @@ export const AdminDashboard = () => {
         {activeTab === 'offers' && (
           <div>
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>Ogłoszenia</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('admin.tabs.offers')}</h2>
               <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
-                {offers.length} ogłoszeń · {offers.filter(o => !o.isApproved).length} oczekuje na zatwierdzenie
+                {t('admin.offers.count', { count: offers.length, pending: offers.filter(o => !o.isApproved).length })}
               </p>
             </div>
 
@@ -475,10 +485,10 @@ export const AdminDashboard = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                         <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#0f1923' }}>{offer.title}</p>
                         {!offer.isApproved && (
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef9c3', color: '#92400e' }}>Oczekuje</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef9c3', color: '#92400e' }}>{t('admin.offers.pendingBadge')}</span>
                         )}
                         {!offer.isActive && (
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#f3f4f6', color: '#6b7280' }}>Zamknięta</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#f3f4f6', color: '#6b7280' }}>{t('employerDashboard.closedBadge')}</span>
                         )}
                       </div>
                       <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
@@ -493,7 +503,7 @@ export const AdminDashboard = () => {
                           disabled={offerActionId === offer.id}
                           onChange={() => togglePromoted(offer.id)}
                         />
-                        ⭐ Wyróżniona
+                        ⭐ {t('jobOfferCard.promoted')}
                       </label>
                       {!offer.isApproved && (
                         <button
@@ -506,7 +516,7 @@ export const AdminDashboard = () => {
                             opacity: offerActionId === offer.id ? 0.6 : 1,
                           }}
                         >
-                          ✓ Zatwierdź
+                          ✓ {t('admin.offers.approve')}
                         </button>
                       )}
                     </div>
@@ -521,15 +531,15 @@ export const AdminDashboard = () => {
         {activeTab === 'categories' && (
           <div>
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>Kategorie</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{categories.length} kategorii</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('admin.tabs.categories')}</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{t('admin.categories.count', { count: categories.length })}</p>
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 20, maxWidth: 420 }}>
               <input
                 value={newCategoryName}
                 onChange={e => setNewCategoryName(e.target.value)}
-                placeholder="Nazwa nowej kategorii…"
+                placeholder={t('admin.categories.newPlaceholder')}
                 style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e8e5df', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
                 onKeyDown={e => { if (e.key === 'Enter') createCategory(); }}
               />
@@ -538,7 +548,7 @@ export const AdminDashboard = () => {
                 disabled={creatingCategory || !newCategoryName.trim()}
                 style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#7dd3b0', color: '#0f1923', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
               >
-                + Dodaj
+                + {t('admin.categories.add')}
               </button>
             </div>
 
@@ -561,14 +571,14 @@ export const AdminDashboard = () => {
                         onKeyDown={e => { if (e.key === 'Enter') saveEditCategory(cat.id); }}
                         autoFocus
                       />
-                      <button onClick={() => saveEditCategory(cat.id)} disabled={categoryActionId === cat.id} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#dcfce7', color: '#166534', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Zapisz</button>
-                      <button onClick={() => setEditingCategoryId(null)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#f3f4f6', color: '#6b7280', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Anuluj</button>
+                      <button onClick={() => saveEditCategory(cat.id)} disabled={categoryActionId === cat.id} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#dcfce7', color: '#166534', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('common.save')}</button>
+                      <button onClick={() => setEditingCategoryId(null)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#f3f4f6', color: '#6b7280', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('common.cancel')}</button>
                     </>
                   ) : (
                     <>
                       <span style={{ flex: 1, fontSize: 14, color: '#0f1923', fontWeight: 600 }}>{cat.name}</span>
-                      <button onClick={() => startEditCategory(cat)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Edytuj</button>
-                      <button onClick={() => deleteCategory(cat.id)} disabled={categoryActionId === cat.id} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#991b1b', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>Usuń</button>
+                      <button onClick={() => startEditCategory(cat)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('common.edit')}</button>
+                      <button onClick={() => deleteCategory(cat.id)} disabled={categoryActionId === cat.id} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#991b1b', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>{t('common.delete')}</button>
                     </>
                   )}
                 </div>
@@ -581,8 +591,8 @@ export const AdminDashboard = () => {
         {activeTab === 'pages' && (
           <div>
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>Strony CMS</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Regulamin, O nas, Polityka Prywatności</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('admin.tabs.pages')}</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{t('admin.pages.subtitle')}</p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 640 }}>
@@ -602,9 +612,9 @@ export const AdminDashboard = () => {
                         style={{ padding: '10px 12px', borderRadius: 8, border: '1.5px solid #e8e5df', fontSize: 14, fontFamily: 'inherit', outline: 'none', resize: 'vertical', lineHeight: 1.6 }}
                       />
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                        <button onClick={() => setEditingPageSlug(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e8e5df', background: 'transparent', color: '#6b7280', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Anuluj</button>
+                        <button onClick={() => setEditingPageSlug(null)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e8e5df', background: 'transparent', color: '#6b7280', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{t('common.cancel')}</button>
                         <button onClick={() => savePage(page.slug)} disabled={savingPage} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: '#7dd3b0', color: '#0f1923', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-                          {savingPage ? 'Zapisywanie…' : 'Zapisz'}
+                          {savingPage ? t('common.saving') : t('common.save')}
                         </button>
                       </div>
                     </div>
@@ -615,7 +625,7 @@ export const AdminDashboard = () => {
                         <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>/p/{page.slug}</p>
                         <p style={{ margin: '8px 0 0', fontSize: 13, color: '#6b7280', maxWidth: 460, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.content}</p>
                       </div>
-                      <button onClick={() => startEditPage(page)} style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>Edytuj</button>
+                      <button onClick={() => startEditPage(page)} style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t('common.edit')}</button>
                     </div>
                   )}
                 </div>
@@ -628,14 +638,14 @@ export const AdminDashboard = () => {
         {activeTab === 'messages' && (
           <div>
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>Wiadomości z formularza kontaktowego</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{contactMessages.length} wiadomości</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('admin.messages.title')}</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{t('admin.messages.count', { count: contactMessages.length })}</p>
             </div>
 
             {contactMessages.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>📬</div>
-                <p style={{ color: '#374151', fontWeight: 600, fontSize: 16 }}>Brak wiadomości</p>
+                <p style={{ color: '#374151', fontWeight: 600, fontSize: 16 }}>{t('chat.noMessages')}</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -652,9 +662,9 @@ export const AdminDashboard = () => {
                       <div style={{ flex: 1, minWidth: 260 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
                           {msg.status === 'NEW' && (
-                            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef9c3', color: '#92400e' }}>Nowa</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef9c3', color: '#92400e' }}>{t('admin.messages.newBadge')}</span>
                           )}
-                          <span style={{ fontSize: 12, color: '#9ca3af' }}>{new Date(msg.createdAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          <span style={{ fontSize: 12, color: '#9ca3af' }}>{new Date(msg.createdAt).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                         <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: 15, color: '#0f1923' }}>{msg.subject}</p>
                         <p style={{ margin: '0 0 8px', fontSize: 13, color: '#6b7280' }}>{msg.name} · {msg.email}</p>
@@ -666,7 +676,7 @@ export const AdminDashboard = () => {
                           disabled={markingReadId === msg.id}
                           style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: '#f1f5f9', color: '#374151', fontWeight: 600, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
-                          Oznacz jako przeczytane
+                          {t('admin.messages.markRead')}
                         </button>
                       )}
                     </div>
@@ -681,8 +691,8 @@ export const AdminDashboard = () => {
         {activeTab === 'users' && (
           <div>
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>Użytkownicy</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{users.length} kont</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('admin.tabs.users')}</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{t('admin.users.count', { count: users.length })}</p>
             </div>
 
             {users.length === 0 ? (
@@ -693,7 +703,7 @@ export const AdminDashboard = () => {
               <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', overflow: 'hidden' }}>
                 {/* Header */}
                 <div className="rwd-table-grid rwd-table-header" style={{ display: 'grid', gridTemplateColumns: '1fr 140px 100px 80px 200px', padding: '12px 24px', background: '#faf9f7', borderBottom: '1px solid #f0ece6' }}>
-                  {['Użytkownik', 'Firma / Rola', 'Data rejestracji', 'Aplikacje', 'Akcje'].map(h => (
+                  {[t('admin.users.tableUser'), t('admin.users.tableCompanyRole'), t('admin.users.tableRegistrationDate'), t('admin.users.tableApplications'), t('admin.users.tableActions')].map(h => (
                     <span key={h} style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af' }}>{h}</span>
                   ))}
                 </div>
@@ -721,7 +731,7 @@ export const AdminDashboard = () => {
                         <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9ca3af' }}>{user.email}</p>
                         {user.isBanned && (
                           <span style={{ display: 'inline-block', marginTop: 4, padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: '#fee2e2', color: '#991b1b' }}>
-                            Zablokowany
+                            {t('admin.users.bannedBadge')}
                           </span>
                         )}
                       </div>
@@ -734,7 +744,7 @@ export const AdminDashboard = () => {
                         )}
                       </div>
                       <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
-                        {new Date(user.createdAt).toLocaleDateString('pl-PL')}
+                        {new Date(user.createdAt).toLocaleDateString(dateLocale)}
                       </p>
                       <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#374151', textAlign: 'center' }}>
                         {user._count?.applications ?? 0}
@@ -751,7 +761,7 @@ export const AdminDashboard = () => {
                             opacity: userActionId === user.id || user.role === 'ADMIN' ? 0.5 : 1,
                           }}
                         >
-                          {user.isBanned ? 'Odblokuj' : 'Zablokuj'}
+                          {user.isBanned ? t('admin.users.unban') : t('admin.users.ban')}
                         </button>
                         <button
                           onClick={() => deleteUser(user.id)}
@@ -763,7 +773,7 @@ export const AdminDashboard = () => {
                             opacity: userActionId === user.id || user.role === 'ADMIN' ? 0.5 : 1,
                           }}
                         >
-                          Usuń
+                          {t('common.delete')}
                         </button>
                       </div>
                     </div>

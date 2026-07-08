@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
 const FREE_EMAIL_DOMAINS = ['gmail.com', 'wp.pl', 'o2.pl', 'interia.pl', 'onet.pl', 'yahoo.com', 'outlook.com', 'hotmail.com'];
@@ -7,6 +8,7 @@ const FREE_EMAIL_DOMAINS = ['gmail.com', 'wp.pl', 'o2.pl', 'interia.pl', 'onet.p
 type NipStatus = 'idle' | 'checking' | 'valid' | 'invalid';
 
 export const RegisterForm = () => {
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +35,7 @@ export const RegisterForm = () => {
     const digits = value.replace(/[^0-9]/g, '');
     if (digits.length !== 10) {
       setNipStatus('idle');
-      setNipMessage(digits.length > 0 ? 'NIP musi mieć 10 cyfr.' : '');
+      setNipMessage(digits.length > 0 ? t('register.nipLength') : '');
       setNipCompanyInfo(null);
       return;
     }
@@ -49,13 +51,13 @@ export const RegisterForm = () => {
         setCompanyName(prev => prev.trim() ? prev : res.data.name);
       } else {
         setNipStatus('invalid');
-        setNipMessage(res.data.message || 'NIP nieprawidłowy.');
+        setNipMessage(res.data.message || t('register.nipInvalid'));
         setNipCompanyInfo(null);
       }
     } catch {
       if (seq !== nipCheckSeq.current) return;
       setNipStatus('invalid');
-      setNipMessage('Nie udało się zweryfikować NIP. Spróbuj ponownie.');
+      setNipMessage(t('register.nipCheckFailed'));
       setNipCompanyInfo(null);
     }
   };
@@ -71,7 +73,7 @@ export const RegisterForm = () => {
       });
       setSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Błąd podczas rejestracji');
+      setError(err.response?.data?.message || t('register.error'));
     } finally {
       setLoading(false);
     }
@@ -124,10 +126,10 @@ export const RegisterForm = () => {
                 fontSize: 28, margin: '0 auto 20px',
               }}>✓</div>
               <h2 style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.02em' }}>
-                Konto zostało utworzone!
+                {t('register.successTitle')}
               </h2>
               <p style={{ fontSize: 15, color: '#64748b', margin: '0 0 32px' }}>
-                Możesz teraz zalogować się i korzystać z platformy.
+                {t('register.successSubtitle')}
               </p>
               <button
                 onClick={() => navigate('/login')}
@@ -138,7 +140,7 @@ export const RegisterForm = () => {
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
-                Przejdź do logowania →
+                {t('register.goToLogin')}
               </button>
             </div>
           ) : (
@@ -148,15 +150,15 @@ export const RegisterForm = () => {
                 <p style={{
                   fontSize: 12, fontWeight: 700, letterSpacing: '0.12em',
                   color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10,
-                }}>Nowe konto</p>
+                }}>{t('register.newAccount')}</p>
                 <h1 style={{
                   fontSize: 32, fontWeight: 800, color: '#fff',
                   letterSpacing: '-0.02em', margin: 0,
-                }}>Zarejestruj się</h1>
+                }}>{t('register.title')}</h1>
                 <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>
-                  Masz już konto?{' '}
+                  {t('register.haveAccount')}{' '}
                   <Link to="/login" style={{ color: '#7dd3b0', fontWeight: 600, textDecoration: 'none' }}>
-                    Zaloguj się
+                    {t('login.submitPlain')}
                   </Link>
                 </p>
               </div>
@@ -184,11 +186,11 @@ export const RegisterForm = () => {
 
                   {/* ROLE SELECTOR */}
                   <div>
-                    <label style={labelStyle}>Jestem…</label>
+                    <label style={labelStyle}>{t('register.iAm')}</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       {([
-                        { value: 'CANDIDATE', icon: '🎯', label: 'Kandydatem', sub: 'Szukam pracy' },
-                        { value: 'EMPLOYER',  icon: '🏢', label: 'Pracodawcą', sub: 'Szukam pracownika' },
+                        { value: 'CANDIDATE', icon: '🎯', label: t('register.candidate'), sub: t('register.candidateSub') },
+                        { value: 'EMPLOYER',  icon: '🏢', label: t('register.employer'), sub: t('register.employerSub') },
                       ] as const).map(opt => (
                         <button
                           key={opt.value}
@@ -222,22 +224,22 @@ export const RegisterForm = () => {
                   {/* NAME ROW */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div>
-                      <label style={labelStyle}>Imię</label>
+                      <label style={labelStyle}>{t('register.firstName')}</label>
                       <input
                         type="text" required
                         value={firstName} onChange={e => setFirstName(e.target.value)}
-                        placeholder="Jan"
+                        placeholder="John"
                         style={inputStyle}
                         onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                         onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
                       />
                     </div>
                     <div>
-                      <label style={labelStyle}>Nazwisko</label>
+                      <label style={labelStyle}>{t('register.lastName')}</label>
                       <input
                         type="text" required
                         value={lastName} onChange={e => setLastName(e.target.value)}
-                        placeholder="Kowalski"
+                        placeholder="Smith"
                         style={inputStyle}
                         onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                         onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
@@ -249,13 +251,13 @@ export const RegisterForm = () => {
                   {role === 'EMPLOYER' && (
                     <>
                       <div>
-                        <label style={labelStyle}>NIP firmy</label>
+                        <label style={labelStyle}>{t('register.nip')}</label>
                         <input
                           type="text" required inputMode="numeric" maxLength={10}
                           value={nip}
                           onChange={e => setNip(e.target.value.replace(/[^0-9]/g, ''))}
                           onBlur={e => checkNip(e.target.value)}
-                          placeholder="np. 5260250995"
+                          placeholder="e.g. 5260250995"
                           style={{
                             ...inputStyle,
                             border: nipStatus === 'valid' ? '1px solid rgba(125,211,176,0.6)'
@@ -265,11 +267,11 @@ export const RegisterForm = () => {
                           onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                         />
                         {nipStatus === 'checking' && (
-                          <p style={{ fontSize: 12, color: '#94a3b8', margin: '6px 0 0' }}>Sprawdzanie w wykazie podatników VAT…</p>
+                          <p style={{ fontSize: 12, color: '#94a3b8', margin: '6px 0 0' }}>{t('register.nipChecking')}</p>
                         )}
                         {nipStatus === 'valid' && nipCompanyInfo && (
                           <div style={{ marginTop: 8, padding: '10px 12px', borderRadius: 8, background: 'rgba(125,211,176,0.1)', border: '1px solid rgba(125,211,176,0.25)' }}>
-                            <p style={{ fontSize: 12, color: '#7dd3b0', fontWeight: 700, margin: 0 }}>✓ Zweryfikowano: {nipCompanyInfo.name}</p>
+                            <p style={{ fontSize: 12, color: '#7dd3b0', fontWeight: 700, margin: 0 }}>✓ {t('register.nipVerified', { name: nipCompanyInfo.name })}</p>
                             {nipCompanyInfo.address && (
                               <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>{nipCompanyInfo.address}</p>
                             )}
@@ -281,11 +283,11 @@ export const RegisterForm = () => {
                       </div>
 
                       <div>
-                        <label style={labelStyle}>Nazwa firmy</label>
+                        <label style={labelStyle}>{t('register.companyName')}</label>
                         <input
                           type="text" required
                           value={companyName} onChange={e => setCompanyName(e.target.value)}
-                          placeholder="Acme Sp. z o.o."
+                          placeholder="Acme Inc."
                           style={inputStyle}
                           onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                           onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
@@ -293,18 +295,18 @@ export const RegisterForm = () => {
                       </div>
 
                       <div>
-                        <label style={labelStyle}>E-mail firmowy</label>
+                        <label style={labelStyle}>{t('register.companyEmail')}</label>
                         <input
                           type="email" required
                           value={companyEmail} onChange={e => setCompanyEmail(e.target.value)}
-                          placeholder="kontakt@twojafirma.pl"
+                          placeholder="contact@yourcompany.com"
                           style={inputStyle}
                           onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                           onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
                         />
                         {companyEmailIsFree && (
                           <p style={{ fontSize: 12, color: '#fbbf24', margin: '6px 0 0' }}>
-                            Zwykle firmy używają adresu na własnej domenie — możesz kontynuować, jeśli to celowe.
+                            {t('register.freeEmailWarning')}
                           </p>
                         )}
                       </div>
@@ -312,11 +314,11 @@ export const RegisterForm = () => {
                   )}
 
                   <div>
-                    <label style={labelStyle}>Adres e-mail</label>
+                    <label style={labelStyle}>{t('common.email')}</label>
                     <input
                       type="email" required
                       value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="ty@przyklad.pl"
+                      placeholder="you@example.com"
                       style={inputStyle}
                       onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                       onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
@@ -324,11 +326,11 @@ export const RegisterForm = () => {
                   </div>
 
                   <div>
-                    <label style={labelStyle}>Hasło</label>
+                    <label style={labelStyle}>{t('login.password')}</label>
                     <input
                       type="password" required minLength={6}
                       value={password} onChange={e => setPassword(e.target.value)}
-                      placeholder="min. 6 znaków"
+                      placeholder={t('register.passwordPlaceholder')}
                       style={inputStyle}
                       onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                       onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
@@ -351,7 +353,7 @@ export const RegisterForm = () => {
                     onMouseEnter={e => { if (!submitDisabled) e.currentTarget.style.opacity = '0.88'; }}
                     onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                   >
-                    {loading ? 'Tworzenie konta…' : role === 'EMPLOYER' && nipStatus !== 'valid' ? 'Zweryfikuj NIP, aby kontynuować' : 'Utwórz konto →'}
+                    {loading ? t('register.creating') : role === 'EMPLOYER' && nipStatus !== 'valid' ? t('register.verifyNipFirst') : t('register.submit')}
                   </button>
                 </form>
               </div>

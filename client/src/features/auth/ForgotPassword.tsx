@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 const labelStyle: React.CSSProperties = {
@@ -17,6 +18,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export const ForgotPassword = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -44,31 +46,31 @@ export const ForgotPassword = () => {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px' }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
           <div style={{ marginBottom: 32 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>Reset hasła</p>
-            <h1 style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>Zapomniałeś hasła?</h1>
-            <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>Podaj e-mail, a wyślemy link do resetu hasła.</p>
+            <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 10 }}>{t('forgotPassword.eyebrow')}</p>
+            <h1 style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>{t('forgotPassword.title')}</h1>
+            <p style={{ fontSize: 15, color: '#64748b', marginTop: 8 }}>{t('forgotPassword.subtitle')}</p>
           </div>
 
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 20, padding: 32, boxShadow: '0 24px 48px rgba(0,0,0,0.3)' }}>
             {done ? (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>✉️</div>
-                <p style={{ color: '#fff', fontWeight: 700, fontSize: 16, margin: '0 0 8px' }}>Sprawdź swoją skrzynkę</p>
-                <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>Jeśli konto istnieje, wysłaliśmy link do resetu hasła.</p>
-                <Link to="/login" style={{ display: 'inline-block', marginTop: 20, color: '#7dd3b0', fontWeight: 600, textDecoration: 'none' }}>← Wróć do logowania</Link>
+                <p style={{ color: '#fff', fontWeight: 700, fontSize: 16, margin: '0 0 8px' }}>{t('forgotPassword.checkInbox')}</p>
+                <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>{t('forgotPassword.checkInboxDetail')}</p>
+                <Link to="/login" style={{ display: 'inline-block', marginTop: 20, color: '#7dd3b0', fontWeight: 600, textDecoration: 'none' }}>← {t('forgotPassword.backToLogin')}</Link>
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={labelStyle}>Adres e-mail</label>
-                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="ty@przyklad.pl" style={inputStyle} />
+                  <label style={labelStyle}>{t('common.email')}</label>
+                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" style={inputStyle} />
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
                   style={{ marginTop: 8, background: loading ? 'rgba(125,211,176,0.5)' : '#7dd3b0', color: '#0f1923', border: 'none', borderRadius: 10, padding: '14px', fontWeight: 800, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
                 >
-                  {loading ? 'Wysyłanie…' : 'Wyślij link resetu →'}
+                  {loading ? t('common.sending') : t('forgotPassword.submit')}
                 </button>
               </form>
             )}

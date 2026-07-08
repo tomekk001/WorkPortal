@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { SearchBar } from '../components/SearchBar';
 import { JobOfferCard, type JobOffer } from '../components/JobOfferCard';
 import { useAuth } from '../../auth/AuthContext';
@@ -26,6 +27,8 @@ interface Conversation {
 const ConversationChat = ({ conv, token, myId, onBack }: {
   conv: Conversation; token: string; myId: number; onBack: () => void;
 }) => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
   const [messages, setMessages] = useState<Message[]>(conv.messages);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -53,7 +56,7 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
       setMessages(prev => [...prev, res.data]);
       setInput('');
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd wysyłania');
+      alert(e.response?.data?.message || t('chat.sendError'));
     } finally {
       setSending(false);
     }
@@ -79,7 +82,7 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, background: '#faf9f7' }}>
         {messages.length === 0 && (
-          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, margin: 'auto 0' }}>Brak wiadomości</p>
+          <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, margin: 'auto 0' }}>{t('chat.noMessages')}</p>
         )}
         {messages.map(msg => {
           const isMe = msg.sender.id === myId;
@@ -95,7 +98,7 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
               }}>
                 <p style={{ margin: 0 }}>{msg.content}</p>
                 <p style={{ margin: '4px 0 0', fontSize: 11, color: isMe ? 'rgba(255,255,255,0.45)' : '#9ca3af' }}>
-                  {new Date(msg.createdAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.createdAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>
@@ -110,7 +113,7 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-          placeholder="Napisz odpowiedź… (Enter = wyślij)"
+          placeholder={t('chat.inputPlaceholder')}
           rows={2}
           style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e8e5df', background: '#fff', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none' }}
         />
@@ -125,7 +128,7 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
             fontFamily: 'inherit', transition: 'all 0.15s',
           }}
         >
-          {sending ? '…' : 'Wyślij'}
+          {sending ? '…' : t('common.send')}
         </button>
       </div>
     </div>
@@ -145,13 +148,6 @@ interface CandidateApplication {
   };
 }
 
-const STATUS_LABELS: Record<CandidateApplication['status'], string> = {
-  NEW: 'Wysłane',
-  REVIEWING: 'W trakcie oceny',
-  REJECTED: 'Odrzucone',
-  HIRED: 'Zaakceptowane',
-};
-
 const STATUS_COLORS: Record<CandidateApplication['status'], { bg: string; color: string }> = {
   NEW: { bg: '#eff6ff', color: '#3b82f6' },
   REVIEWING: { bg: '#fefce8', color: '#ca8a04' },
@@ -160,6 +156,14 @@ const STATUS_COLORS: Record<CandidateApplication['status'], { bg: string; color:
 };
 
 const ApplicationHistoryTab = ({ token }: { token: string }) => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
+  const STATUS_LABELS: Record<CandidateApplication['status'], string> = {
+    NEW: t('candidateDashboard.status.new'),
+    REVIEWING: t('candidateDashboard.status.reviewing'),
+    REJECTED: t('candidateDashboard.status.rejected'),
+    HIRED: t('candidateDashboard.status.hired'),
+  };
   const [applications, setApplications] = useState<CandidateApplication[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -182,8 +186,8 @@ const ApplicationHistoryTab = ({ token }: { token: string }) => {
     return (
       <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-        <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak aplikacji</p>
-        <p style={{ color: '#9ca3af', fontSize: 14 }}>Nie aplikowałeś jeszcze na żadną ofertę.</p>
+        <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>{t('candidateDashboard.applicationHistory.noApplications')}</p>
+        <p style={{ color: '#9ca3af', fontSize: 14 }}>{t('candidateDashboard.applicationHistory.noApplicationsDetail')}</p>
       </div>
     );
   }
@@ -192,7 +196,12 @@ const ApplicationHistoryTab = ({ token }: { token: string }) => {
     <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* Table header */}
       <div className="rwd-table-grid rwd-table-header" style={{ display: 'grid', gridTemplateColumns: '1fr 180px 140px 130px', gap: 0, padding: '12px 24px', borderBottom: '1px solid #f0ece6', background: '#faf9f7' }}>
-        {['Oferta', 'Firma', 'Data wysłania', 'Status'].map(h => (
+        {[
+          t('candidateDashboard.applicationHistory.tableOffer'),
+          t('candidateDashboard.applicationHistory.tableCompany'),
+          t('candidateDashboard.applicationHistory.tableDate'),
+          t('candidateDashboard.applicationHistory.tableStatus'),
+        ].map(h => (
           <span key={h} style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af' }}>{h}</span>
         ))}
       </div>
@@ -222,7 +231,7 @@ const ApplicationHistoryTab = ({ token }: { token: string }) => {
 
             {/* Date */}
             <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
-              {new Date(app.appliedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+              {new Date(app.appliedAt).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </p>
 
             {/* Status badge */}
@@ -240,6 +249,8 @@ const ApplicationHistoryTab = ({ token }: { token: string }) => {
 };
 
 const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === 'en' ? 'en-US' : 'pl-PL';
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Conversation | null>(null);
@@ -267,8 +278,8 @@ const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
     return (
       <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
-        <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak wiadomości</p>
-        <p style={{ color: '#9ca3af', fontSize: 14 }}>Gdy pracodawca napisze do Ciebie, wiadomości pojawią się tutaj.</p>
+        <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>{t('candidateDashboard.messages.noConversations')}</p>
+        <p style={{ color: '#9ca3af', fontSize: 14 }}>{t('candidateDashboard.messages.noConversationsDetail')}</p>
       </div>
     );
   }
@@ -303,7 +314,7 @@ const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
                   {conv.employer.firstName} {conv.employer.lastName}
                 </p>
                 <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>
-                  {lastMsg ? new Date(lastMsg.createdAt).toLocaleDateString('pl-PL') : ''}
+                  {lastMsg ? new Date(lastMsg.createdAt).toLocaleDateString(dateLocale) : ''}
                 </span>
               </div>
               {conv.application && (
@@ -313,7 +324,7 @@ const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
               )}
               {lastMsg && (
                 <p style={{ fontSize: 13, color: isUnread ? '#0f1923' : '#9ca3af', margin: 0, fontWeight: isUnread ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {lastMsg.sender.id === myId ? 'Ty: ' : ''}{lastMsg.content}
+                  {lastMsg.sender.id === myId ? `${t('candidateDashboard.messages.you')} ` : ''}{lastMsg.content}
                 </p>
               )}
             </div>
@@ -329,6 +340,7 @@ const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
 };
 
 export const CandidateDashboard = () => {
+  const { t, i18n } = useTranslation();
   const [offers, setOffers] = useState<JobOffer[]>([]);
   const [totalOffers, setTotalOffers] = useState(0);
   const [loadingOffers, setLoadingOffers] = useState(false);
@@ -424,10 +436,10 @@ export const CandidateDashboard = () => {
   }, []);
 
   const sortOptions = [
-    { value: 'newest', label: 'Od najnowszych' },
-    { value: 'oldest', label: 'Od najstarszych' },
-    { value: 'salary', label: 'Najwyższe wynagrodzenie' },
-    { value: 'alpha',  label: 'Alfabetycznie (A–Z)' },
+    { value: 'newest', label: t('candidateDashboard.sort.newest') },
+    { value: 'oldest', label: t('candidateDashboard.sort.oldest') },
+    { value: 'salary', label: t('candidateDashboard.sort.salary') },
+    { value: 'alpha',  label: t('candidateDashboard.sort.alpha') },
   ] as const;
 
   const sortedOffers = [...offers].sort((a, b) => {
@@ -435,7 +447,7 @@ export const CandidateDashboard = () => {
       case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       case 'salary': return (b.salaryMax ?? b.salaryMin ?? -1) - (a.salaryMax ?? a.salaryMin ?? -1);
-      case 'alpha':  return a.title.localeCompare(b.title, 'pl');
+      case 'alpha':  return a.title.localeCompare(b.title, i18n.language);
     }
   });
 
@@ -464,7 +476,7 @@ export const CandidateDashboard = () => {
       );
       setReportDone(true);
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Błąd podczas zgłaszania.');
+      alert(e.response?.data?.message || t('candidateDashboard.reportModal.sendError'));
     } finally {
       setReportSending(false);
     }
@@ -475,12 +487,12 @@ export const CandidateDashboard = () => {
   };
 
   const REPORT_REASONS = [
-    'Podejrzana oferta',
-    'Fałszywe informacje',
-    'Nieodpowiednie treści',
-    'Duplikat ogłoszenia',
-    'Błędne dane kontaktowe',
-    'Inne',
+    { value: 'Podejrzana oferta', label: t('candidateDashboard.reportReasons.suspicious') },
+    { value: 'Fałszywe informacje', label: t('candidateDashboard.reportReasons.fakeInfo') },
+    { value: 'Nieodpowiednie treści', label: t('candidateDashboard.reportReasons.inappropriate') },
+    { value: 'Duplikat ogłoszenia', label: t('candidateDashboard.reportReasons.duplicate') },
+    { value: 'Błędne dane kontaktowe', label: t('candidateDashboard.reportReasons.wrongContact') },
+    { value: 'Inne', label: t('candidateDashboard.reportReasons.other') },
   ];
 
   return (
@@ -509,10 +521,10 @@ export const CandidateDashboard = () => {
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
                 <div style={{ fontSize: 44, marginBottom: 16 }}>✅</div>
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f1923', margin: '0 0 8px' }}>
-                  Zgłoszenie wysłane
+                  {t('candidateDashboard.reportModal.done')}
                 </h3>
                 <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>
-                  Dziękujemy. Administrator sprawdzi ofertę i podejmie odpowiednie działania.
+                  {t('candidateDashboard.reportModal.doneDetail')}
                 </p>
                 <button
                   onClick={closeReport}
@@ -522,7 +534,7 @@ export const CandidateDashboard = () => {
                     fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
-                  Zamknij
+                  {t('common.close')}
                 </button>
               </div>
             ) : (
@@ -530,10 +542,10 @@ export const CandidateDashboard = () => {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
                   <div>
                     <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f1923', margin: '0 0 4px' }}>
-                      Zgłoś ofertę
+                      {t('candidateDashboard.reportModal.title')}
                     </h3>
                     <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
-                      Pomóż nam utrzymać jakość ogłoszeń
+                      {t('candidateDashboard.reportModal.subtitle')}
                     </p>
                   </div>
                   <button
@@ -546,29 +558,29 @@ export const CandidateDashboard = () => {
 
                 <div style={{ marginBottom: 16 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                    Powód zgłoszenia *
+                    {t('candidateDashboard.reportModal.reasonLabel')}
                   </label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {REPORT_REASONS.map(reason => (
                       <label
-                        key={reason}
+                        key={reason.value}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 10,
                           padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
-                          border: `1.5px solid ${reportReason === reason ? '#ef4444' : '#e8e5df'}`,
-                          background: reportReason === reason ? '#fff5f5' : '#faf9f7',
+                          border: `1.5px solid ${reportReason === reason.value ? '#ef4444' : '#e8e5df'}`,
+                          background: reportReason === reason.value ? '#fff5f5' : '#faf9f7',
                           transition: 'all 0.12s',
                         }}
                       >
                         <input
                           type="radio"
                           name="reason"
-                          value={reason}
-                          checked={reportReason === reason}
-                          onChange={() => setReportReason(reason)}
+                          value={reason.value}
+                          checked={reportReason === reason.value}
+                          onChange={() => setReportReason(reason.value)}
                           style={{ accentColor: '#ef4444' }}
                         />
-                        <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{reason}</span>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{reason.label}</span>
                       </label>
                     ))}
                   </div>
@@ -576,12 +588,12 @@ export const CandidateDashboard = () => {
 
                 <div style={{ marginBottom: 24 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                    Dodatkowy opis (opcjonalnie)
+                    {t('candidateDashboard.reportModal.descLabel')}
                   </label>
                   <textarea
                     value={reportDesc}
                     onChange={e => setReportDesc(e.target.value)}
-                    placeholder="Opisz dokładniej co jest nie tak z tą ofertą…"
+                    placeholder={t('candidateDashboard.reportModal.descPlaceholder')}
                     rows={3}
                     maxLength={500}
                     style={{
@@ -606,7 +618,7 @@ export const CandidateDashboard = () => {
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
                   >
-                    Anuluj
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={submitReport}
@@ -620,7 +632,7 @@ export const CandidateDashboard = () => {
                       fontFamily: 'inherit', transition: 'all 0.15s',
                     }}
                   >
-                    {reportSending ? 'Wysyłanie…' : 'Wyślij zgłoszenie'}
+                    {reportSending ? t('common.sending') : t('candidateDashboard.reportModal.submit')}
                   </button>
                 </div>
               </>
@@ -633,23 +645,23 @@ export const CandidateDashboard = () => {
       <div style={{ background: '#0f1923', color: '#fff', padding: '48px 0 0' }}>
         <div style={{ width: '100%', padding: '0 32px' }}>
           <p style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.12em', color: '#7dd3b0', textTransform: 'uppercase', marginBottom: 12 }}>
-            WorkPortal — Twoja platforma kariery
+            {t('candidateDashboard.heroEyebrow')}
           </p>
           <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, lineHeight: 1.1, margin: '0 0 16px', letterSpacing: '-0.02em' }}>
-            Znajdź pracę,<br />
-            <span style={{ color: '#7dd3b0' }}>która Cię nakręca.</span>
+            {t('candidateDashboard.heroTitle1')}<br />
+            <span style={{ color: '#7dd3b0' }}>{t('candidateDashboard.heroTitle2')}</span>
           </h1>
           <p style={{ fontSize: 17, color: '#94a3b8', margin: '0 0 32px', maxWidth: 480 }}>
-            {totalOffers} aktywnych ofert od sprawdzonych pracodawców.
+            {t('candidateDashboard.activeOffers', { count: totalOffers })}
           </p>
 
           {/* TABS */}
           <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
             {([
-              { key: 'offers', label: 'Oferty pracy' },
-              { key: 'saved', label: `Zapisane${savedIds.size > 0 ? ` (${savedIds.size})` : ''}` },
-              { key: 'history', label: 'Historia aplikacji' },
-              { key: 'messages', label: `Wiadomości${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
+              { key: 'offers', label: t('candidateDashboard.tabOffers') },
+              { key: 'saved', label: `${t('candidateDashboard.tabSaved')}${savedIds.size > 0 ? ` (${savedIds.size})` : ''}` },
+              { key: 'history', label: t('candidateDashboard.tabHistory') },
+              { key: 'messages', label: `${t('candidateDashboard.tabMessages')}${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
             ] as const).map(tab => (
               <button
                 key={tab.key}
@@ -676,7 +688,7 @@ export const CandidateDashboard = () => {
             {/* SIDEBAR */}
             <aside style={{ position: 'sticky', top: 24 }}>
               <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>Filtruj oferty</p>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>{t('candidateDashboard.filterOffers')}</p>
                 <SearchBar
                   categories={categories}
                   onSearch={(title, location, categoryId, skill, seniority) => fetchOffers(title, location, categoryId, skill, seniority)}
@@ -688,9 +700,9 @@ export const CandidateDashboard = () => {
             <section>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
                 <div>
-                  <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Dostępne oferty</h2>
+                  <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('candidateDashboard.availableOffers')}</h2>
                   <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
-                    {loadingOffers ? 'Ładowanie...' : `Znaleziono ${offers.length} ofert`}
+                    {loadingOffers ? t('common.loading') : t('candidateDashboard.foundOffers', { count: offers.length })}
                   </p>
                 </div>
                 <select
@@ -713,15 +725,15 @@ export const CandidateDashboard = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 0', gap: 12 }}>
                   <div style={{ width: 36, height: 36, border: '3px solid #e8e5df', borderTopColor: '#0f1923', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                  <p style={{ color: '#9ca3af', fontSize: 14 }}>Ładowanie ofert...</p>
+                  <p style={{ color: '#9ca3af', fontSize: 14 }}>{t('candidateDashboard.loadingOffers')}</p>
                 </div>
               )}
 
               {!loadingOffers && offers.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
                   <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                  <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak wyników</p>
-                  <p style={{ color: '#9ca3af', fontSize: 14 }}>Spróbuj zmienić filtry lub poczekaj na nowe ogłoszenia.</p>
+                  <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>{t('candidateDashboard.noResults')}</p>
+                  <p style={{ color: '#9ca3af', fontSize: 14 }}>{t('candidateDashboard.noResultsDetail')}</p>
                 </div>
               )}
 
@@ -746,18 +758,18 @@ export const CandidateDashboard = () => {
         {activeTab === 'saved' && (
           <div style={{ maxWidth: 860 }}>
             <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Zapisane oferty</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('candidateDashboard.savedOffersTitle')}</h2>
               <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
-                Oferty oznaczone gwiazdką — wróć do nich w dowolnej chwili
+                {t('candidateDashboard.savedOffersSubtitle')}
               </p>
             </div>
 
             {savedOffers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '64px 32px', background: '#fff', borderRadius: 16, border: '2px dashed #e8e5df' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
-                <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Brak zapisanych ofert</p>
+                <p style={{ color: '#374151', fontWeight: 600, fontSize: 16, marginBottom: 6 }}>{t('candidateDashboard.noSavedOffers')}</p>
                 <p style={{ color: '#9ca3af', fontSize: 14 }}>
-                  Kliknij gwiazdkę ☆ na dowolnej ofercie, żeby ją tutaj zapisać.
+                  {t('candidateDashboard.noSavedOffersDetail')}
                 </p>
               </div>
             ) : (
@@ -780,8 +792,8 @@ export const CandidateDashboard = () => {
         {activeTab === 'history' && token && (
           <div style={{ maxWidth: 960 }}>
             <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Historia aplikacji</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Lista ofert, na które aplikowałeś</p>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('candidateDashboard.historyTitle')}</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{t('candidateDashboard.historySubtitle')}</p>
             </div>
             <ApplicationHistoryTab token={token} />
           </div>
@@ -790,8 +802,8 @@ export const CandidateDashboard = () => {
         {activeTab === 'messages' && token && (
           <div style={{ maxWidth: 720 }}>
             <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>Wiadomości</h2>
-              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>Konwersacje z pracodawcami</p>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f1923', margin: 0 }}>{t('candidateDashboard.messagesTitle')}</h2>
+              <p style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>{t('candidateDashboard.messagesSubtitle')}</p>
             </div>
             <MessagesTab token={token} myId={myId} />
           </div>
