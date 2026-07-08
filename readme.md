@@ -148,7 +148,7 @@ npx prisma generate
 Wypełnia bazę przykładowymi danymi:
 
 ```bash
-npx prisma db seed
+npx ts-node prisma/seed-random.ts
 ```
 
 ---
@@ -174,22 +174,23 @@ npx prisma db seed
 
 ### Moduł II: Dla Pracodawcy (Rekrutera)
 - [✔️] **10. Panel Pracodawcy** - Osobny widok po zalogowaniu dla firm, pozwalający zarządzać danymi firmy, dodawać logo oraz edytować opis działalności wyświetlany przy ofertach.
-- [ ] **11. Dodawanie ogłoszenia (Formularz)** - Prosty kreator, w którym pracodawca wpisuje tytuł, treść ogłoszenia, wybiera kategorię z listy, wpisuje wynagrodzenie i okres ważności ogłoszenia (np. 30 dni).
-- [ ] **12. Lista otrzymanych aplikacji** - Widok tabelaryczny dla pracodawcy przy każdym aktywnym ogłoszeniu, pokazujący listę osób, które przesłały CV. Umożliwia pobranie pliku CV na dysk.
-- [ ] **13. Zmiana statusu kandydata** - Możliwość oznaczenia kandydata na liście prostym statusem: "Nowy", "Odrzucony", "Zaproszony na rozmowę". Pozwala to pracodawcy utrzymać porządek w rekrutacji.
-- [ ] **14. Duplikowanie ogłoszeń** - Funkcja "Wystaw podobne", która kopiuje treść zakończonego lub istniejącego ogłoszenia do nowego formularza, aby pracodawca nie musiał wpisywać wszystkiego od nowa.
-- [ ] **15. Licznik wyświetleń oferty** - Prosta statystyka, która zlicza każde wejście na stronę ogłoszenia i pokazuje pracodawcy w panelu, ile osób zobaczyło jego ofertę.
-- [ ] **16. Edycja i zamykanie ofert** - Możliwość poprawienia treści ogłoszenia w dowolnym momencie lub wcześniejszego zakończenia rekrutacji (ukrycie oferty z listy głównej).
+- [✔️] **11. Dodawanie ogłoszenia (Formularz)** - Prosty kreator, w którym pracodawca wpisuje tytuł, treść ogłoszenia, wybiera kategorię z listy, wpisuje wynagrodzenie i okres ważności ogłoszenia (np. 30 dni).
+- [✔️] **12. Lista otrzymanych aplikacji** - Widok tabelaryczny dla pracodawcy przy każdym aktywnym ogłoszeniu, pokazujący listę osób, które przesłały CV. Umożliwia pobranie pliku CV na dysk.
+- [✔️] **13. Zmiana statusu kandydata** - Możliwość oznaczenia kandydata na liście prostym statusem: "Nowy", "Odrzucony", "Zaproszony na rozmowę". Pozwala to pracodawcy utrzymać porządek w rekrutacji.
+- [✔️] **14. Duplikowanie ogłoszeń** - Funkcja "Wystaw podobne", która kopiuje treść zakończonego lub istniejącego ogłoszenia do nowego formularza, aby pracodawca nie musiał wpisywać wszystkiego od nowa.
+- [✔️] **15. Licznik wyświetleń oferty** - Prosta statystyka, która zlicza każde wejście na stronę ogłoszenia i pokazuje pracodawcy w panelu, ile osób zobaczyło jego ofertę.
+- [✔️] **16. Edycja i zamykanie ofert** - Możliwość poprawienia treści ogłoszenia w dowolnym momencie lub wcześniejszego zakończenia rekrutacji (ukrycie oferty z listy głównej).
 
 ### Moduł III: Panel Administratora (Back-Office)
-- [ ] **17. Zarządzanie użytkownikami** - Lista wszystkich zarejestrowanych osób i firm z możliwością ich blokowania (banowania), edycji danych lub usuwania konta na żądanie.
-- [ ] **18. Moderacja ogłoszeń** - Lista nowych ogłoszeń oczekujących na akceptację. Administrator musi kliknąć "Zatwierdź", aby ogłoszenie pojawiło się publicznie na stronie (zapobiega spamowi).
-- [ ] **19. Zarządzanie kategoriami** - Możliwość dodawania, edycji i usuwania kategorii pracy (np. dodanie nowej branży) bez konieczności ingerencji w kod źródłowy strony.
-- [ ] **20. Ręczne wyróżnianie ofert (Zamiast płatności online)** - Administrator w swoim panelu ma checkbox "Wyróżniona". Może go zaznaczyć ręcznie, np. po otrzymaniu tradycyjnego przelewu od firmy, co sprawi, że oferta wyświetli się na górze listy lub w innym kolorze.
-- [ ] **21. Zarządzanie stronami informacyjnymi (CMS)** - Prosty edytor pozwalający administratorowi zmieniać treść podstron takich jak "Regulamin", "O nas", "Polityka Prywatności".
+- [✔️] **17. Zarządzanie użytkownikami** - Lista wszystkich zarejestrowanych osób i firm z możliwością ich blokowania (banowania), edycji danych lub usuwania konta na żądanie.
+- [✔️] **18. Moderacja ogłoszeń** - Lista nowych ogłoszeń oczekujących na akceptację. Administrator musi kliknąć "Zatwierdź", aby ogłoszenie pojawiło się publicznie na stronie (zapobiega spamowi).
+- [✔️] **19. Zarządzanie kategoriami** - Możliwość dodawania, edycji i usuwania kategorii pracy (np. dodanie nowej branży) bez konieczności ingerencji w kod źródłowy strony.
+- [✔️] **20. Ręczne wyróżnianie ofert (Zamiast płatności online)** - Administrator w swoim panelu ma checkbox "Wyróżniona". Może go zaznaczyć ręcznie, np. po otrzymaniu tradycyjnego przelewu od firmy, co sprawi, że oferta wyświetli się na górze listy lub w innym kolorze.
+- [✔️] **21. Zarządzanie stronami informacyjnymi (CMS)** - Prosty edytor pozwalający administratorowi zmieniać treść podstron takich jak "Regulamin", "O nas", "Polityka Prywatności".
 
 ### Moduł IV: Funkcje Ogólne i Techniczne
-- [ ] **22. Newsletter (Zapis do bazy)** - Formularz w stopce strony, gdzie użytkownik podaje e-mail. Adres trafia do bazy danych, co pozwala administratorowi w przyszłości wyeksportować listę i wysłać mailing ręcznie.
-- [ ] **23. Formularz kontaktowy** - Strona "Kontakt", która umożliwia wysłanie wiadomości bezpośrednio do administratora serwisu (wiadomość zapisywana w bazie lub wysyłana na e-mail admina).
-- [ ] **24. Resetowanie hasła** - Mechanizm pozwalający użytkownikowi odzyskać dostęp do konta. System generuje unikalny link (token) i wysyła go na e-mail, umożliwiając ustawienie nowego hasła.
-- [ ] **25. Responsywność (RWD)** - Dostosowanie interfejsu systemu tak, aby czytelnie wyświetlał się na urządzeniach mobilnych (smartfony, tablety) oraz komputerach stacjonarnych (wymóg współczesnych systemów).
+- [✔️] **22. Newsletter (Zapis do bazy)** - Formularz w stopce strony, gdzie użytkownik podaje e-mail. Adres trafia do bazy danych, co pozwala administratorowi w przyszłości wyeksportować listę i wysłać mailing ręcznie.
+- [✔️] **23. Formularz kontaktowy** - Strona "Kontakt", która umożliwia wysłanie wiadomości bezpośrednio do administratora serwisu (wiadomość zapisywana w bazie lub wysyłana na e-mail admina).
+- [✔️] **24. Resetowanie hasła** - Mechanizm pozwalający użytkownikowi odzyskać dostęp do konta. System generuje unikalny link (token) i wysyła go na e-mail, umożliwiając ustawienie nowego hasła.
+- [✔️] **25. Responsywność (RWD)** - Dostosowanie interfejsu systemu tak, aby czytelnie wyświetlał się na urządzeniach mobilnych (smartfony, tablety) oraz komputerach stacjonarnych (wymóg współczesnych systemów).
+- [✔️] **26. Weryfikacja NIP pracodawcy** - Rejestracja firmy wymaga podania numeru NIP, sprawdzanego na żywo w Wykazie Podatników VAT Ministerstwa Finansów, oraz osobnego adresu e-mail firmowego.
