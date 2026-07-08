@@ -13,6 +13,7 @@ export interface JobOffer {
     name: string;
   };
   createdAt: string;
+  isPromoted?: boolean;
 }
 
 interface JobOfferCardProps {
@@ -35,34 +36,49 @@ export const JobOfferCard = ({
   return (
     <div
       style={{
-        background: '#fff',
+        background: offer.isPromoted ? '#fffbeb' : '#fff',
         borderRadius: 14,
-        border: '1px solid #e8e5df',
+        border: offer.isPromoted ? '1.5px solid #fbbf24' : '1px solid #e8e5df',
         padding: '18px 22px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 16,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        boxShadow: offer.isPromoted ? '0 2px 10px rgba(251,191,36,0.18)' : '0 1px 3px rgba(0,0,0,0.05)',
         transition: 'box-shadow 0.15s, border-color 0.15s',
       }}
       onMouseEnter={e => {
         (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)';
-        (e.currentTarget as HTMLDivElement).style.borderColor = '#c9c5be';
+        if (!offer.isPromoted) (e.currentTarget as HTMLDivElement).style.borderColor = '#c9c5be';
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-        (e.currentTarget as HTMLDivElement).style.borderColor = '#e8e5df';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = offer.isPromoted ? '0 2px 10px rgba(251,191,36,0.18)' : '0 1px 3px rgba(0,0,0,0.05)';
+        if (!offer.isPromoted) (e.currentTarget as HTMLDivElement).style.borderColor = '#e8e5df';
       }}
     >
       {/* LEWA: info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h4 style={{
-          fontSize: 16, fontWeight: 700, color: '#0f1923',
-          margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-        }}>
-          {offer.title}
-        </h4>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: 14 }}>
+        {offer.company?.logoUrl && (
+          <img
+            src={`http://localhost:3000${offer.company.logoUrl}`}
+            alt=""
+            style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', border: '1px solid #e8e5df', flexShrink: 0 }}
+          />
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <h4 style={{
+            fontSize: 16, fontWeight: 700, color: '#0f1923',
+            margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }}>
+            {offer.title}
+          </h4>
+          {offer.isPromoted && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fbbf24', color: '#78350f', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              ⭐ Wyróżniona
+            </span>
+          )}
+        </div>
         <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px', fontWeight: 500 }}>
           {offer.company?.companyName || 'Brak nazwy firmy'}
         </p>
@@ -93,6 +109,7 @@ export const JobOfferCard = ({
               Wynagrodzenie do negocjacji
             </span>
           )}
+        </div>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { JobOfferCard, type JobOffer } from '../components/JobOfferCard';
 import { useAuth } from '../../auth/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../../auth/Header';
+import { Footer } from '../../layout/Footer';
 
 interface Message {
   id: number;
@@ -190,7 +191,7 @@ const ApplicationHistoryTab = ({ token }: { token: string }) => {
   return (
     <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* Table header */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 180px 140px 130px', gap: 0, padding: '12px 24px', borderBottom: '1px solid #f0ece6', background: '#faf9f7' }}>
+      <div className="rwd-table-grid rwd-table-header" style={{ display: 'grid', gridTemplateColumns: '1fr 180px 140px 130px', gap: 0, padding: '12px 24px', borderBottom: '1px solid #f0ece6', background: '#faf9f7' }}>
         {['Oferta', 'Firma', 'Data wysłania', 'Status'].map(h => (
           <span key={h} style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af' }}>{h}</span>
         ))}
@@ -201,6 +202,7 @@ const ApplicationHistoryTab = ({ token }: { token: string }) => {
         return (
           <div
             key={app.id}
+            className="rwd-table-grid"
             style={{
               display: 'grid', gridTemplateColumns: '1fr 180px 140px 130px', gap: 0,
               padding: '18px 24px', alignItems: 'center',
@@ -669,7 +671,7 @@ export const CandidateDashboard = () => {
       <div style={{ width: '100%', padding: '40px 32px' }}>
 
         {activeTab === 'offers' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 32, alignItems: 'start' }}>
+          <div className="rwd-sidebar-layout" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 32, alignItems: 'start' }}>
             {/* SIDEBAR */}
             <aside style={{ position: 'sticky', top: 24 }}>
               <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -796,6 +798,7 @@ export const CandidateDashboard = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

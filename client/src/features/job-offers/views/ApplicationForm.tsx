@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
@@ -67,6 +67,13 @@ export const ApplicationForm = () => {
 
   const [messageCount, setMessageCount] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const viewCounted = useRef(false);
+  useEffect(() => {
+    if (!jobOfferId || viewCounted.current) return;
+    viewCounted.current = true;
+    axios.post(`http://localhost:3000/job-offers/${jobOfferId}/view`).catch(() => {});
+  }, [jobOfferId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;

@@ -9,8 +9,6 @@ export const CreateJobOffer = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [customCategory, setCustomCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
   const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [durationMonths, setDurationMonths] = useState<number>(1);
   const [formData, setFormData] = useState({
@@ -31,27 +29,13 @@ export const CreateJobOffer = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      let categoryId = formData.categoryId;
-
-      if (customCategory) {
-        if (!newCategoryName.trim()) {
-          alert('Podaj nazwę nowej kategorii.');
-          setLoading(false);
-          return;
-        }
-        const res = await axios.post('http://localhost:3000/job-offers/categories', {
-          name: newCategoryName.trim(),
-        });
-        categoryId = res.data.id;
-      }
-
       if (contractTypes.length === 0) {
         alert('Wybierz co najmniej jedną formę współpracy.');
         setLoading(false);
         return;
       }
 
-      await axios.post('http://localhost:3000/job-offers', { ...formData, categoryId, contract: contractTypes.join(','), durationMonths }, {
+      await axios.post('http://localhost:3000/job-offers', { ...formData, contract: contractTypes.join(','), durationMonths }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       navigate('/');
@@ -132,45 +116,20 @@ export const CreateJobOffer = () => {
                   />
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <label style={{ ...labelStyle, marginBottom: 0 }}>Kategoria *</label>
-                    <button
-                      type="button"
-                      onClick={() => { setCustomCategory(prev => !prev); setNewCategoryName(''); setFormData(prev => ({ ...prev, categoryId: '' })); }}
-                      style={{
-                        fontSize: 12, fontWeight: 700, color: '#7dd3b0',
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        fontFamily: 'inherit', padding: 0,
-                      }}
-                    >
-                      {customCategory ? '← Wybierz z listy' : '+ Nowa kategoria'}
-                    </button>
-                  </div>
-                  {customCategory ? (
-                    <input
-                      required
-                      placeholder="np. Cyberbezpieczeństwo"
-                      value={newCategoryName}
-                      onChange={e => setNewCategoryName(e.target.value)}
-                      style={inputStyle}
-                      onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                      onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
-                    />
-                  ) : (
-                    <select
-                      required
-                      value={formData.categoryId}
-                      onChange={set('categoryId')}
-                      style={{ ...inputStyle, cursor: 'pointer' }}
-                      onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                      onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}
-                    >
-                      <option value="" disabled>Wybierz kategorię…</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  )}
+                  <label style={labelStyle}>Kategoria *</label>
+                  <select
+                    required
+                    value={formData.categoryId}
+                    onChange={set('categoryId')}
+                    style={{ ...inputStyle, cursor: 'pointer' }}
+                    onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                    onBlur={e => Object.assign(e.currentTarget.style, { ...inputStyle, cursor: 'pointer' })}
+                  >
+                    <option value="" disabled>Wybierz kategorię…</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

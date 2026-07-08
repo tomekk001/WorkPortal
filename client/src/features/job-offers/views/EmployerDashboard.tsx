@@ -1,5 +1,6 @@
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
+import { Footer } from '../../layout/Footer';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
@@ -173,10 +174,19 @@ const ChatPanel = ({ application, token, myId, onClose }: {
   );
 };
 
-const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, downloadingId }: {
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: 'NEW', label: 'Nowa' },
+  { value: 'REVIEWING', label: 'Przegląd' },
+  { value: 'REJECTED', label: 'Odrzucona' },
+  { value: 'HIRED', label: 'Zatrudniona' },
+];
+
+const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, downloadingId, onStatusChange, updatingStatus }: {
   application: Application; token: string; myId: number; onClose: () => void;
   onDownloadCv: (id: number, e: React.MouseEvent) => void;
   downloadingId: number | null;
+  onStatusChange: (applicationId: number, status: string) => void;
+  updatingStatus: boolean;
 }) => {
   const [showChat, setShowChat] = useState(false);
 
@@ -206,6 +216,29 @@ const ApplicationModal = ({ application, token, myId, onClose, onDownloadCv, dow
 
           {/* Details */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <Section title="🔖 Status kandydata">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {STATUS_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onStatusChange(application.id, opt.value)}
+                    disabled={application.status === opt.value || updatingStatus}
+                    style={{
+                      padding: '7px 16px', borderRadius: 8, border: 'none',
+                      cursor: application.status === opt.value ? 'default' : 'pointer',
+                      fontSize: 12, fontWeight: 600, fontFamily: 'inherit',
+                      background: application.status === opt.value ? '#0f1923' : '#f1f5f9',
+                      color: application.status === opt.value ? '#fff' : '#6b7280',
+                      opacity: updatingStatus ? 0.6 : 1,
+                      transition: 'all 0.12s',
+                    }}
+                  >
+                    {application.status === opt.value ? '✓ ' : ''}{opt.label}
+                  </button>
+                ))}
+              </div>
+            </Section>
+
             <Section title="📋 Dane kontaktowe">
               <Row label="Imię i nazwisko" value={`${application.user.firstName} ${application.user.lastName}`} />
               <Row label="E-mail" value={application.user.email} />
@@ -290,6 +323,41 @@ export const EmployerDashboard = () => {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [myId, setMyId] = useState<number>(0);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [togglingOfferId, setTogglingOfferId] = useState<number | null>(null);
+
+  const handleToggleActive = async (offerId: number) => {
+    setTogglingOfferId(offerId);
+    try {
+      const res = await axios.patch(
+        `http://localhost:3000/job-offers/${offerId}/toggle-active`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setOffers(prev => prev.map(o => o.id === offerId ? { ...o, isActive: res.data.isActive } : o));
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Błąd zmiany statusu oferty');
+    } finally {
+      setTogglingOfferId(null);
+    }
+  };
+
+  const handleStatusChange = async (applicationId: number, status: string) => {
+    setUpdatingStatus(true);
+    try {
+      await axios.patch(
+        `http://localhost:3000/job-offers/applications/${applicationId}/status`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setApplications(prev => prev.map(a => a.id === applicationId ? { ...a, status } : a));
+      setSelectedApp(prev => prev && prev.id === applicationId ? { ...prev, status } : prev);
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Błąd zmiany statusu');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const handleDownloadCv = async (applicationId: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -388,10 +456,21 @@ export const EmployerDashboard = () => {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {offers.map(offer => (
-                <div key={offer.id} style={cardStyle}>
+                <div key={offer.id} style={{ ...cardStyle, opacity: offer.isActive ? 1 : 0.55 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
-                      <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f1923', margin: '0 0 8px' }}>{offer.title}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f1923', margin: 0 }}>{offer.title}</h3>
+                        {!offer.isActive && (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#f3f4f6', color: '#6b7280' }}>Zamknięta</span>
+                        )}
+                        {!offer.isApproved && (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef9c3', color: '#92400e' }}>Oczekuje na zatwierdzenie</span>
+                        )}
+                        {offer.isPromoted && (
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#b45309' }}>⭐ Wyróżniona</span>
+                        )}
+                      </div>
                       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         <span style={metaStyle}>📍 {offer.location}</span>
                         <span style={metaStyle}>📅 {new Date(offer.createdAt).toLocaleDateString('pl-PL')}</span>
@@ -404,6 +483,10 @@ export const EmployerDashboard = () => {
                       )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ background: '#f5f3ff', borderRadius: 10, padding: '12px 20px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 28, fontWeight: 800, color: '#7c3aed', lineHeight: 1 }}>👁 {offer.views ?? 0}</div>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>wyświetleń</div>
+                      </div>
                       <div style={{ background: '#eff6ff', borderRadius: 10, padding: '12px 20px', textAlign: 'center' }}>
                         <div style={{ fontSize: 28, fontWeight: 800, color: '#1d4ed8', lineHeight: 1 }}>{offer.applications?.length ?? 0}</div>
                         <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3, fontWeight: 500 }}>aplikacji</div>
@@ -416,6 +499,19 @@ export const EmployerDashboard = () => {
                           onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e5df'; e.currentTarget.style.color = '#374151'; }}
                         >
                           ✏️ Edytuj
+                        </button>
+                        <button
+                          onClick={() => handleToggleActive(offer.id)}
+                          disabled={togglingOfferId === offer.id}
+                          style={{
+                            padding: '8px 18px', borderRadius: 8, border: '1.5px solid #e8e5df',
+                            background: '#fff', color: offer.isActive ? '#b45309' : '#166534',
+                            fontWeight: 600, fontSize: 13, cursor: togglingOfferId === offer.id ? 'default' : 'pointer',
+                            fontFamily: 'inherit', whiteSpace: 'nowrap',
+                            opacity: togglingOfferId === offer.id ? 0.6 : 1,
+                          }}
+                        >
+                          {offer.isActive ? '⏸ Zamknij' : '▶ Aktywuj'}
                         </button>
                         {offer.validUntil && (
                           <span style={{ fontSize: 11, color: new Date(offer.validUntil) < new Date() ? '#ef4444' : '#9ca3af', textAlign: 'center', fontWeight: 500 }}>
@@ -475,9 +571,10 @@ export const EmployerDashboard = () => {
           )
         )}
       </div>
+      <Footer />
 
       {selectedApp && token && (
-        <ApplicationModal application={selectedApp} token={token} myId={myId} onClose={() => setSelectedApp(null)} onDownloadCv={handleDownloadCv} downloadingId={downloadingId} />
+        <ApplicationModal application={selectedApp} token={token} myId={myId} onClose={() => setSelectedApp(null)} onDownloadCv={handleDownloadCv} downloadingId={downloadingId} onStatusChange={handleStatusChange} updatingStatus={updatingStatus} />
       )}
     </div>
   );
