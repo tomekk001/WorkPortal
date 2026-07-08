@@ -42,3 +42,37 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
+
+/* ── RWD ── */
+@media (max-width: 768px) {
+  .rwd-sidebar-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .rwd-sidebar-layout > aside {
+    position: static !important;
+  }
+  .rwd-table-grid {
+    grid-template-columns: 1fr !important;
+    row-gap: 6px;
+  }
+  .rwd-table-grid.rwd-table-header {
+    display: none !important;
+  }
+  .rwd-nav-label {
+    display: none !important;
+  }
+  .rwd-stack-mobile {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .rwd-hide-mobile {
+    display: none !important;
+  }
+  .rwd-full-mobile {
+    width: 100% !important;
+  }
+  .rwd-header-inner {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
