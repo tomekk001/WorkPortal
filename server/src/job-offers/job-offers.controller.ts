@@ -6,11 +6,12 @@ import {
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
+import { randomBytes } from 'crypto';
 import type { Response } from 'express';
 import { JobOffersService } from './job-offers.service';
 import { JwtService } from '@nestjs/jwt';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ';
+import { JWT_SECRET } from '../common/jwt-secret';
+import { verifyFileSignature } from '../common/file-signature';
 
 function verifyToken(authHeader: string) {
   if (!authHeader) throw new UnauthorizedException('Brak dostępu. Zaloguj się.');
@@ -90,8 +91,19 @@ export class JobOffersController {
   ) {
     const decoded = verifyToken(authHeader);
     if (!body?.jobOfferId) throw new BadRequestException('Brak ID oferty w request body.');
-    const cvFileName = files?.cv?.[0]?.filename ?? null;
-    const additionalFileName = files?.additional?.[0]?.filename ?? null;
+
+    const cvFile = files?.cv?.[0];
+    const additionalFile = files?.additional?.[0];
+
+    if (cvFile && !(await verifyFileSignature(cvFile.path, cvFile.mimetype))) {
+      throw new BadRequestException('Plik CV nie jest prawidłowym plikiem PDF.');
+    }
+    if (additionalFile && !(await verifyFileSignature(additionalFile.path, additionalFile.mimetype))) {
+      throw new BadRequestException('Dodatkowy plik ma nieprawidłową zawartość dla zadeklarowanego typu.');
+    }
+
+    const cvFileName = cvFile?.filename ?? null;
+    const additionalFileName = additionalFile?.filename ?? null;
     return this.jobOffersService.submitApplicationForm(
       decoded.sub, body.jobOfferId,
       { ...body, cvFileName, additionalFileName },
@@ -199,7 +211,7 @@ export class JobOffersController {
     storage: diskStorage({
       destination: join(process.cwd(), 'uploads', 'logos'),
       filename: (_req, file, cb) => {
-        const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+        const unique = randomBytes(16).toString('hex');
         cb(null, `${unique}${extname(file.originalname)}`);
       },
     }),
@@ -217,6 +229,9 @@ export class JobOffersController {
   ) {
     const decoded = verifyToken(authHeader);
     if (!file) throw new BadRequestException('Brak pliku logo.');
+    if (!(await verifyFileSignature(file.path, file.mimetype))) {
+      throw new BadRequestException('Plik logo ma nieprawidłową zawartość dla zadeklarowanego typu.');
+    }
     return this.jobOffersService.updateCompanyLogo(decoded.sub, `/uploads/logos/${file.filename}`);
   }
 

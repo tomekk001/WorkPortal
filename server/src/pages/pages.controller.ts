@@ -1,8 +1,7 @@
 import { Controller, Get, Patch, Param, Body, Headers, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { PagesService } from './pages.service';
 import { JwtService } from '@nestjs/jwt';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ';
+import { JWT_SECRET } from '../common/jwt-secret';
 
 function verifyAdmin(authHeader: string) {
   if (!authHeader) throw new UnauthorizedException('Brak dostępu.');

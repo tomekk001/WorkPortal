@@ -6,9 +6,23 @@ export class MessagesService {
   constructor(private prisma: PrismaService) {}
 
   async startConversation(employerId: number, candidateId: number, applicationId: number, firstMessage: string) {
-    const employer = await this.prisma.user.findUnique({ where: { id: employerId } });
-    if (!employer || employer.role !== 'EMPLOYER') {
+    const employer = await this.prisma.user.findUnique({ where: { id: employerId }, include: { companyProfile: true } });
+    if (!employer || employer.role !== 'EMPLOYER' || !employer.companyProfile) {
       throw new ForbiddenException('Tylko pracodawca może rozpocząć konwersację.');
+    }
+
+    // Zapobiega IDOR: bez tej weryfikacji dowolny pracodawca mógłby podać cudzy
+    // candidateId/applicationId i rozpocząć konwersację z kimkolwiek w systemie,
+    // fałszywie przypisując ją do nienależącej do siebie aplikacji.
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { jobOffer: true },
+    });
+    if (!application || application.userId !== candidateId) {
+      throw new ForbiddenException('Aplikacja nie należy do wskazanego kandydata.');
+    }
+    if (application.jobOffer.companyId !== employer.companyProfile.id) {
+      throw new ForbiddenException('Ta aplikacja nie dotyczy Twojej oferty.');
     }
 
     const existing = await this.prisma.conversation.findFirst({

@@ -7,6 +7,7 @@ import { Role } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import { NipService } from './nip.service';
 import { Prisma } from '@prisma/client';
+import { JWT_SECRET } from '../common/jwt-secret';
 
 @Injectable()
 export class AuthService {
@@ -102,7 +103,7 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ',
+      secret: JWT_SECRET,
       expiresIn: '1d',
     });
 

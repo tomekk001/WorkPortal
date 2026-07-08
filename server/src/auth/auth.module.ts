@@ -4,12 +4,13 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { MailModule } from '../mail/mail.module';
 import { NipService } from './nip.service';
+import { JWT_SECRET } from '../common/jwt-secret';
 
 @Module({
   imports: [
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET || 'TWOJ_SEKRETNY_KLUCZ',
+      secret: JWT_SECRET,
       signOptions: { expiresIn: '1d' },
     }),
     MailModule,
