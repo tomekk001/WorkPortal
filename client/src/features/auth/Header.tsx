@@ -50,13 +50,14 @@ export const Header = () => {
       zIndex: 100,
       fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
     }}>
-      <div style={{
+      <div className="rwd-header-inner" style={{
         width: '100%',
         padding: '0 32px',
         height: 60,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 8,
       }}>
 
         {/* LOGO */}
@@ -82,7 +83,7 @@ export const Header = () => {
 
         {/* NAV LINKS (tylko dla pracodawcy) */}
         {role === 'EMPLOYER' && (
-          <nav style={{ display: 'flex', gap: 4 }}>
+          <nav className="rwd-hide-mobile" style={{ display: 'flex', gap: 4 }}>
             <button
               onClick={() => navigate('/')}
               style={navBtnStyle}
@@ -162,7 +163,7 @@ export const Header = () => {
             }}>
               {roleInitial}
             </div>
-            <div style={{ textAlign: 'left' }}>
+            <div className="rwd-hide-mobile" style={{ textAlign: 'left' }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>
                 {roleLabel}
               </div>
@@ -215,6 +216,13 @@ export const Header = () => {
                   icon="📋"
                   label="Moje ogłoszenia"
                   onClick={() => { navigate('/'); setMenuOpen(false); }}
+                />
+              )}
+              {role === 'EMPLOYER' && (
+                <DropdownItem
+                  icon="🏢"
+                  label="Profil firmy"
+                  onClick={() => { navigate('/company-profile'); setMenuOpen(false); }}
                 />
               )}
               <DropdownItem

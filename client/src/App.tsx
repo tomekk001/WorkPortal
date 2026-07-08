@@ -8,6 +8,11 @@ import { CreateJobOffer } from './features/job-offers/views/CreateJobOffer';
 import { ApplicationForm } from './features/job-offers/views/ApplicationForm';
 import { AdminDashboard } from './features/admin/AdminDashboard';
 import { EditJobOffer } from './features/job-offers/views/EditJobOffer';
+import { CompanyProfile } from './features/job-offers/views/CompanyProfile';
+import { StaticPage } from './features/pages/StaticPage';
+import { ContactForm } from './features/pages/ContactForm';
+import { ForgotPassword } from './features/auth/ForgotPassword';
+import { ResetPassword } from './features/auth/ResetPassword';
 import './App.css';
 
 const ProtectedRoute = () => {
@@ -32,10 +37,15 @@ function App() {
         <Routes>
           <Route path="/login" element={<AuthLayout><LoginForm /></AuthLayout>} />
           <Route path="/register" element={<AuthLayout><RegisterForm /></AuthLayout>} />
+          <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+          <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
           <Route path="/" element={<ProtectedRoute />} />
           <Route path="/add-offer" element={<CreateJobOffer />} />
           <Route path="/edit-offer/:offerId" element={<EditJobOffer />} />
+          <Route path="/company-profile" element={<CompanyProfile />} />
           <Route path="/apply/:jobId" element={<ApplicationForm />} />
+          <Route path="/p/:slug" element={<StaticPage />} />
+          <Route path="/kontakt" element={<ContactForm />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

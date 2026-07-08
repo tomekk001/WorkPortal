@@ -121,6 +121,10 @@ export const LoginForm = () => {
                 />
               </div>
 
+              <Link to="/forgot-password" style={{ alignSelf: 'flex-end', fontSize: 13, color: '#7dd3b0', fontWeight: 600, textDecoration: 'none' }}>
+                Zapomniałeś hasła?
+              </Link>
+
               <button
                 type="submit"
                 disabled={loading}
