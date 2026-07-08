@@ -37,6 +37,7 @@ model User {
   email     String   @unique
   password  String
   role      Role     @default(CANDIDATE)
+  isBanned  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -68,11 +69,13 @@ model CompanyProfile {
   userId      Int     @unique
   user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  companyName String
-  logoUrl     String?
-  description String?
-  website     String?
-  location    String?
+  companyName  String
+  logoUrl      String?
+  description  String?
+  website      String?
+  location     String?
+  nip          String? @unique
+  companyEmail String?
 
   jobOffers   JobOffer[]
 }
@@ -96,6 +99,7 @@ model JobOffer {
   workMode   WorkMode
 
   isActive   Boolean  @default(false)
+  isApproved Boolean  @default(false)
   isPromoted Boolean  @default(false)
   views      Int      @default(0)
   validUntil DateTime
@@ -104,7 +108,7 @@ model JobOffer {
   updatedAt  DateTime @updatedAt
 
   companyId  Int
-  company    CompanyProfile @relation(fields: [companyId], references: [id])
+  company    CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   categoryId Int
   category   Category @relation(fields: [categoryId], references: [id])
@@ -128,10 +132,10 @@ model Application {
   customCvUrl        String?
 
   userId     Int
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   jobOfferId Int
-  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id])
+  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
 
   conversations Conversation[]
 
@@ -143,13 +147,13 @@ model Conversation {
   createdAt DateTime @default(now())
 
   employerId  Int
-  employer    User @relation("EmployerConversations", fields: [employerId], references: [id])
+  employer    User @relation("EmployerConversations", fields: [employerId], references: [id], onDelete: Cascade)
 
   candidateId Int
-  candidate   User @relation("CandidateConversations", fields: [candidateId], references: [id])
+  candidate   User @relation("CandidateConversations", fields: [candidateId], references: [id], onDelete: Cascade)
 
   applicationId Int?
-  application   Application? @relation(fields: [applicationId], references: [id])
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   messages Message[]
 
@@ -162,10 +166,10 @@ model Message {
   content   String   @db.Text
 
   senderId Int
-  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 
   conversationId Int
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
 model Report {
@@ -176,10 +180,10 @@ model Report {
   status      ReportStatus @default(PENDING)
 
   userId     Int
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   jobOfferId Int
-  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id])
+  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
 
   @@unique([userId, jobOfferId])
 }
@@ -189,10 +193,48 @@ model SavedOffer {
   savedAt DateTime @default(now())
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   jobOfferId Int
-  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id])
+  jobOffer   JobOffer @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
 
   @@unique([userId, jobOfferId])
+}
+
+model StaticPage {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  title     String
+  content   String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+}
+
+enum ContactStatus {
+  NEW
+  READ
+}
+
+model ContactMessage {
+  id        Int           @id @default(autoincrement())
+  createdAt DateTime      @default(now())
+  name      String
+  email     String
+  subject   String
+  message   String        @db.Text
+  status    ContactStatus @default(NEW)
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
