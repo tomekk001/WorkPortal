@@ -359,11 +359,13 @@ export const CandidateDashboard = () => {
     else setSearchParams({ tab });
   };
 
-  const fetchOffers = async (title?: string, location?: string, categoryId?: string) => {
+  const fetchOffers = async (title?: string, location?: string, categoryId?: string, skill?: string, seniority?: string) => {
     setLoadingOffers(true);
     try {
       const params: Record<string, string | undefined> = { title, location };
       if (categoryId) params.categoryId = categoryId;
+      if (skill) params.skill = skill;
+      if (seniority) params.seniority = seniority;
       const response = await axios.get('http://localhost:3000/job-offers/search', { params });
       setOffers(Array.isArray(response.data) ? response.data : []);
     } catch { setOffers([]); }
@@ -469,8 +471,7 @@ export const CandidateDashboard = () => {
   };
 
   const handleApply = (offerId: number) => {
-    if (!token) { alert('Musisz być zalogowany, aby aplikować.'); return; }
-    navigate(`/apply/${offerId}`);
+    navigate(`/oferta/${offerId}`);
   };
 
   const REPORT_REASONS = [
@@ -678,7 +679,7 @@ export const CandidateDashboard = () => {
                 <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>Filtruj oferty</p>
                 <SearchBar
                   categories={categories}
-                  onSearch={(title, location, categoryId) => fetchOffers(title, location, categoryId)}
+                  onSearch={(title, location, categoryId, skill, seniority) => fetchOffers(title, location, categoryId, skill, seniority)}
                 />
               </div>
             </aside>
@@ -731,7 +732,6 @@ export const CandidateDashboard = () => {
                       key={offer.id}
                       offer={offer}
                       onActionClick={handleApply}
-                      actionLabel="Aplikuj"
                       isSaved={savedIds.has(offer.id)}
                       onSaveToggle={token ? handleSaveToggle : undefined}
                       onReport={token ? openReport : undefined}
@@ -767,7 +767,6 @@ export const CandidateDashboard = () => {
                     key={offer.id}
                     offer={offer}
                     onActionClick={handleApply}
-                    actionLabel="Aplikuj"
                     isSaved={true}
                     onSaveToggle={handleSaveToggle}
                     onReport={openReport}

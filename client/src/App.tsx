@@ -13,6 +13,8 @@ import { StaticPage } from './features/pages/StaticPage';
 import { ContactForm } from './features/pages/ContactForm';
 import { ForgotPassword } from './features/auth/ForgotPassword';
 import { ResetPassword } from './features/auth/ResetPassword';
+import { JobOfferDetails } from './features/job-offers/views/JobOfferDetails';
+import { CompanyPublicPage } from './features/job-offers/views/CompanyPublicPage';
 import './App.css';
 
 const ProtectedRoute = () => {
@@ -44,6 +46,8 @@ function App() {
           <Route path="/edit-offer/:offerId" element={<EditJobOffer />} />
           <Route path="/company-profile" element={<CompanyProfile />} />
           <Route path="/apply/:jobId" element={<ApplicationForm />} />
+          <Route path="/oferta/:offerId" element={<JobOfferDetails />} />
+          <Route path="/firma/:companyId" element={<CompanyPublicPage />} />
           <Route path="/p/:slug" element={<StaticPage />} />
           <Route path="/kontakt" element={<ContactForm />} />
           <Route path="*" element={<Navigate to="/" replace />} />

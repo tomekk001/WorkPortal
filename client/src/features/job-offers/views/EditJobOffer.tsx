@@ -14,6 +14,9 @@ export const EditJobOffer = () => {
   const [loadingOffer, setLoadingOffer] = useState(true);
   const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [durationMonths, setDurationMonths] = useState<number>(1);
+  const [seniority, setSeniority] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState('');
   const [formData, setFormData] = useState({
     title: '', location: '', categoryId: '',
     salaryMin: '', salaryMax: '', description: '',
@@ -21,6 +24,13 @@ export const EditJobOffer = () => {
 
   const toggleContract = (type: string) =>
     setContractTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+
+  const addSkill = () => {
+    const value = skillInput.trim();
+    if (value && !skills.includes(value)) setSkills(prev => [...prev, value]);
+    setSkillInput('');
+  };
+  const removeSkill = (skill: string) => setSkills(prev => prev.filter(s => s !== skill));
 
   useEffect(() => {
     axios.get('http://localhost:3000/job-offers/categories')
@@ -45,6 +55,8 @@ export const EditJobOffer = () => {
         description: offer.description ?? '',
       });
       if (offer.contract) setContractTypes(offer.contract.split(','));
+      setSeniority(offer.seniority ?? '');
+      setSkills(Array.isArray(offer.skills) ? offer.skills : []);
     }).catch(console.error)
       .finally(() => setLoadingOffer(false));
   }, [offerId, token]);
@@ -60,7 +72,7 @@ export const EditJobOffer = () => {
       }
       await axios.patch(
         `http://localhost:3000/job-offers/${offerId}`,
-        { ...formData, contract: contractTypes.join(','), durationMonths },
+        { ...formData, contract: contractTypes.join(','), durationMonths, seniority: seniority || undefined, skills },
         { headers: { Authorization: `Bearer ${token}` } },
       );
       navigate('/');
@@ -155,6 +167,44 @@ export const EditJobOffer = () => {
                     );
                   })}
                 </div>
+              </div>
+
+              {/* SENIORITY + UMIEJĘTNOŚCI */}
+              <div>
+                <label style={labelStyle}>Poziom doświadczenia</label>
+                <select value={seniority} onChange={e => setSeniority(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }} onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)} onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}>
+                  <option value="">Nie określono</option>
+                  <option value="JUNIOR">Junior</option>
+                  <option value="MID">Mid</option>
+                  <option value="SENIOR">Senior</option>
+                  <option value="LEAD">Lead</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Umiejętności / stos technologiczny <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>(Enter, aby dodać)</span></label>
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={e => setSkillInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill(); } }}
+                  placeholder="np. React, TypeScript, Docker"
+                  style={inputStyle}
+                  onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                />
+                {skills.length > 0 && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                    {skills.map(skill => (
+                      <button
+                        key={skill} type="button" onClick={() => removeSkill(skill)}
+                        style={{ fontSize: 12, padding: '4px 10px 4px 12px', borderRadius: 20, background: '#0f1923', color: '#7dd3b0', fontWeight: 600, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}
+                      >
+                        {skill} <span style={{ color: '#94a3b8' }}>×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* PRZEDŁUŻ CZAS (opcjonalnie) */}

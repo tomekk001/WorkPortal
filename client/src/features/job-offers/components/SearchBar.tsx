@@ -7,8 +7,16 @@ interface Category {
 
 interface SearchBarProps {
   categories: Category[];
-  onSearch: (title: string, location: string, categoryId: string) => void;
+  onSearch: (title: string, location: string, categoryId: string, skill: string, seniority: string) => void;
 }
+
+const SENIORITY_OPTIONS = [
+  { value: '', label: 'Wszystkie poziomy' },
+  { value: 'JUNIOR', label: 'Junior' },
+  { value: 'MID', label: 'Mid' },
+  { value: 'SENIOR', label: 'Senior' },
+  { value: 'LEAD', label: 'Lead' },
+];
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -38,10 +46,12 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [skill, setSkill] = useState('');
+  const [seniority, setSeniority] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(title, location, categoryId);
+    onSearch(title, location, categoryId, skill, seniority);
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -81,6 +91,34 @@ export const SearchBar = ({ categories, onSearch }: SearchBarProps) => {
           <option value="">Wszystkie kategorie</option>
           {categories.map(cat => (
             <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label style={labelStyle}>Umiejętność</label>
+        <input
+          type="text"
+          placeholder="np. React"
+          value={skill}
+          onChange={e => setSkill(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          style={inputStyle}
+        />
+      </div>
+
+      <div>
+        <label style={labelStyle}>Poziom doświadczenia</label>
+        <select
+          value={seniority}
+          onChange={e => setSeniority(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
+        >
+          {SENIORITY_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
       </div>

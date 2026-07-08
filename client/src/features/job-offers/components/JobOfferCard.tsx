@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export interface JobOffer {
   id: number;
   title: string;
@@ -6,6 +8,7 @@ export interface JobOffer {
   salaryMax: number | null;
   currency: string;
   company: {
+    id?: number;
     companyName: string;
     logoUrl: string | null;
   };
@@ -14,7 +17,16 @@ export interface JobOffer {
   };
   createdAt: string;
   isPromoted?: boolean;
+  skills?: string[];
+  seniority?: string | null;
 }
+
+export const SENIORITY_LABELS: Record<string, string> = {
+  JUNIOR: 'Junior',
+  MID: 'Mid',
+  SENIOR: 'Senior',
+  LEAD: 'Lead',
+};
 
 interface JobOfferCardProps {
   offer: JobOffer;
@@ -28,7 +40,7 @@ interface JobOfferCardProps {
 export const JobOfferCard = ({
   offer,
   onActionClick,
-  actionLabel = 'Aplikuj',
+  actionLabel = 'Zobacz ofertę',
   isSaved = false,
   onSaveToggle,
   onReport,
@@ -67,21 +79,33 @@ export const JobOfferCard = ({
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <h4 style={{
+          <Link to={`/oferta/${offer.id}`} style={{
             fontSize: 16, fontWeight: 700, color: '#0f1923',
-            margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+            margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            textDecoration: 'none',
           }}>
             {offer.title}
-          </h4>
+          </Link>
           {offer.isPromoted && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#fbbf24', color: '#78350f', whiteSpace: 'nowrap', flexShrink: 0 }}>
               ⭐ Wyróżniona
             </span>
           )}
+          {offer.seniority && SENIORITY_LABELS[offer.seniority] && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: '#e0e7ff', color: '#3730a3', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              {SENIORITY_LABELS[offer.seniority]}
+            </span>
+          )}
         </div>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px', fontWeight: 500 }}>
-          {offer.company?.companyName || 'Brak nazwy firmy'}
-        </p>
+        {offer.company?.id ? (
+          <Link to={`/firma/${offer.company.id}`} style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px', fontWeight: 500, textDecoration: 'none', display: 'inline-block' }}>
+            {offer.company.companyName}
+          </Link>
+        ) : (
+          <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 8px', fontWeight: 500 }}>
+            {offer.company?.companyName || 'Brak nazwy firmy'}
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{
             fontSize: 12, padding: '3px 10px', borderRadius: 6,
@@ -110,6 +134,18 @@ export const JobOfferCard = ({
             </span>
           )}
         </div>
+        {offer.skills && offer.skills.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 8 }}>
+            {offer.skills.slice(0, 4).map(skill => (
+              <span key={skill} style={{ fontSize: 11, padding: '2px 9px', borderRadius: 20, background: '#0f1923', color: '#7dd3b0', fontWeight: 600 }}>
+                {skill}
+              </span>
+            ))}
+            {offer.skills.length > 4 && (
+              <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>+{offer.skills.length - 4}</span>
+            )}
+          </div>
+        )}
         </div>
       </div>
 
