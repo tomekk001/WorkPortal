@@ -1,9 +1,11 @@
 import {
-  Controller, Get, Post, Patch, Body, Query, Headers, Param,
-  Res, UseInterceptors, UploadedFiles,
+  Controller, Get, Post, Patch, Delete, Body, Query, Headers, Param,
+  Res, UseInterceptors, UploadedFiles, UploadedFile,
   UnauthorizedException, BadRequestException,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
 import type { Response } from 'express';
 import { JobOffersService } from './job-offers.service';
 import { JwtService } from '@nestjs/jwt';
@@ -19,6 +21,12 @@ function verifyToken(authHeader: string) {
   } catch {
     throw new UnauthorizedException('Nieprawidłowy lub wygasły token.');
   }
+}
+
+function verifyAdmin(authHeader: string) {
+  const decoded = verifyToken(authHeader);
+  if (decoded.role !== 'ADMIN') throw new UnauthorizedException('Brak uprawnień administratora.');
+  return decoded;
 }
 
 @Controller('job-offers')
@@ -40,9 +48,27 @@ export class JobOffersController {
   }
 
   @Post('categories')
-  async createCategory(@Body() body: { name: string }) {
+  async createCategory(@Headers('authorization') authHeader: string, @Body() body: { name: string }) {
+    verifyAdmin(authHeader);
     if (!body?.name?.trim()) throw new BadRequestException('Nazwa kategorii jest wymagana.');
     return this.jobOffersService.createCategory(body.name.trim());
+  }
+
+  @Patch('categories/:id')
+  async updateCategory(
+    @Headers('authorization') authHeader: string,
+    @Param('id') id: string,
+    @Body() body: { name: string },
+  ) {
+    verifyAdmin(authHeader);
+    if (!body?.name?.trim()) throw new BadRequestException('Nazwa kategorii jest wymagana.');
+    return this.jobOffersService.updateCategory(Number(id), body.name.trim());
+  }
+
+  @Delete('categories/:id')
+  async deleteCategory(@Headers('authorization') authHeader: string, @Param('id') id: string) {
+    verifyAdmin(authHeader);
+    return this.jobOffersService.deleteCategory(Number(id));
   }
 
   @Post('submit-application')
@@ -111,6 +137,16 @@ export class JobOffersController {
     return stream;
   }
 
+  @Patch('applications/:applicationId/status')
+  async updateApplicationStatus(
+    @Headers('authorization') authHeader: string,
+    @Param('applicationId') applicationId: string,
+    @Body() body: { status: string },
+  ) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.updateApplicationStatus(decoded.sub, Number(applicationId), body.status);
+  }
+
   @Post('save/:jobOfferId')
   async toggleSave(
     @Headers('authorization') authHeader: string,
@@ -118,6 +154,11 @@ export class JobOffersController {
   ) {
     const decoded = verifyToken(authHeader);
     return this.jobOffersService.toggleSaveOffer(decoded.sub, Number(jobOfferId));
+  }
+
+  @Post(':jobOfferId/view')
+  async incrementViews(@Param('jobOfferId') jobOfferId: string) {
+    return this.jobOffersService.incrementViews(Number(jobOfferId));
   }
 
   @Post(':jobOfferId/report')
@@ -129,6 +170,56 @@ export class JobOffersController {
     const decoded = verifyToken(authHeader);
     if (!body?.reason?.trim()) throw new BadRequestException('Powód zgłoszenia jest wymagany.');
     return this.jobOffersService.reportOffer(decoded.sub, Number(jobOfferId), body.reason, body.description);
+  }
+
+  @Get('company-profile')
+  async getCompanyProfile(@Headers('authorization') authHeader: string) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.getCompanyProfile(decoded.sub);
+  }
+
+  @Patch('company-profile')
+  async updateCompanyProfile(
+    @Headers('authorization') authHeader: string,
+    @Body() body: { companyName?: string; description?: string; website?: string; location?: string; companyEmail?: string },
+  ) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.setupCompanyProfile(decoded.sub, body);
+  }
+
+  @Post('company-profile/logo')
+  @UseInterceptors(FileInterceptor('logo', {
+    storage: diskStorage({
+      destination: join(process.cwd(), 'uploads', 'logos'),
+      filename: (_req, file, cb) => {
+        const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+        cb(null, `${unique}${extname(file.originalname)}`);
+      },
+    }),
+    limits: { fileSize: 3 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (!file.mimetype.startsWith('image/')) {
+        return cb(new Error('Logo musi być obrazem.') as any, false);
+      }
+      cb(null, true);
+    },
+  }))
+  async uploadCompanyLogo(
+    @Headers('authorization') authHeader: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const decoded = verifyToken(authHeader);
+    if (!file) throw new BadRequestException('Brak pliku logo.');
+    return this.jobOffersService.updateCompanyLogo(decoded.sub, `/uploads/logos/${file.filename}`);
+  }
+
+  @Patch(':offerId/toggle-active')
+  async toggleOfferActive(
+    @Headers('authorization') authHeader: string,
+    @Param('offerId') offerId: string,
+  ) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.toggleOfferActive(decoded.sub, Number(offerId));
   }
 
   @Patch(':offerId')

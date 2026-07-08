@@ -11,11 +11,12 @@ export class JobOffersService {
     return this.prisma.jobOffer.findMany({
       where: {
         isActive: true,
+        isApproved: true,
         title: title ? { contains: title, mode: 'insensitive' } : undefined,
         location: location ? { contains: location, mode: 'insensitive' } : undefined,
         categoryId: categoryId ? Number(categoryId) : undefined,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ isPromoted: 'desc' }, { createdAt: 'desc' }],
       include: {
         company: { select: { companyName: true, logoUrl: true } },
         category: true,
@@ -83,7 +84,24 @@ export class JobOffersService {
         workMode: data.workMode || 'REMOTE',
         categoryId: Number(data.categoryId),
         ...(validUntil ? { validUntil } : {}),
+        ...(data.isActive !== undefined ? { isActive: Boolean(data.isActive) } : {}),
       },
+    });
+  }
+
+  async toggleOfferActive(userId: number, offerId: number) {
+    const company = await this.prisma.companyProfile.findUnique({
+      where: { userId: Number(userId) },
+    });
+    if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+
+    const offer = await this.prisma.jobOffer.findUnique({ where: { id: Number(offerId) } });
+    if (!offer) throw new NotFoundException('Oferta nie istnieje.');
+    if (offer.companyId !== company.id) throw new UnauthorizedException('Brak dostępu do tej oferty.');
+
+    return this.prisma.jobOffer.update({
+      where: { id: Number(offerId) },
+      data: { isActive: !offer.isActive },
     });
   }
 
@@ -108,6 +126,34 @@ export class JobOffersService {
     };
   }
 
+  async updateApplicationStatus(employerUserId: number, applicationId: number, status: string) {
+    const allowed = ['NEW', 'REVIEWING', 'REJECTED', 'HIRED'];
+    if (!allowed.includes(status)) throw new BadRequestException('Nieprawidłowy status.');
+
+    const company = await this.prisma.companyProfile.findUnique({ where: { userId: Number(employerUserId) } });
+    if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+
+    const application = await this.prisma.application.findUnique({
+      where: { id: Number(applicationId) },
+      include: { jobOffer: true },
+    });
+    if (!application) throw new NotFoundException('Aplikacja nie istnieje.');
+    if (application.jobOffer.companyId !== company.id) throw new UnauthorizedException('Brak dostępu.');
+
+    return this.prisma.application.update({
+      where: { id: Number(applicationId) },
+      data: { status: status as any },
+    });
+  }
+
+  async incrementViews(offerId: number) {
+    await this.prisma.jobOffer.update({
+      where: { id: Number(offerId) },
+      data: { views: { increment: 1 } },
+    }).catch(() => null);
+    return { ok: true };
+  }
+
   async findAllCategories() {
     return this.prisma.category.findMany({ orderBy: { name: 'asc' } });
   }
@@ -118,6 +164,29 @@ export class JobOffersService {
     });
     if (existing) return existing;
     return this.prisma.category.create({ data: { name } });
+  }
+
+  async updateCategory(id: number, name: string) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    if (!category) throw new NotFoundException('Kategoria nie istnieje.');
+    const duplicate = await this.prisma.category.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' }, id: { not: id } },
+    });
+    if (duplicate) throw new BadRequestException('Kategoria o tej nazwie już istnieje.');
+    return this.prisma.category.update({ where: { id }, data: { name } });
+  }
+
+  async deleteCategory(id: number) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: { _count: { select: { jobOffers: true } } },
+    });
+    if (!category) throw new NotFoundException('Kategoria nie istnieje.');
+    if (category._count.jobOffers > 0) {
+      throw new BadRequestException('Nie można usunąć kategorii, która ma przypisane ogłoszenia.');
+    }
+    await this.prisma.category.delete({ where: { id } });
+    return { ok: true };
   }
 
   async getEmployerOffers(userId: number) {
@@ -217,14 +286,30 @@ export class JobOffersService {
     });
   }
 
-  async setupCompanyProfile(userId: number, companyName: string) {
-    if (!companyName?.trim()) {
+  async setupCompanyProfile(userId: number, data: { companyName?: string; description?: string; website?: string; location?: string; companyEmail?: string }) {
+    if (!data.companyName?.trim()) {
       throw new BadRequestException('Nazwa firmy jest wymagana.');
     }
+    const fields = {
+      companyName: data.companyName.trim(),
+      description: data.description?.trim() || null,
+      website: data.website?.trim() || null,
+      location: data.location?.trim() || null,
+      companyEmail: data.companyEmail?.trim() || null,
+    };
     return this.prisma.companyProfile.upsert({
       where: { userId: Number(userId) },
-      update: { companyName: companyName.trim() },
-      create: { userId: Number(userId), companyName: companyName.trim() },
+      update: fields,
+      create: { userId: Number(userId), ...fields },
+    });
+  }
+
+  async updateCompanyLogo(userId: number, logoUrl: string) {
+    const company = await this.prisma.companyProfile.findUnique({ where: { userId: Number(userId) } });
+    if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+    return this.prisma.companyProfile.update({
+      where: { userId: Number(userId) },
+      data: { logoUrl },
     });
   }
 

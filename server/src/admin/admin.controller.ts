@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, Headers, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Param, Body, Headers, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -48,9 +48,51 @@ export class AdminController {
     return this.adminService.updateReportStatus(Number(id), body.status);
   }
 
+  @Get('offers')
+  async getAllOffers(@Headers('authorization') authHeader: string) {
+    verifyAdmin(authHeader);
+    return this.adminService.getAllOffers();
+  }
+
+  @Patch('offers/:id/approve')
+  async approveOffer(@Headers('authorization') authHeader: string, @Param('id') id: string) {
+    verifyAdmin(authHeader);
+    return this.adminService.approveOffer(Number(id));
+  }
+
+  @Patch('offers/:id/promote')
+  async togglePromoted(@Headers('authorization') authHeader: string, @Param('id') id: string) {
+    verifyAdmin(authHeader);
+    return this.adminService.togglePromoted(Number(id));
+  }
+
+  @Get('contact-messages')
+  async getContactMessages(@Headers('authorization') authHeader: string) {
+    verifyAdmin(authHeader);
+    return this.adminService.getContactMessages();
+  }
+
+  @Patch('contact-messages/:id/read')
+  async markContactMessageRead(@Headers('authorization') authHeader: string, @Param('id') id: string) {
+    verifyAdmin(authHeader);
+    return this.adminService.markContactMessageRead(Number(id));
+  }
+
   @Get('users')
   async getUsers(@Headers('authorization') authHeader: string) {
     verifyAdmin(authHeader);
     return this.adminService.getUsers();
+  }
+
+  @Patch('users/:id/ban')
+  async toggleUserBan(@Headers('authorization') authHeader: string, @Param('id') id: string) {
+    verifyAdmin(authHeader);
+    return this.adminService.toggleUserBan(Number(id));
+  }
+
+  @Delete('users/:id')
+  async deleteUser(@Headers('authorization') authHeader: string, @Param('id') id: string) {
+    verifyAdmin(authHeader);
+    return this.adminService.deleteUser(Number(id));
   }
 }
