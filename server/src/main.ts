@@ -18,7 +18,14 @@ async function bootstrap() {
   // Tylko logo firm jest publiczne. CV/załączniki kandydatów NIE są tu montowane —
   // dostęp do nich wyłącznie przez GET /job-offers/applications/:id/download-cv
   // (z weryfikacją, że pracodawca jest właścicielem oferty, do której aplikowano).
-  app.useStaticAssets(join(process.cwd(), 'uploads', 'logos'), { prefix: '/uploads/logos' });
+  // Nagłówek CORP nadpisany na 'cross-origin': logo ma być osadzalne z innej domeny
+  // (frontend), a helmet() domyślnie ustawia 'same-origin', co blokuje <img> w przeglądarce.
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'logos'), {
+    prefix: '/uploads/logos',
+    setHeaders: (res) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
