@@ -69,7 +69,7 @@ export const JobOfferDetails = () => {
   }, [offerId]);
 
   const handleApply = () => {
-    if (!token) { alert(t('jobOfferDetails.mustBeLoggedIn')); return; }
+    if (!token) { navigate('/login'); return; }
     navigate(`/apply/${offerId}`);
   };
 

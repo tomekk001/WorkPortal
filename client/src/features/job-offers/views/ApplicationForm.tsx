@@ -109,6 +109,10 @@ export const ApplicationForm = () => {
       alert(t('applicationForm.fillRequiredAndAccept'));
       return;
     }
+    if (!files.cv) {
+      alert(t('applicationForm.cvRequired'));
+      return;
+    }
     setLoading(true);
     try {
       const fd = new FormData();

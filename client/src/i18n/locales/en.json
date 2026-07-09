@@ -229,6 +229,7 @@
   "applicationForm": {
     "fileTooLarge": "File is too large. Max. {{size}}",
     "cvMustBePdf": "CV must be in PDF format",
+    "cvRequired": "Please attach your CV.",
     "fillRequired": "Fill in all required fields.",
     "fillRequiredAndAccept": "Fill in all required fields and accept the terms.",
     "submitSuccess": "Application submitted successfully!",

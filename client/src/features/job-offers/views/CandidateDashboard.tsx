@@ -658,11 +658,13 @@ export const CandidateDashboard = () => {
           {/* TABS */}
           <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
             {([
-              { key: 'offers', label: t('candidateDashboard.tabOffers') },
-              { key: 'saved', label: `${t('candidateDashboard.tabSaved')}${savedIds.size > 0 ? ` (${savedIds.size})` : ''}` },
-              { key: 'history', label: t('candidateDashboard.tabHistory') },
-              { key: 'messages', label: `${t('candidateDashboard.tabMessages')}${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
-            ] as const).map(tab => (
+              { key: 'offers' as const, label: t('candidateDashboard.tabOffers') },
+              ...(token ? [
+                { key: 'saved' as const, label: `${t('candidateDashboard.tabSaved')}${savedIds.size > 0 ? ` (${savedIds.size})` : ''}` },
+                { key: 'history' as const, label: t('candidateDashboard.tabHistory') },
+                { key: 'messages' as const, label: `${t('candidateDashboard.tabMessages')}${unreadCount > 0 ? ` (${unreadCount})` : ''}` },
+              ] : []),
+            ]).map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setTab(tab.key)}

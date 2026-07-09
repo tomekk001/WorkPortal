@@ -17,12 +17,11 @@ import { JobOfferDetails } from './features/job-offers/views/JobOfferDetails';
 import { CompanyPublicPage } from './features/job-offers/views/CompanyPublicPage';
 import './App.css';
 
-const ProtectedRoute = () => {
+const HomeRoute = () => {
   const { token, role } = useAuth();
 
-  if (!token) return <Navigate to="/login" replace />;
-  if (role === 'ADMIN')     return <AdminDashboard />;
-  if (role === 'EMPLOYER')  return <EmployerDashboard />;
+  if (token && role === 'ADMIN')    return <AdminDashboard />;
+  if (token && role === 'EMPLOYER') return <EmployerDashboard />;
   return <CandidateDashboard />;
 };
 
@@ -41,7 +40,7 @@ function App() {
           <Route path="/register" element={<AuthLayout><RegisterForm /></AuthLayout>} />
           <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
           <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
-          <Route path="/" element={<ProtectedRoute />} />
+          <Route path="/" element={<HomeRoute />} />
           <Route path="/add-offer" element={<CreateJobOffer />} />
           <Route path="/edit-offer/:offerId" element={<EditJobOffer />} />
           <Route path="/company-profile" element={<CompanyProfile />} />
