@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, StreamableFile } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, HttpException, HttpStatus, StreamableFile } from '@nestjs/common';
 import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
+import { OFFER_PRICE_PLN, PROMOTION_PRICE_PLN, FREE_OFFER_DURATION_MONTHS } from './pricing';
 
 @Injectable()
 export class JobOffersService {
@@ -74,6 +75,26 @@ export class JobOffersService {
     return { company, offers };
   }
 
+  async getPricing() {
+    return {
+      offerPricePln: OFFER_PRICE_PLN,
+      promotionPricePln: PROMOTION_PRICE_PLN,
+      freeOfferDurationMonths: FREE_OFFER_DURATION_MONTHS,
+    };
+  }
+
+  async getOfferEligibility(userId: number) {
+    const company = await this.prisma.companyProfile.findUnique({ where: { userId: Number(userId) } });
+    if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+    const offerCount = await this.prisma.jobOffer.count({ where: { companyId: company.id } });
+    return {
+      freeOfferAvailable: offerCount === 0,
+      offerPricePln: OFFER_PRICE_PLN,
+      promotionPricePln: PROMOTION_PRICE_PLN,
+      freeOfferDurationMonths: FREE_OFFER_DURATION_MONTHS,
+    };
+  }
+
   async createOffer(userId: number, data: any) {
     const company = await this.prisma.companyProfile.findUnique({
       where: { userId: Number(userId) },
@@ -85,7 +106,26 @@ export class JobOffersService {
       throw new UnauthorizedException('Zweryfikuj adres e-mail firmy, zanim opublikujesz ogłoszenie.');
     }
 
-    const months = Math.min(Math.max(Number(data.durationMonths) || 1, 1), 4);
+    // Pierwsze ogłoszenie danej firmy jest darmowe (aktywne przez FREE_OFFER_DURATION_MONTHS).
+    // Każde kolejne wymaga płatności — patrz komentarz przy modelu Payment odnośnie braku
+    // integracji z prawdziwą bramką płatniczą.
+    const offerCount = await this.prisma.jobOffer.count({ where: { companyId: company.id } });
+    const isFree = offerCount === 0;
+
+    if (!isFree && !data.confirmPayment) {
+      throw new HttpException(
+        {
+          message: 'Wymagana płatność za publikację kolejnego ogłoszenia.',
+          code: 'PAYMENT_REQUIRED',
+          offerPricePln: OFFER_PRICE_PLN,
+        },
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
+
+    const months = isFree
+      ? FREE_OFFER_DURATION_MONTHS
+      : Math.min(Math.max(Number(data.durationMonths) || 1, 1), 4);
     const validUntil = new Date();
     validUntil.setMonth(validUntil.getMonth() + months);
 
@@ -93,23 +133,65 @@ export class JobOffersService {
     const salaryMin = data.salaryMin ? Math.min(Number(data.salaryMin), MAX_SALARY) : null;
     const salaryMax = data.salaryMax ? Math.min(Number(data.salaryMax), MAX_SALARY) : null;
 
-    return this.prisma.jobOffer.create({
-      data: {
-        title: data.title,
-        description: data.description,
-        location: data.location,
-        salaryMin,
-        salaryMax,
-        currency: data.currency || 'PLN',
-        contract: data.contract || 'B2B',
-        workMode: data.workMode || 'REMOTE',
-        isActive: true,
-        validUntil,
-        companyId: company.id,
-        categoryId: Number(data.categoryId),
-        skills: Array.isArray(data.skills) ? data.skills : [],
-        seniority: data.seniority || null,
-      },
+    return this.prisma.$transaction(async (prisma) => {
+      const offer = await prisma.jobOffer.create({
+        data: {
+          title: data.title,
+          description: data.description,
+          location: data.location,
+          salaryMin,
+          salaryMax,
+          currency: data.currency || 'PLN',
+          contract: data.contract || 'B2B',
+          workMode: data.workMode || 'REMOTE',
+          isActive: true,
+          validUntil,
+          companyId: company.id,
+          categoryId: Number(data.categoryId),
+          skills: Array.isArray(data.skills) ? data.skills : [],
+          seniority: data.seniority || null,
+          isPaidOffer: !isFree,
+        },
+      });
+
+      if (!isFree) {
+        await prisma.payment.create({
+          data: {
+            companyId: company.id,
+            jobOfferId: offer.id,
+            purpose: 'OFFER',
+            amount: OFFER_PRICE_PLN,
+            status: 'PAID',
+            paidAt: new Date(),
+          },
+        });
+      }
+
+      return offer;
+    });
+  }
+
+  async promoteOfferPaid(userId: number, offerId: number) {
+    const company = await this.prisma.companyProfile.findUnique({ where: { userId: Number(userId) } });
+    if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+
+    const offer = await this.prisma.jobOffer.findUnique({ where: { id: Number(offerId) } });
+    if (!offer) throw new NotFoundException('Oferta nie istnieje.');
+    if (offer.companyId !== company.id) throw new UnauthorizedException('Brak dostępu do tej oferty.');
+    if (offer.isPromoted) return offer;
+
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.payment.create({
+        data: {
+          companyId: company.id,
+          jobOfferId: offer.id,
+          purpose: 'PROMOTION',
+          amount: PROMOTION_PRICE_PLN,
+          status: 'PAID',
+          paidAt: new Date(),
+        },
+      });
+      return prisma.jobOffer.update({ where: { id: offer.id }, data: { isPromoted: true } });
     });
   }
 

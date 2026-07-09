@@ -39,6 +39,16 @@ enum SeniorityLevel {
   LEAD
 }
 
+enum PaymentPurpose {
+  OFFER
+  PROMOTION
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+}
+
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
@@ -86,6 +96,7 @@ model CompanyProfile {
   companyEmail String?
 
   jobOffers   JobOffer[]
+  payments    Payment[]
 }
 
 model Category {
@@ -109,6 +120,7 @@ model JobOffer {
   isActive   Boolean  @default(false)
   isApproved Boolean  @default(false)
   isPromoted Boolean  @default(false)
+  isPaidOffer Boolean @default(false)
   views      Int      @default(0)
   validUntil DateTime
 
@@ -127,6 +139,7 @@ model JobOffer {
   applications Application[]
   savedBy      SavedOffer[]
   reports      Report[]
+  payments     Payment[]
 }
 
 model Application {
@@ -257,4 +270,23 @@ model EmailVerificationToken {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+// Brak integracji z prawdziwą bramką płatności (np. Przelewy24/Stripe) — status
+// jest ustawiany na PAID synchronicznie przy "zatwierdzeniu" w serwisie, bez
+// faktycznego pobrania pieniędzy. Pole PENDING zostawione pod przyszłą, prawdziwą
+// integrację (np. przejście PENDING -> PAID dopiero po webhooku od dostawcy płatności).
+model Payment {
+  id         Int            @id @default(autoincrement())
+  purpose    PaymentPurpose
+  amount     Int
+  status     PaymentStatus  @default(PENDING)
+  createdAt  DateTime       @default(now())
+  paidAt     DateTime?
+
+  companyId  Int
+  company    CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  jobOfferId Int?
+  jobOffer   JobOffer?      @relation(fields: [jobOfferId], references: [id], onDelete: SetNull)
 }

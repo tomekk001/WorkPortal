@@ -349,6 +349,8 @@
     "noOffersDetail": "Dodaj pierwsze ogłoszenie, aby zacząć rekrutować.",
     "addOffer": "Dodaj ogłoszenie",
     "closedBadge": "Zamknięta",
+    "paidBadge": "Płatne",
+    "freeBadge": "Darmowe",
     "pendingApprovalBadge": "Oczekuje na zatwierdzenie",
     "views": "wyświetleń",
     "applicationsCount": "aplikacji",
@@ -389,7 +391,13 @@
     "loadError": "Nie udało się wczytać ogłoszenia",
     "notFound": "Nie znaleziono oferty lub nie masz do niej dostępu.",
     "saving": "Zapisywanie…",
-    "saveChanges": "Zapisz zmiany"
+    "saveChanges": "Zapisz zmiany",
+    "freeOfferBanner": "🎁 To Twoje pierwsze, darmowe ogłoszenie — aktywne przez {{months}} miesiące.",
+    "paidOfferBanner": "Publikacja tego ogłoszenia kosztuje {{price}} zł.",
+    "freeDurationFixed": "{{months}} miesiące (stałe dla darmowego ogłoszenia)",
+    "payAndPublish": "Zapłać {{price}} zł i opublikuj →",
+    "confirmPromote": "Wyróżnić tę ofertę za {{price}} zł?",
+    "promoteFor": "Wyróżnij za {{price}} zł"
   },
   "editJobOffer": {
     "extendOffer": "Przedłuż ofertę o",

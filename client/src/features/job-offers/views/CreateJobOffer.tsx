@@ -12,6 +12,7 @@ export const CreateJobOffer = () => {
   const emailVerified = token ? JSON.parse(atob(token.split('.')[1])).emailVerified !== false : true;
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [eligibility, setEligibility] = useState<{ freeOfferAvailable: boolean; offerPricePln: number; freeOfferDurationMonths: number } | null>(null);
   const [contractTypes, setContractTypes] = useState<string[]>([]);
   const [durationMonths, setDurationMonths] = useState<number>(1);
   const [seniority, setSeniority] = useState('');
@@ -38,6 +39,17 @@ export const CreateJobOffer = () => {
       .catch(err => console.error('Błąd kategorii', err));
   }, []);
 
+  useEffect(() => {
+    if (!token || !emailVerified) return;
+    axios.get('http://localhost:3000/job-offers/offer-eligibility', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        setEligibility(res.data);
+        if (!res.data.freeOfferAvailable) setDurationMonths(1);
+        else setDurationMonths(res.data.freeOfferDurationMonths);
+      })
+      .catch(() => {});
+  }, [token, emailVerified]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,7 +60,10 @@ export const CreateJobOffer = () => {
         return;
       }
 
-      await axios.post('http://localhost:3000/job-offers', { ...formData, contract: contractTypes.join(','), durationMonths, seniority: seniority || undefined, skills }, {
+      await axios.post('http://localhost:3000/job-offers', {
+        ...formData, contract: contractTypes.join(','), durationMonths, seniority: seniority || undefined, skills,
+        ...(eligibility && !eligibility.freeOfferAvailable ? { confirmPayment: true } : {}),
+      }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       navigate('/');
@@ -102,6 +117,21 @@ export const CreateJobOffer = () => {
         </div>
       ) : (
       <div style={{ width: '100%', padding: '40px 32px' }}>
+        {eligibility && (
+          <div style={{
+            maxWidth: 720, margin: '0 auto 20px', borderRadius: 14, padding: '14px 20px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: eligibility.freeOfferAvailable ? 'rgba(125,211,176,0.12)' : '#eff6ff',
+            border: eligibility.freeOfferAvailable ? '1px solid rgba(125,211,176,0.35)' : '1px solid #bfdbfe',
+          }}>
+            <span style={{ fontSize: 18 }}>{eligibility.freeOfferAvailable ? '🎁' : 'ℹ️'}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: eligibility.freeOfferAvailable ? '#0a7a5a' : '#1e40af' }}>
+              {eligibility.freeOfferAvailable
+                ? t('jobOfferForm.freeOfferBanner', { months: eligibility.freeOfferDurationMonths })
+                : t('jobOfferForm.paidOfferBanner', { price: eligibility.offerPricePln })}
+            </span>
+          </div>
+        )}
         <div style={{
           maxWidth: 720,
           margin: '0 auto',
@@ -262,6 +292,11 @@ export const CreateJobOffer = () => {
               {/* CZAS WYSTAWIENIA */}
               <div>
                 <label style={labelStyle}>{t('jobOfferForm.durationLabel')} <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9ca3af' }}>({t('jobOfferForm.durationHint')})</span></label>
+                {eligibility && eligibility.freeOfferAvailable ? (
+                  <div style={{ padding: '12px 16px', borderRadius: 10, background: '#f9f8f6', border: '1.5px solid #e8e5df', fontSize: 13, color: '#374151' }}>
+                    {t('jobOfferForm.freeDurationFixed', { months: eligibility.freeOfferDurationMonths })}
+                  </div>
+                ) : (
                 <div style={{ display: 'flex', gap: 10 }}>
                   {[1, 2, 3, 4].map(m => (
                     <button
@@ -282,6 +317,7 @@ export const CreateJobOffer = () => {
                     </button>
                   ))}
                 </div>
+                )}
               </div>
 
               {/* OPIS */}
@@ -335,7 +371,11 @@ export const CreateJobOffer = () => {
                 onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.85'; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
               >
-                {loading ? t('jobOfferForm.publishing') : t('jobOfferForm.publish')}
+                {loading
+                  ? t('jobOfferForm.publishing')
+                  : eligibility && !eligibility.freeOfferAvailable
+                    ? t('jobOfferForm.payAndPublish', { price: eligibility.offerPricePln })
+                    : t('jobOfferForm.publish')}
               </button>
             </div>
 

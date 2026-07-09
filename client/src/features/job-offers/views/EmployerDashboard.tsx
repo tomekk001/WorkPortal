@@ -337,6 +337,31 @@ export const EmployerDashboard = () => {
   const [emailVerified, setEmailVerified] = useState(true);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  const [promotionPricePln, setPromotionPricePln] = useState<number | null>(null);
+  const [promotingOfferId, setPromotingOfferId] = useState<number | null>(null);
+
+  useEffect(() => {
+    axios.get('http://localhost:3000/job-offers/pricing')
+      .then(res => setPromotionPricePln(res.data.promotionPricePln))
+      .catch(() => {});
+  }, []);
+
+  const handlePromoteOffer = async (offerId: number) => {
+    if (promotionPricePln !== null && !window.confirm(t('jobOfferForm.confirmPromote', { price: promotionPricePln }))) return;
+    setPromotingOfferId(offerId);
+    try {
+      const res = await axios.post(
+        `http://localhost:3000/job-offers/${offerId}/promote-paid`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setOffers(prev => prev.map(o => o.id === offerId ? { ...o, isPromoted: res.data.isPromoted } : o));
+    } catch (e: any) {
+      alert(e.response?.data?.message || t('employerDashboard.toggleActiveError'));
+    } finally {
+      setPromotingOfferId(null);
+    }
+  };
 
   const handleResendVerification = async () => {
     setResending(true);
@@ -513,6 +538,13 @@ export const EmployerDashboard = () => {
                         {offer.isPromoted && (
                           <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: '#fef3c7', color: '#b45309' }}>⭐ {t('jobOfferCard.promoted')}</span>
                         )}
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20,
+                          background: offer.isPaidOffer ? '#eff6ff' : '#f0fdf4',
+                          color: offer.isPaidOffer ? '#1d4ed8' : '#166534',
+                        }}>
+                          {offer.isPaidOffer ? t('employerDashboard.paidBadge') : t('employerDashboard.freeBadge')}
+                        </span>
                       </div>
                       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                         <span style={metaStyle}>📍 {offer.location}</span>
@@ -556,6 +588,21 @@ export const EmployerDashboard = () => {
                         >
                           {offer.isActive ? `⏸ ${t('employerDashboard.close')}` : `▶ ${t('employerDashboard.activate')}`}
                         </button>
+                        {!offer.isPromoted && (
+                          <button
+                            onClick={() => handlePromoteOffer(offer.id)}
+                            disabled={promotingOfferId === offer.id}
+                            style={{
+                              padding: '8px 18px', borderRadius: 8, border: '1.5px solid #fbbf24',
+                              background: '#fffbeb', color: '#b45309',
+                              fontWeight: 600, fontSize: 13, cursor: promotingOfferId === offer.id ? 'default' : 'pointer',
+                              fontFamily: 'inherit', whiteSpace: 'nowrap',
+                              opacity: promotingOfferId === offer.id ? 0.6 : 1,
+                            }}
+                          >
+                            ⭐ {promotionPricePln !== null ? t('jobOfferForm.promoteFor', { price: promotionPricePln }) : t('jobOfferCard.promoted')}
+                          </button>
+                        )}
                         {offer.validUntil && (
                           <span style={{ fontSize: 11, color: new Date(offer.validUntil) < new Date() ? '#ef4444' : '#9ca3af', textAlign: 'center', fontWeight: 500 }}>
                             {new Date(offer.validUntil) < new Date() ? `⚠ ${t('employerDashboard.expired')}` : t('employerDashboard.validUntil', { date: new Date(offer.validUntil).toLocaleDateString(dateLocale) })}

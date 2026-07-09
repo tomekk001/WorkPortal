@@ -55,6 +55,11 @@ export class JobOffersController {
     return this.jobOffersService.findAllCategories();
   }
 
+  @Get('pricing')
+  async getPricing() {
+    return this.jobOffersService.getPricing();
+  }
+
   @Post('categories')
   async createCategory(@Headers('authorization') authHeader: string, @Body() body: { name: string }) {
     verifyAdmin(authHeader);
@@ -115,6 +120,12 @@ export class JobOffersController {
   async getMyOffers(@Headers('authorization') authHeader: string) {
     const decoded = verifyToken(authHeader);
     return this.jobOffersService.getEmployerOffers(decoded.sub);
+  }
+
+  @Get('offer-eligibility')
+  async getOfferEligibility(@Headers('authorization') authHeader: string) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.getOfferEligibility(decoded.sub);
   }
 
   @Get('my-applications')
@@ -252,6 +263,15 @@ export class JobOffersController {
   ) {
     const decoded = verifyToken(authHeader);
     return this.jobOffersService.toggleOfferActive(decoded.sub, Number(offerId));
+  }
+
+  @Post(':offerId/promote-paid')
+  async promoteOfferPaid(
+    @Headers('authorization') authHeader: string,
+    @Param('offerId') offerId: string,
+  ) {
+    const decoded = verifyToken(authHeader);
+    return this.jobOffersService.promoteOfferPaid(decoded.sub, Number(offerId));
   }
 
   @Patch(':offerId')

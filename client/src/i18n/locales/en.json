@@ -349,6 +349,8 @@
     "noOffersDetail": "Add your first listing to start recruiting.",
     "addOffer": "Add listing",
     "closedBadge": "Closed",
+    "paidBadge": "Paid",
+    "freeBadge": "Free",
     "pendingApprovalBadge": "Awaiting approval",
     "views": "views",
     "applicationsCount": "applications",
@@ -389,7 +391,13 @@
     "loadError": "Failed to load the listing",
     "notFound": "Offer not found or you don't have access to it.",
     "saving": "Saving…",
-    "saveChanges": "Save changes"
+    "saveChanges": "Save changes",
+    "freeOfferBanner": "🎁 This is your free first listing — active for {{months}} months.",
+    "paidOfferBanner": "Publishing this listing costs {{price}} zł.",
+    "freeDurationFixed": "{{months}} months (fixed for your free listing)",
+    "payAndPublish": "Pay {{price}} zł and publish →",
+    "confirmPromote": "Feature this listing for {{price}} zł?",
+    "promoteFor": "Feature for {{price}} zł"
   },
   "editJobOffer": {
     "extendOffer": "Extend the offer by",
