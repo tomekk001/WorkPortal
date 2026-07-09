@@ -334,6 +334,21 @@ export const EmployerDashboard = () => {
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [togglingOfferId, setTogglingOfferId] = useState<number | null>(null);
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      await axios.post('http://localhost:3000/auth/resend-verification', {}, { headers: { Authorization: `Bearer ${token}` } });
+      setResent(true);
+    } catch (e: any) {
+      alert(e.response?.data?.message || t('verifyEmail.resendError'));
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleToggleActive = async (offerId: number) => {
     setTogglingOfferId(offerId);
@@ -404,6 +419,7 @@ export const EmployerDashboard = () => {
         if (token) {
           const payload = JSON.parse(atob(token.split('.')[1]));
           setMyId(payload.sub);
+          setEmailVerified(payload.emailVerified !== false);
         }
       } catch (error) {
         console.error('Błąd pobierania danych:', error);
@@ -419,6 +435,24 @@ export const EmployerDashboard = () => {
   return (
     <div style={{ minHeight: '100vh', background: '#f8f7f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
       <Header />
+
+      {!emailVerified && (
+        <div style={{ background: '#fef9c3', borderBottom: '1px solid #fde68a', padding: '12px 32px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13, color: '#92400e', fontWeight: 600 }}>⚠️ {t('verifyEmail.banner')}</span>
+          <button
+            onClick={handleResendVerification}
+            disabled={resending || resent}
+            style={{
+              padding: '6px 14px', borderRadius: 8, border: '1px solid #92400e',
+              background: 'transparent', color: '#92400e', fontWeight: 700, fontSize: 12,
+              cursor: resending || resent ? 'default' : 'pointer', fontFamily: 'inherit',
+              opacity: resending || resent ? 0.6 : 1,
+            }}
+          >
+            {resent ? t('verifyEmail.resent') : resending ? t('common.sending') : t('verifyEmail.resend')}
+          </button>
+        </div>
+      )}
 
       {/* TOP BAR */}
       <div style={{ background: '#0f1923', padding: '40px 0 0' }}>

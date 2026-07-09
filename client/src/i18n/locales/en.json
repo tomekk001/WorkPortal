@@ -83,6 +83,7 @@
     "nipCheckFailed": "Could not verify the NIP. Please try again.",
     "companyName": "Company name",
     "companyEmail": "Company email",
+    "companyEmailHint": "Also used to sign in — we'll send a verification link here before you can publish job offers.",
     "freeEmailWarning": "Companies usually use an address on their own domain — you can continue if this is intentional.",
     "passwordPlaceholder": "min. 6 characters",
     "creating": "Creating account…",
@@ -90,6 +91,7 @@
     "submit": "Create account →",
     "successTitle": "Your account has been created!",
     "successSubtitle": "You can now sign in and start using the platform.",
+    "successSubtitleEmployer": "We've sent a verification link to your company email. Confirm it to be able to publish job offers.",
     "goToLogin": "Go to sign in →",
     "error": "Registration failed"
   },
@@ -112,6 +114,21 @@
     "passwordPlaceholder": "min. 6 characters",
     "submit": "Set new password →",
     "error": "Password reset failed."
+  },
+  "verifyEmail": {
+    "eyebrow": "Company verification",
+    "title": "Email verification",
+    "noToken": "The verification link is missing a token. Please request a new one.",
+    "verifying": "Verifying your email…",
+    "success": "Email verified",
+    "successDetail": "You can now sign in and publish job offers.",
+    "failed": "Verification failed",
+    "error": "The verification link is invalid or has expired.",
+    "banner": "Verify your company email to publish job offers.",
+    "blockedDetail": "Check your inbox and click the verification link to unlock job offer publishing.",
+    "resend": "Resend verification email",
+    "resent": "A new verification link has been sent.",
+    "resendError": "Failed to resend the verification email."
   },
   "jobOfferCard": {
     "promoted": "Promoted",

@@ -9,6 +9,7 @@ export const CreateJobOffer = () => {
   const { t } = useTranslation();
   const { token } = useAuth();
   const navigate = useNavigate();
+  const emailVerified = token ? JSON.parse(atob(token.split('.')[1])).emailVerified !== false : true;
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [contractTypes, setContractTypes] = useState<string[]>([]);
@@ -87,7 +88,19 @@ export const CreateJobOffer = () => {
         </div>
       </div>
 
-      {/* FORM CARD */}
+      {!emailVerified ? (
+        <div style={{ width: '100%', padding: '40px 32px' }}>
+          <div style={{
+            maxWidth: 720, margin: '0 auto', background: '#fff', borderRadius: 20,
+            border: '1px solid #e8e5df', boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+            padding: '48px 40px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: '#0f1923', margin: '0 0 8px' }}>{t('verifyEmail.banner')}</p>
+            <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{t('verifyEmail.blockedDetail')}</p>
+          </div>
+        </div>
+      ) : (
       <div style={{ width: '100%', padding: '40px 32px' }}>
         <div style={{
           maxWidth: 720,
@@ -329,6 +342,7 @@ export const CreateJobOffer = () => {
           </form>
         </div>
       </div>
+      )}
     </div>
   );
 };

@@ -40,13 +40,14 @@ enum SeniorityLevel {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  role      Role     @default(CANDIDATE)
-  isBanned  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password      String
+  role          Role     @default(CANDIDATE)
+  isBanned      Boolean  @default(false)
+  emailVerified Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   firstName String?
   lastName  String?
@@ -241,6 +242,15 @@ model ContactMessage {
 }
 
 model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model EmailVerificationToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique
   userId    Int

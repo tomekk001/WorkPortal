@@ -67,8 +67,11 @@ export const RegisterForm = () => {
     setError('');
     setLoading(true);
     try {
+      // Pracodawca ma tylko jeden adres e-mail (firmowy) — służy zarówno do
+      // logowania, jak i jako kontakt firmy, więc musi zostać przez niego zweryfikowany.
+      const accountEmail = role === 'EMPLOYER' ? companyEmail : email;
       await axios.post('http://localhost:3000/auth/register', {
-        firstName, lastName, email, password, role,
+        firstName, lastName, email: accountEmail, password, role,
         ...(role === 'EMPLOYER' && { companyName, nip: nip.replace(/[^0-9]/g, ''), companyEmail }),
       });
       setSuccess(true);
@@ -129,7 +132,7 @@ export const RegisterForm = () => {
                 {t('register.successTitle')}
               </h2>
               <p style={{ fontSize: 15, color: '#64748b', margin: '0 0 32px' }}>
-                {t('register.successSubtitle')}
+                {role === 'EMPLOYER' ? t('register.successSubtitleEmployer') : t('register.successSubtitle')}
               </p>
               <button
                 onClick={() => navigate('/login')}
@@ -304,6 +307,9 @@ export const RegisterForm = () => {
                           onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
                           onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
                         />
+                        <p style={{ fontSize: 12, color: '#64748b', margin: '6px 0 0' }}>
+                          {t('register.companyEmailHint')}
+                        </p>
                         {companyEmailIsFree && (
                           <p style={{ fontSize: 12, color: '#fbbf24', margin: '6px 0 0' }}>
                             {t('register.freeEmailWarning')}
@@ -313,17 +319,19 @@ export const RegisterForm = () => {
                     </>
                   )}
 
-                  <div>
-                    <label style={labelStyle}>{t('common.email')}</label>
-                    <input
-                      type="email" required
-                      value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      style={inputStyle}
-                      onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                      onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
-                    />
-                  </div>
+                  {role !== 'EMPLOYER' && (
+                    <div>
+                      <label style={labelStyle}>{t('common.email')}</label>
+                      <input
+                        type="email" required
+                        value={email} onChange={e => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        style={inputStyle}
+                        onFocus={e => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                        onBlur={e => Object.assign(e.currentTarget.style, inputStyle)}
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label style={labelStyle}>{t('login.password')}</label>

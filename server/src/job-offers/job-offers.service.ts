@@ -77,9 +77,13 @@ export class JobOffersService {
   async createOffer(userId: number, data: any) {
     const company = await this.prisma.companyProfile.findUnique({
       where: { userId: Number(userId) },
+      include: { user: { select: { emailVerified: true } } },
     });
 
     if (!company) throw new UnauthorizedException('Brak profilu pracodawcy.');
+    if (!company.user.emailVerified) {
+      throw new UnauthorizedException('Zweryfikuj adres e-mail firmy, zanim opublikujesz ogłoszenie.');
+    }
 
     const months = Math.min(Math.max(Number(data.durationMonths) || 1, 1), 4);
     const validUntil = new Date();

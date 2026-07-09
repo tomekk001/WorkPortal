@@ -13,6 +13,7 @@ import { StaticPage } from './features/pages/StaticPage';
 import { ContactForm } from './features/pages/ContactForm';
 import { ForgotPassword } from './features/auth/ForgotPassword';
 import { ResetPassword } from './features/auth/ResetPassword';
+import { VerifyEmail } from './features/auth/VerifyEmail';
 import { JobOfferDetails } from './features/job-offers/views/JobOfferDetails';
 import { CompanyPublicPage } from './features/job-offers/views/CompanyPublicPage';
 import './App.css';
@@ -40,6 +41,7 @@ function App() {
           <Route path="/register" element={<AuthLayout><RegisterForm /></AuthLayout>} />
           <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
           <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/" element={<HomeRoute />} />
           <Route path="/add-offer" element={<CreateJobOffer />} />
           <Route path="/edit-offer/:offerId" element={<EditJobOffer />} />

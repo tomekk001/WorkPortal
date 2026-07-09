@@ -28,4 +28,17 @@ export class MailService implements OnModuleInit {
     this.logger.log(`Password reset email sent to ${email}. Preview: ${previewUrl}`);
     return previewUrl;
   }
+
+  async sendCompanyEmailVerification(email: string, verifyLink: string) {
+    const info = await this.transporter.sendMail({
+      from: '"WorkPortal" <no-reply@workportal.pl>',
+      to: email,
+      subject: 'Zweryfikuj adres e-mail firmy — WorkPortal',
+      text: `Kliknij link, aby zweryfikować adres e-mail firmy i móc publikować ogłoszenia: ${verifyLink}\n\nLink jest ważny 24 godziny.`,
+      html: `<p>Kliknij link, aby zweryfikować adres e-mail firmy i móc publikować ogłoszenia:</p><p><a href="${verifyLink}">${verifyLink}</a></p><p>Link jest ważny 24 godziny.</p>`,
+    });
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    this.logger.log(`Company email verification sent to ${email}. Preview: ${previewUrl}`);
+    return previewUrl;
+  }
 }

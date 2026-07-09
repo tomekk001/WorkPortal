@@ -58,6 +58,10 @@ export class AuthService {
             role: role || Role.CANDIDATE,
             firstName,
             lastName,
+            // Sam publiczny NIP nie dowodzi, że rejestrujący faktycznie reprezentuje
+            // tę firmę — konto pracodawcy zaczyna niezweryfikowane, dopóki nie
+            // potwierdzi kontroli nad podanym adresem e-mail firmy (patrz niżej).
+            emailVerified: role !== Role.EMPLOYER,
           },
         });
 
@@ -80,8 +84,49 @@ export class AuthService {
       throw e;
     }
 
+    if (role === Role.EMPLOYER) {
+      await this.sendVerificationEmail(user.id, user.email);
+    }
+
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  private async sendVerificationEmail(userId: number, email: string) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await this.prisma.emailVerificationToken.create({
+      data: { token, userId, expiresAt },
+    });
+    const verifyLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
+    await this.mailService.sendCompanyEmailVerification(email, verifyLink);
+  }
+
+  async verifyEmail(token: string) {
+    if (!token) {
+      throw new BadRequestException('Brak tokenu weryfikacyjnego.');
+    }
+    const verificationToken = await this.prisma.emailVerificationToken.findUnique({ where: { token } });
+    if (!verificationToken || verificationToken.used || verificationToken.expiresAt < new Date()) {
+      throw new BadRequestException('Link weryfikacyjny jest nieprawidłowy lub wygasł.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: verificationToken.userId }, data: { emailVerified: true } }),
+      this.prisma.emailVerificationToken.update({ where: { id: verificationToken.id }, data: { used: true } }),
+    ]);
+    return { message: 'Adres e-mail został zweryfikowany.' };
+  }
+
+  async resendVerification(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('Zaloguj się ponownie.');
+    }
+    if (user.emailVerified) {
+      return { message: 'Adres e-mail jest już zweryfikowany.' };
+    }
+    await this.sendVerificationEmail(user.id, user.email);
+    return { message: 'Wysłaliśmy nowy link weryfikacyjny.' };
   }
 
   async login(data: any) {
@@ -101,7 +146,7 @@ export class AuthService {
       throw new UnauthorizedException('Konto zostało zablokowane.');
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = { sub: user.id, email: user.email, role: user.role, emailVerified: user.emailVerified };
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: JWT_SECRET,
       expiresIn: '1d',

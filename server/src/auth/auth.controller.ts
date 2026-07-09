@@ -1,7 +1,20 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Headers, UnauthorizedException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { JwtService } from '@nestjs/jwt';
+import { JWT_SECRET } from '../common/jwt-secret';
 import { AuthService } from './auth.service';
 import { NipService } from './nip.service';
+
+function verifyToken(authHeader: string) {
+  if (!authHeader) throw new UnauthorizedException('Brak dostępu. Zaloguj się.');
+  const token = authHeader.split(' ')[1];
+  const jwtService = new JwtService({ secret: JWT_SECRET });
+  try {
+    return jwtService.verify(token);
+  } catch {
+    throw new UnauthorizedException('Nieprawidłowy lub wygasły token.');
+  }
+}
 
 @Controller('auth')
 export class AuthController {
@@ -38,5 +51,18 @@ export class AuthController {
   @Post('reset-password')
   resetPassword(@Body() body: { token: string; newPassword: string }) {
     return this.authService.resetPassword(body?.token, body?.newPassword);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('verify-email')
+  verifyEmail(@Body() body: { token: string }) {
+    return this.authService.verifyEmail(body?.token);
+  }
+
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post('resend-verification')
+  resendVerification(@Headers('authorization') authHeader: string) {
+    const decoded = verifyToken(authHeader);
+    return this.authService.resendVerification(decoded.sub);
   }
 }

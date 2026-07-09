@@ -83,6 +83,7 @@
     "nipCheckFailed": "Nie udało się zweryfikować NIP. Spróbuj ponownie.",
     "companyName": "Nazwa firmy",
     "companyEmail": "E-mail firmowy",
+    "companyEmailHint": "Służy też do logowania — wyślemy tu link weryfikacyjny, zanim będzie można publikować ogłoszenia.",
     "freeEmailWarning": "Zwykle firmy używają adresu na własnej domenie — możesz kontynuować, jeśli to celowe.",
     "passwordPlaceholder": "min. 6 znaków",
     "creating": "Tworzenie konta…",
@@ -90,6 +91,7 @@
     "submit": "Utwórz konto →",
     "successTitle": "Konto zostało utworzone!",
     "successSubtitle": "Możesz teraz zalogować się i korzystać z platformy.",
+    "successSubtitleEmployer": "Wysłaliśmy link weryfikacyjny na adres e-mail Twojej firmy. Potwierdź go, aby móc publikować ogłoszenia.",
     "goToLogin": "Przejdź do logowania →",
     "error": "Błąd podczas rejestracji"
   },
@@ -112,6 +114,21 @@
     "passwordPlaceholder": "min. 6 znaków",
     "submit": "Ustaw nowe hasło →",
     "error": "Błąd resetowania hasła."
+  },
+  "verifyEmail": {
+    "eyebrow": "Weryfikacja firmy",
+    "title": "Weryfikacja adresu e-mail",
+    "noToken": "Brak tokenu weryfikacyjnego w linku. Poproś o nowy link.",
+    "verifying": "Weryfikowanie adresu e-mail…",
+    "success": "E-mail zweryfikowany",
+    "successDetail": "Możesz teraz zalogować się i publikować ogłoszenia.",
+    "failed": "Weryfikacja nie powiodła się",
+    "error": "Link weryfikacyjny jest nieprawidłowy lub wygasł.",
+    "banner": "Zweryfikuj adres e-mail firmy, aby publikować ogłoszenia.",
+    "blockedDetail": "Sprawdź skrzynkę e-mail i kliknij link weryfikacyjny, aby odblokować publikowanie ogłoszeń.",
+    "resend": "Wyślij link ponownie",
+    "resent": "Wysłaliśmy nowy link weryfikacyjny.",
+    "resendError": "Nie udało się wysłać linku weryfikacyjnego."
   },
   "jobOfferCard": {
     "promoted": "Wyróżniona",
