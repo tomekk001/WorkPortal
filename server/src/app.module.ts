@@ -9,13 +9,14 @@ import { AdminModule } from './admin/admin.module';
 import { PagesModule } from './pages/pages.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
 import { ContactModule } from './contact/contact.module';
+import { SeoModule } from './seo/seo.module';
 
 @Module({
   imports: [
     // Domyślny globalny limit — dodatkowo zaostrzony przez @Throttle(...) na
     // endpointach wrażliwych na brute-force (login, rejestracja, reset hasła).
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
-    AuthModule, PrismaModule, JobOffersModule, MessagesModule, AdminModule, PagesModule, NewsletterModule, ContactModule,
+    AuthModule, PrismaModule, JobOffersModule, MessagesModule, AdminModule, PagesModule, NewsletterModule, ContactModule, SeoModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

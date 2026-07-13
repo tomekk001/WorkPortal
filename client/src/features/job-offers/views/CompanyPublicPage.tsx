@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Header } from '../../auth/Header';
 import { JobOfferCard, type JobOffer } from '../components/JobOfferCard';
+import { setSeoTags, resetSeoTags } from '../../../utils/seo';
 
 interface CompanyPublicData {
   id: number;
@@ -35,6 +36,17 @@ export const CompanyPublicPage = () => {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [companyId]);
+
+  useEffect(() => {
+    if (!company) return;
+    setSeoTags({
+      title: `${company.companyName} — oferty pracy | WorkPortal`,
+      description: company.description?.slice(0, 200) || `Zobacz aktualne oferty pracy firmy ${company.companyName} na WorkPortal.`,
+      url: `${window.location.origin}/firma/${company.id}`,
+      image: company.logoUrl ? `http://localhost:3000${company.logoUrl}` : undefined,
+    });
+    return () => resetSeoTags();
+  }, [company]);
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#f8f7f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>

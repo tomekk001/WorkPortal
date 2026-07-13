@@ -5,6 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 import { JobOfferCard, SENIORITY_LABELS, type JobOffer } from '../components/JobOfferCard';
+import { setSeoTags, resetSeoTags, setJsonLd, removeJsonLd } from '../../../utils/seo';
+
+const JSONLD_ID = 'jobposting-jsonld';
+const EMPLOYMENT_TYPE: Record<string, string> = { UOP: 'FULL_TIME', UZ: 'CONTRACTOR', B2B: 'CONTRACTOR' };
 
 interface OfferDetails extends JobOffer {
   description: string;
@@ -67,6 +71,58 @@ export const JobOfferDetails = () => {
       .catch(() => {});
     axios.post(`http://localhost:3000/job-offers/${offerId}/view`).catch(() => {});
   }, [offerId]);
+
+  useEffect(() => {
+    if (!offer) return;
+
+    const description = offer.description.slice(0, 200);
+    const logoUrl = offer.company.logoUrl ? `http://localhost:3000${offer.company.logoUrl}` : undefined;
+    setSeoTags({
+      title: `${offer.title} — ${offer.company.companyName} | WorkPortal`,
+      description,
+      url: `${window.location.origin}/oferta/${offer.id}`,
+      image: logoUrl,
+    });
+
+    const jsonLd: Record<string, unknown> = {
+      '@context': 'https://schema.org/',
+      '@type': 'JobPosting',
+      title: offer.title,
+      description: offer.description,
+      identifier: { '@type': 'PropertyValue', name: offer.company.companyName, value: String(offer.id) },
+      datePosted: offer.createdAt,
+      validThrough: offer.validUntil,
+      employmentType: EMPLOYMENT_TYPE[offer.contract] ?? 'OTHER',
+      hiringOrganization: {
+        '@type': 'Organization',
+        name: offer.company.companyName,
+        ...(offer.company.website ? { sameAs: offer.company.website } : {}),
+        ...(logoUrl ? { logo: logoUrl } : {}),
+      },
+    };
+    if (offer.workMode === 'REMOTE') {
+      jsonLd.jobLocationType = 'TELECOMMUTE';
+      jsonLd.applicantLocationRequirements = { '@type': 'Country', name: 'Poland' };
+    } else {
+      jsonLd.jobLocation = {
+        '@type': 'Place',
+        address: { '@type': 'PostalAddress', addressLocality: offer.location, addressCountry: 'PL' },
+      };
+    }
+    if (offer.salaryMin && offer.salaryMax) {
+      jsonLd.baseSalary = {
+        '@type': 'MonetaryAmount',
+        currency: offer.currency || 'PLN',
+        value: { '@type': 'QuantitativeValue', minValue: offer.salaryMin, maxValue: offer.salaryMax, unitText: 'MONTH' },
+      };
+    }
+    setJsonLd(JSONLD_ID, jsonLd);
+
+    return () => {
+      removeJsonLd(JSONLD_ID);
+      resetSeoTags();
+    };
+  }, [offer]);
 
   const handleApply = () => {
     if (!token) { navigate('/login'); return; }
