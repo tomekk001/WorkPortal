@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { randomBytes } from 'crypto';
+import { memoryStorage } from 'multer';
 import { JobOffersService } from './job-offers.service';
 import { JobOffersController } from './job-offers.controller';
+import { StorageModule } from '../storage/storage.module';
 
 const ALLOWED_DOC_MIMETYPES = [
   'application/pdf',
@@ -14,17 +13,11 @@ const ALLOWED_DOC_MIMETYPES = [
 
 @Module({
   imports: [
+    StorageModule,
     MulterModule.register({
-      storage: diskStorage({
-        destination: join(process.cwd(), 'uploads', 'cv'),
-        filename: (_req, file, cb) => {
-          // Nazwa kryptograficznie losowa — nie do odgadnięcia/brute-force'u,
-          // co ma znaczenie dodatkowe (defense-in-depth), bo katalog i tak
-          // nie jest już publicznie serwowany (patrz main.ts).
-          const unique = randomBytes(24).toString('hex');
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
+      // Pliki trzymane w pamięci (nie na dysku) — StorageService decyduje,
+      // czy trafią na lokalny dysk (dev) czy do Cloudflare R2 (produkcja).
+      storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (_req, file, cb) => {
         if (file.fieldname === 'cv' && file.mimetype !== 'application/pdf') {

@@ -14,7 +14,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.use(helmet());
-  app.enableCors();
+  // PUBLIC_APP_URL to publiczny adres frontendu (patrz też SeoModule) — w produkcji
+  // zawężamy CORS do niego zamiast zezwalać każdej stronie w sieci na wywołania API.
+  app.enableCors(process.env.PUBLIC_APP_URL ? { origin: process.env.PUBLIC_APP_URL } : undefined);
   // Tylko logo firm jest publiczne. CV/załączniki kandydatów NIE są tu montowane —
   // dostęp do nich wyłącznie przez GET /job-offers/applications/:id/download-cv
   // (z weryfikacją, że pracodawca jest właścicielem oferty, do której aplikowano).

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../../../api/axios';
 
 export interface JobOffer {
   id: number;
@@ -75,7 +76,7 @@ export const JobOfferCard = ({
       <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: 14 }}>
         {offer.company?.logoUrl && (
           <img
-            src={`http://localhost:3000${offer.company.logoUrl}`}
+            src={`${API_URL}${offer.company.logoUrl}`}
             alt=""
             style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', border: '1px solid #e8e5df', flexShrink: 0 }}
           />

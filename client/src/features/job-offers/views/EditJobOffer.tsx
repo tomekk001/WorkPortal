@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
+import { API_URL } from '../../../api/axios';
 
 export const EditJobOffer = () => {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export const EditJobOffer = () => {
   const removeSkill = (skill: string) => setSkills(prev => prev.filter(s => s !== skill));
 
   useEffect(() => {
-    axios.get('http://localhost:3000/job-offers/categories')
+    axios.get(`${API_URL}/job-offers/categories`)
       .then(res => setCategories(res.data))
       .catch(console.error);
   }, []);
@@ -43,7 +44,7 @@ export const EditJobOffer = () => {
   useEffect(() => {
     if (!offerId || !token) return;
     // Load offer data from my-offers list
-    axios.get('http://localhost:3000/job-offers/my-offers', {
+    axios.get(`${API_URL}/job-offers/my-offers`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => {
       const offer = res.data.find((o: any) => o.id === Number(offerId));
@@ -73,7 +74,7 @@ export const EditJobOffer = () => {
         return;
       }
       await axios.patch(
-        `http://localhost:3000/job-offers/${offerId}`,
+        `${API_URL}/job-offers/${offerId}`,
         { ...formData, contract: contractTypes.join(','), durationMonths, seniority: seniority || undefined, skills },
         { headers: { Authorization: `Bearer ${token}` } },
       );

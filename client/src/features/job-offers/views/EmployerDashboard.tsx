@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../../../api/axios';
 
 interface Application {
   id: number;
@@ -65,7 +66,7 @@ const ChatPanel = ({ application, token, myId, onClose }: {
 
   useEffect(() => {
     if (existingConvId) {
-      axios.get(`http://localhost:3000/messages/conversations/${existingConvId}`, {
+      axios.get(`${API_URL}/messages/conversations/${existingConvId}`, {
         headers: { Authorization: `Bearer ${token}` },
       }).then(res => setConversation(res.data)).catch(console.error);
     }
@@ -80,7 +81,7 @@ const ChatPanel = ({ application, token, myId, onClose }: {
     setSending(true);
     try {
       if (!conversation) {
-        const res = await axios.post('http://localhost:3000/messages/start', {
+        const res = await axios.post(`${API_URL}/messages/start`, {
           candidateId: application.user.id,
           applicationId: application.id,
           firstMessage: input.trim(),
@@ -88,7 +89,7 @@ const ChatPanel = ({ application, token, myId, onClose }: {
         setConversation(res.data);
       } else {
         const res = await axios.post(
-          `http://localhost:3000/messages/conversations/${conversation.id}/send`,
+          `${API_URL}/messages/conversations/${conversation.id}/send`,
           { content: input.trim() },
           { headers: { Authorization: `Bearer ${token}` } },
         );
@@ -341,7 +342,7 @@ export const EmployerDashboard = () => {
   const [promotingOfferId, setPromotingOfferId] = useState<number | null>(null);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/job-offers/pricing')
+    axios.get(`${API_URL}/job-offers/pricing`)
       .then(res => setPromotionPricePln(res.data.promotionPricePln))
       .catch(() => {});
   }, []);
@@ -351,7 +352,7 @@ export const EmployerDashboard = () => {
     setPromotingOfferId(offerId);
     try {
       const res = await axios.post(
-        `http://localhost:3000/job-offers/${offerId}/promote-paid`,
+        `${API_URL}/job-offers/${offerId}/promote-paid`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -366,7 +367,7 @@ export const EmployerDashboard = () => {
   const handleResendVerification = async () => {
     setResending(true);
     try {
-      await axios.post('http://localhost:3000/auth/resend-verification', {}, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post(`${API_URL}/auth/resend-verification`, {}, { headers: { Authorization: `Bearer ${token}` } });
       setResent(true);
     } catch (e: any) {
       alert(e.response?.data?.message || t('verifyEmail.resendError'));
@@ -379,7 +380,7 @@ export const EmployerDashboard = () => {
     setTogglingOfferId(offerId);
     try {
       const res = await axios.patch(
-        `http://localhost:3000/job-offers/${offerId}/toggle-active`,
+        `${API_URL}/job-offers/${offerId}/toggle-active`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -395,7 +396,7 @@ export const EmployerDashboard = () => {
     setUpdatingStatus(true);
     try {
       await axios.patch(
-        `http://localhost:3000/job-offers/applications/${applicationId}/status`,
+        `${API_URL}/job-offers/applications/${applicationId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -413,7 +414,7 @@ export const EmployerDashboard = () => {
     setDownloadingId(applicationId);
     try {
       const response = await axios.get(
-        `http://localhost:3000/job-offers/applications/${applicationId}/download-cv`,
+        `${API_URL}/job-offers/applications/${applicationId}/download-cv`,
         { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' },
       );
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
@@ -435,8 +436,8 @@ export const EmployerDashboard = () => {
     const fetchData = async () => {
       try {
         const [offersRes, appsRes] = await Promise.all([
-          axios.get('http://localhost:3000/job-offers/my-offers', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:3000/job-offers/my-applications', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_URL}/job-offers/my-offers`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_URL}/job-offers/my-applications`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
         setOffers(Array.isArray(offersRes.data) ? offersRes.data : []);
         setApplications(Array.isArray(appsRes.data) ? appsRes.data : []);

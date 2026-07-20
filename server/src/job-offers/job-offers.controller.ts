@@ -4,11 +4,10 @@ import {
   UnauthorizedException, BadRequestException,
 } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { randomBytes } from 'crypto';
+import { memoryStorage } from 'multer';
 import type { Response } from 'express';
 import { JobOffersService } from './job-offers.service';
+import { StorageService } from '../storage/storage.service';
 import { JwtService } from '@nestjs/jwt';
 import { JWT_SECRET } from '../common/jwt-secret';
 import { verifyFileSignature } from '../common/file-signature';
@@ -32,7 +31,10 @@ function verifyAdmin(authHeader: string) {
 
 @Controller('job-offers')
 export class JobOffersController {
-  constructor(private readonly jobOffersService: JobOffersService) {}
+  constructor(
+    private readonly jobOffersService: JobOffersService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Get('search')
   async search(
@@ -100,15 +102,19 @@ export class JobOffersController {
     const cvFile = files?.cv?.[0];
     const additionalFile = files?.additional?.[0];
 
-    if (cvFile && !(await verifyFileSignature(cvFile.path, cvFile.mimetype))) {
+    if (cvFile && !verifyFileSignature(cvFile.buffer, cvFile.mimetype)) {
       throw new BadRequestException('Plik CV nie jest prawidłowym plikiem PDF.');
     }
-    if (additionalFile && !(await verifyFileSignature(additionalFile.path, additionalFile.mimetype))) {
+    if (additionalFile && !verifyFileSignature(additionalFile.buffer, additionalFile.mimetype)) {
       throw new BadRequestException('Dodatkowy plik ma nieprawidłową zawartość dla zadeklarowanego typu.');
     }
 
-    const cvFileName = cvFile?.filename ?? null;
-    const additionalFileName = additionalFile?.filename ?? null;
+    const cvFileName = cvFile
+      ? await this.storageService.savePrivateFile(cvFile.buffer, cvFile.originalname, cvFile.mimetype, 'cv')
+      : null;
+    const additionalFileName = additionalFile
+      ? await this.storageService.savePrivateFile(additionalFile.buffer, additionalFile.originalname, additionalFile.mimetype, 'cv')
+      : null;
     return this.jobOffersService.submitApplicationForm(
       decoded.sub, body.jobOfferId,
       { ...body, cvFileName, additionalFileName },
@@ -219,13 +225,7 @@ export class JobOffersController {
 
   @Post('company-profile/logo')
   @UseInterceptors(FileInterceptor('logo', {
-    storage: diskStorage({
-      destination: join(process.cwd(), 'uploads', 'logos'),
-      filename: (_req, file, cb) => {
-        const unique = randomBytes(16).toString('hex');
-        cb(null, `${unique}${extname(file.originalname)}`);
-      },
-    }),
+    storage: memoryStorage(),
     limits: { fileSize: 3 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       if (!file.mimetype.startsWith('image/')) {
@@ -240,10 +240,11 @@ export class JobOffersController {
   ) {
     const decoded = verifyToken(authHeader);
     if (!file) throw new BadRequestException('Brak pliku logo.');
-    if (!(await verifyFileSignature(file.path, file.mimetype))) {
+    if (!verifyFileSignature(file.buffer, file.mimetype)) {
       throw new BadRequestException('Plik logo ma nieprawidłową zawartość dla zadeklarowanego typu.');
     }
-    return this.jobOffersService.updateCompanyLogo(decoded.sub, `/uploads/logos/${file.filename}`);
+    const logoUrl = await this.storageService.savePublicFile(file.buffer, file.originalname, file.mimetype, 'logos');
+    return this.jobOffersService.updateCompanyLogo(decoded.sub, logoUrl);
   }
 
   @Get(':offerId/similar')

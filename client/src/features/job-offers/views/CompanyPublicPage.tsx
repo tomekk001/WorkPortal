@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Header } from '../../auth/Header';
 import { JobOfferCard, type JobOffer } from '../components/JobOfferCard';
 import { setSeoTags, resetSeoTags } from '../../../utils/seo';
+import { API_URL } from '../../../api/axios';
 
 interface CompanyPublicData {
   id: number;
@@ -28,7 +29,7 @@ export const CompanyPublicPage = () => {
     if (!companyId) return;
     setLoading(true);
     setNotFound(false);
-    axios.get(`http://localhost:3000/job-offers/company/${companyId}`)
+    axios.get(`${API_URL}/job-offers/company/${companyId}`)
       .then(res => {
         setCompany(res.data.company);
         setOffers(Array.isArray(res.data.offers) ? res.data.offers : []);
@@ -43,7 +44,7 @@ export const CompanyPublicPage = () => {
       title: `${company.companyName} — oferty pracy | WorkPortal`,
       description: company.description?.slice(0, 200) || `Zobacz aktualne oferty pracy firmy ${company.companyName} na WorkPortal.`,
       url: `${window.location.origin}/firma/${company.id}`,
-      image: company.logoUrl ? `http://localhost:3000${company.logoUrl}` : undefined,
+      image: company.logoUrl ? `${API_URL}${company.logoUrl}` : undefined,
     });
     return () => resetSeoTags();
   }, [company]);
@@ -76,7 +77,7 @@ export const CompanyPublicPage = () => {
       <div style={{ background: '#0f1923', padding: '40px 0 48px' }}>
         <div style={{ width: '100%', padding: '0 32px', maxWidth: 960, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 20 }}>
           {company.logoUrl ? (
-            <img src={`http://localhost:3000${company.logoUrl}`} alt="" style={{ width: 72, height: 72, borderRadius: 14, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+            <img src={`${API_URL}${company.logoUrl}`} alt="" style={{ width: 72, height: 72, borderRadius: 14, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
           ) : (
             <div style={{ width: 72, height: 72, borderRadius: 14, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🏢</div>
           )}

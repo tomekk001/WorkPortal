@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LanguageSwitcher } from '../layout/LanguageSwitcher';
+import { API_URL } from '../../api/axios';
 
 export const Header = () => {
   const { t } = useTranslation();
@@ -33,7 +34,7 @@ export const Header = () => {
     if (!token) return;
     const fetchUnread = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/messages/unread-count', {
+        const res = await axios.get(`${API_URL}/messages/unread-count`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUnreadCount(res.data.count ?? 0);

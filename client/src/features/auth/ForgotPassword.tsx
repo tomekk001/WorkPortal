@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { API_URL } from '../../api/axios';
 
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 13, fontWeight: 600,
@@ -27,7 +28,7 @@ export const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:3000/auth/forgot-password', { email });
+      await axios.post(`${API_URL}/auth/forgot-password`, { email });
     } finally {
       setDone(true);
       setLoading(false);

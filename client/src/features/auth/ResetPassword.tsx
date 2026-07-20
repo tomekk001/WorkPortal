@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { API_URL } from '../../api/axios';
 
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 13, fontWeight: 600,
@@ -32,7 +33,7 @@ export const ResetPassword = () => {
     setError('');
     setLoading(true);
     try {
-      await axios.post('http://localhost:3000/auth/reset-password', { token, newPassword });
+      await axios.post(`${API_URL}/auth/reset-password`, { token, newPassword });
       setDone(true);
     } catch (err: any) {
       setError(err.response?.data?.message || t('resetPassword.error'));

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './AuthContext';
 import { Link } from 'react-router-dom';
+import { API_URL } from '../../api/axios';
 
 export const LoginForm = () => {
   const { t } = useTranslation();
@@ -18,7 +19,7 @@ export const LoginForm = () => {
     setError('');
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', { email, password });
+      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
       const { access_token, role } = response.data;
       login(access_token, role);
     } catch (err: any) {

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_URL } from '../../api/axios';
 
 const FREE_EMAIL_DOMAINS = ['gmail.com', 'wp.pl', 'o2.pl', 'interia.pl', 'onet.pl', 'yahoo.com', 'outlook.com', 'hotmail.com'];
 
@@ -43,7 +44,7 @@ export const RegisterForm = () => {
     setNipStatus('checking');
     setNipMessage('');
     try {
-      const res = await axios.get(`http://localhost:3000/auth/verify-nip/${digits}`);
+      const res = await axios.get(`${API_URL}/auth/verify-nip/${digits}`);
       if (seq !== nipCheckSeq.current) return; // nowszy request w toku — ignoruj wynik
       if (res.data.valid) {
         setNipStatus('valid');
@@ -70,7 +71,7 @@ export const RegisterForm = () => {
       // Pracodawca ma tylko jeden adres e-mail (firmowy) — służy zarówno do
       // logowania, jak i jako kontakt firmy, więc musi zostać przez niego zweryfikowany.
       const accountEmail = role === 'EMPLOYER' ? companyEmail : email;
-      await axios.post('http://localhost:3000/auth/register', {
+      await axios.post(`${API_URL}/auth/register`, {
         firstName, lastName, email: accountEmail, password, role,
         ...(role === 'EMPLOYER' && { companyName, nip: nip.replace(/[^0-9]/g, ''), companyEmail }),
       });

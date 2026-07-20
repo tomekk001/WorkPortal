@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { Header } from '../auth/Header';
+import { API_URL } from '../../api/axios';
 
 interface Report {
   id: number;
@@ -67,8 +68,8 @@ export const AdminDashboard = () => {
     const load = async () => {
       try {
         const [statsRes, reportsRes] = await Promise.all([
-          axios.get('http://localhost:3000/admin/stats', { headers }),
-          axios.get('http://localhost:3000/admin/reports', { headers }),
+          axios.get(`${API_URL}/admin/stats`, { headers }),
+          axios.get(`${API_URL}/admin/reports`, { headers }),
         ]);
         setStats(statsRes.data);
         setReports(Array.isArray(reportsRes.data) ? reportsRes.data : []);
@@ -83,27 +84,27 @@ export const AdminDashboard = () => {
 
   useEffect(() => {
     if (activeTab === 'users' && users.length === 0) {
-      axios.get('http://localhost:3000/admin/users', { headers })
+      axios.get(`${API_URL}/admin/users`, { headers })
         .then(r => setUsers(Array.isArray(r.data) ? r.data : []))
         .catch(console.error);
     }
     if (activeTab === 'offers' && offers.length === 0) {
-      axios.get('http://localhost:3000/admin/offers', { headers })
+      axios.get(`${API_URL}/admin/offers`, { headers })
         .then(r => setOffers(Array.isArray(r.data) ? r.data : []))
         .catch(console.error);
     }
     if (activeTab === 'categories' && categories.length === 0) {
-      axios.get('http://localhost:3000/job-offers/categories')
+      axios.get(`${API_URL}/job-offers/categories`)
         .then(r => setCategories(Array.isArray(r.data) ? r.data : []))
         .catch(console.error);
     }
     if (activeTab === 'pages' && pages.length === 0) {
-      axios.get('http://localhost:3000/pages', { headers })
+      axios.get(`${API_URL}/pages`, { headers })
         .then(r => setPages(Array.isArray(r.data) ? r.data : []))
         .catch(console.error);
     }
     if (activeTab === 'messages' && contactMessages.length === 0) {
-      axios.get('http://localhost:3000/admin/contact-messages', { headers })
+      axios.get(`${API_URL}/admin/contact-messages`, { headers })
         .then(r => setContactMessages(Array.isArray(r.data) ? r.data : []))
         .catch(console.error);
     }
@@ -112,7 +113,7 @@ export const AdminDashboard = () => {
   const markMessageRead = async (id: number) => {
     setMarkingReadId(id);
     try {
-      await axios.patch(`http://localhost:3000/admin/contact-messages/${id}/read`, {}, { headers });
+      await axios.patch(`${API_URL}/admin/contact-messages/${id}/read`, {}, { headers });
       setContactMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'READ' } : m));
     } catch (e: any) {
       alert(e.response?.data?.message || t('common.error'));
@@ -129,7 +130,7 @@ export const AdminDashboard = () => {
   const savePage = async (slug: string) => {
     setSavingPage(true);
     try {
-      const res = await axios.patch(`http://localhost:3000/pages/${slug}`, pageDraft, { headers });
+      const res = await axios.patch(`${API_URL}/pages/${slug}`, pageDraft, { headers });
       setPages(prev => prev.map(p => p.slug === slug ? res.data : p));
       setEditingPageSlug(null);
     } catch (e: any) {
@@ -143,7 +144,7 @@ export const AdminDashboard = () => {
     if (!newCategoryName.trim()) return;
     setCreatingCategory(true);
     try {
-      const res = await axios.post('http://localhost:3000/job-offers/categories', { name: newCategoryName.trim() }, { headers });
+      const res = await axios.post(`${API_URL}/job-offers/categories`, { name: newCategoryName.trim() }, { headers });
       setCategories(prev => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name, i18n.language)));
       setNewCategoryName('');
     } catch (e: any) {
@@ -162,7 +163,7 @@ export const AdminDashboard = () => {
     if (!editingCategoryName.trim()) return;
     setCategoryActionId(id);
     try {
-      const res = await axios.patch(`http://localhost:3000/job-offers/categories/${id}`, { name: editingCategoryName.trim() }, { headers });
+      const res = await axios.patch(`${API_URL}/job-offers/categories/${id}`, { name: editingCategoryName.trim() }, { headers });
       setCategories(prev => prev.map(c => c.id === id ? res.data : c));
       setEditingCategoryId(null);
     } catch (e: any) {
@@ -176,7 +177,7 @@ export const AdminDashboard = () => {
     if (!window.confirm(t('admin.categories.deleteConfirm'))) return;
     setCategoryActionId(id);
     try {
-      await axios.delete(`http://localhost:3000/job-offers/categories/${id}`, { headers });
+      await axios.delete(`${API_URL}/job-offers/categories/${id}`, { headers });
       setCategories(prev => prev.filter(c => c.id !== id));
     } catch (e: any) {
       alert(e.response?.data?.message || t('admin.categories.deleteError'));
@@ -188,7 +189,7 @@ export const AdminDashboard = () => {
   const approveOffer = async (offerId: number) => {
     setOfferActionId(offerId);
     try {
-      await axios.patch(`http://localhost:3000/admin/offers/${offerId}/approve`, {}, { headers });
+      await axios.patch(`${API_URL}/admin/offers/${offerId}/approve`, {}, { headers });
       setOffers(prev => prev.map(o => o.id === offerId ? { ...o, isApproved: true } : o));
     } catch (e: any) {
       alert(e.response?.data?.message || t('admin.offers.approveError'));
@@ -200,7 +201,7 @@ export const AdminDashboard = () => {
   const togglePromoted = async (offerId: number) => {
     setOfferActionId(offerId);
     try {
-      const res = await axios.patch(`http://localhost:3000/admin/offers/${offerId}/promote`, {}, { headers });
+      const res = await axios.patch(`${API_URL}/admin/offers/${offerId}/promote`, {}, { headers });
       setOffers(prev => prev.map(o => o.id === offerId ? { ...o, isPromoted: res.data.isPromoted } : o));
     } catch (e: any) {
       alert(e.response?.data?.message || t('admin.offers.promoteError'));
@@ -212,7 +213,7 @@ export const AdminDashboard = () => {
   const toggleBan = async (userId: number) => {
     setUserActionId(userId);
     try {
-      const res = await axios.patch(`http://localhost:3000/admin/users/${userId}/ban`, {}, { headers });
+      const res = await axios.patch(`${API_URL}/admin/users/${userId}/ban`, {}, { headers });
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, isBanned: res.data.isBanned } : u));
     } catch (e: any) {
       alert(e.response?.data?.message || t('admin.users.banError'));
@@ -225,7 +226,7 @@ export const AdminDashboard = () => {
     if (!window.confirm(t('admin.users.deleteConfirm'))) return;
     setUserActionId(userId);
     try {
-      await axios.delete(`http://localhost:3000/admin/users/${userId}`, { headers });
+      await axios.delete(`${API_URL}/admin/users/${userId}`, { headers });
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (e: any) {
       alert(e.response?.data?.message || t('admin.users.deleteError'));
@@ -238,7 +239,7 @@ export const AdminDashboard = () => {
     setUpdatingId(reportId);
     try {
       await axios.patch(
-        `http://localhost:3000/admin/reports/${reportId}/status`,
+        `${API_URL}/admin/reports/${reportId}/status`,
         { status },
         { headers },
       );

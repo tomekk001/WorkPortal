@@ -1,12 +1,14 @@
 import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, HttpException, HttpStatus, StreamableFile } from '@nestjs/common';
-import { createReadStream, existsSync } from 'fs';
-import { join } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { OFFER_PRICE_PLN, PROMOTION_PRICE_PLN, FREE_OFFER_DURATION_MONTHS } from './pricing';
 
 @Injectable()
 export class JobOffersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private storageService: StorageService,
+  ) {}
 
   async searchOffers(title?: string, location?: string, categoryId?: string, skill?: string, seniority?: string) {
     return this.prisma.jobOffer.findMany({
@@ -257,13 +259,8 @@ export class JobOffersService {
     if (application.jobOffer.companyId !== company.id) throw new UnauthorizedException('Brak dostępu.');
     if (!application.cvFileName) throw new NotFoundException('Kandydat nie dołączył CV.');
 
-    const filePath = join(process.cwd(), 'uploads', 'cv', application.cvFileName);
-    if (!existsSync(filePath)) throw new NotFoundException('Plik CV nie został znaleziony na serwerze.');
-
-    return {
-      stream: new StreamableFile(createReadStream(filePath)),
-      filename: application.cvFileName,
-    };
+    const stream = await this.storageService.readPrivateFile('cv', application.cvFileName);
+    return { stream, filename: application.cvFileName };
   }
 
   async updateApplicationStatus(employerUserId: number, applicationId: number, status: string) {

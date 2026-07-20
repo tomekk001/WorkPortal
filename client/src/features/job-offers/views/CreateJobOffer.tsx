@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
+import { API_URL } from '../../../api/axios';
 
 export const CreateJobOffer = () => {
   const { t } = useTranslation();
@@ -34,14 +35,14 @@ export const CreateJobOffer = () => {
   const removeSkill = (skill: string) => setSkills(prev => prev.filter(s => s !== skill));
 
   useEffect(() => {
-    axios.get('http://localhost:3000/job-offers/categories')
+    axios.get(`${API_URL}/job-offers/categories`)
       .then(res => setCategories(res.data))
       .catch(err => console.error('Błąd kategorii', err));
   }, []);
 
   useEffect(() => {
     if (!token || !emailVerified) return;
-    axios.get('http://localhost:3000/job-offers/offer-eligibility', { headers: { Authorization: `Bearer ${token}` } })
+    axios.get(`${API_URL}/job-offers/offer-eligibility`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
         setEligibility(res.data);
         if (!res.data.freeOfferAvailable) setDurationMonths(1);
@@ -60,7 +61,7 @@ export const CreateJobOffer = () => {
         return;
       }
 
-      await axios.post('http://localhost:3000/job-offers', {
+      await axios.post(`${API_URL}/job-offers`, {
         ...formData, contract: contractTypes.join(','), durationMonths, seniority: seniority || undefined, skills,
         ...(eligibility && !eligibility.freeOfferAvailable ? { confirmPayment: true } : {}),
       }, {

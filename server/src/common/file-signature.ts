@@ -1,5 +1,3 @@
-import { readFile, unlink } from 'fs/promises';
-
 // Weryfikacja rzeczywistej zawartości pliku po sygnaturze bajtowej (magic bytes),
 // bo `mimetype` zgłaszany przez multer pochodzi z nagłówka Content-Type ustawianego
 // przez klienta i jest trywialny do podrobienia (np. plik .exe nazwany "cv.pdf"
@@ -14,21 +12,9 @@ const SIGNATURES: Record<string, (buf: Buffer) => boolean> = {
   'image/png': buf => buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
 };
 
-/**
- * Sprawdza, czy zawartość pliku na dysku faktycznie odpowiada deklarowanemu
- * mimetype. Jeśli nie — usuwa plik i zwraca false, żeby wywołujący mógł odrzucić upload.
- */
-export async function verifyFileSignature(filePath: string, declaredMimetype: string): Promise<boolean> {
+/** Sprawdza, czy zawartość bufora faktycznie odpowiada deklarowanemu mimetype. */
+export function verifyFileSignature(buffer: Buffer, declaredMimetype: string): boolean {
   const check = SIGNATURES[declaredMimetype];
   if (!check) return true; // brak zdefiniowanej sygnatury dla tego typu — nie blokujemy
-
-  try {
-    const buf = await readFile(filePath);
-    if (check(buf)) return true;
-  } catch {
-    // plik nieczytelny — traktujemy jako niepoprawny
-  }
-
-  await unlink(filePath).catch(() => {});
-  return false;
+  return check(buffer);
 }

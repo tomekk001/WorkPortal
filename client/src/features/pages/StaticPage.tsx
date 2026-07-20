@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Header } from '../auth/Header';
+import { API_URL } from '../../api/axios';
 
 export const StaticPage = () => {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export const StaticPage = () => {
     if (!slug) return;
     setLoading(true);
     setNotFound(false);
-    axios.get(`http://localhost:3000/pages/${slug}`)
+    axios.get(`${API_URL}/pages/${slug}`)
       .then(res => setPage(res.data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));

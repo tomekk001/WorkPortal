@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../../api/axios';
 
 export const Footer = () => {
   const { t } = useTranslation();
@@ -14,7 +15,7 @@ export const Footer = () => {
     setStatus('sending');
     setErrorMsg('');
     try {
-      await axios.post('http://localhost:3000/newsletter/subscribe', { email });
+      await axios.post(`${API_URL}/newsletter/subscribe`, { email });
       setStatus('done');
       setEmail('');
     } catch (err: any) {

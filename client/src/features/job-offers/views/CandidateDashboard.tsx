@@ -7,6 +7,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Header } from '../../auth/Header';
 import { Footer } from '../../layout/Footer';
+import { API_URL } from '../../../api/axios';
 
 interface Message {
   id: number;
@@ -35,7 +36,7 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:3000/messages/conversations/${conv.id}`, {
+    axios.get(`${API_URL}/messages/conversations/${conv.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => setMessages(res.data.messages)).catch(console.error);
   }, [conv.id]);
@@ -49,7 +50,7 @@ const ConversationChat = ({ conv, token, myId, onBack }: {
     setSending(true);
     try {
       const res = await axios.post(
-        `http://localhost:3000/messages/conversations/${conv.id}/send`,
+        `${API_URL}/messages/conversations/${conv.id}/send`,
         { content: input.trim() },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -168,7 +169,7 @@ const ApplicationHistoryTab = ({ token }: { token: string }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/job-offers/candidate-applications', {
+    axios.get(`${API_URL}/job-offers/candidate-applications`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => setApplications(Array.isArray(res.data) ? res.data : []))
       .catch(console.error)
@@ -256,7 +257,7 @@ const MessagesTab = ({ token, myId }: { token: string; myId: number }) => {
   const [selected, setSelected] = useState<Conversation | null>(null);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/messages/conversations', {
+    axios.get(`${API_URL}/messages/conversations`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => setConversations(Array.isArray(res.data) ? res.data : []))
       .catch(console.error)
@@ -378,7 +379,7 @@ export const CandidateDashboard = () => {
       if (categoryId) params.categoryId = categoryId;
       if (skill) params.skill = skill;
       if (seniority) params.seniority = seniority;
-      const response = await axios.get('http://localhost:3000/job-offers/search', { params });
+      const response = await axios.get(`${API_URL}/job-offers/search`, { params });
       setOffers(Array.isArray(response.data) ? response.data : []);
     } catch { setOffers([]); }
     finally { setLoadingOffers(false); }
@@ -388,8 +389,8 @@ export const CandidateDashboard = () => {
     if (!token) return;
     try {
       const [idsRes, offersRes] = await Promise.all([
-        axios.get('http://localhost:3000/job-offers/saved-ids', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://localhost:3000/job-offers/saved', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/job-offers/saved-ids`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_URL}/job-offers/saved`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       setSavedIds(new Set(Array.isArray(idsRes.data) ? idsRes.data : []));
       setSavedOffers(Array.isArray(offersRes.data) ? offersRes.data : []);
@@ -413,7 +414,7 @@ export const CandidateDashboard = () => {
     }
     try {
       await axios.post(
-        `http://localhost:3000/job-offers/save/${offerId}`,
+        `${API_URL}/job-offers/save/${offerId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -424,12 +425,12 @@ export const CandidateDashboard = () => {
 
   useEffect(() => {
     fetchOffers();
-    axios.get('http://localhost:3000/job-offers/search').then(r => { if (Array.isArray(r.data)) setTotalOffers(r.data.length); }).catch(() => {});
-    axios.get('http://localhost:3000/job-offers/categories').then(r => setCategories(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    axios.get(`${API_URL}/job-offers/search`).then(r => { if (Array.isArray(r.data)) setTotalOffers(r.data.length); }).catch(() => {});
+    axios.get(`${API_URL}/job-offers/categories`).then(r => setCategories(Array.isArray(r.data) ? r.data : [])).catch(() => {});
     if (token) {
       const payload = JSON.parse(atob(token.split('.')[1]));
       setMyId(payload.sub);
-      axios.get('http://localhost:3000/messages/unread-count', { headers: { Authorization: `Bearer ${token}` } })
+      axios.get(`${API_URL}/messages/unread-count`, { headers: { Authorization: `Bearer ${token}` } })
         .then(r => setUnreadCount(r.data.count ?? 0)).catch(() => {});
       fetchSaved();
     }
@@ -470,7 +471,7 @@ export const CandidateDashboard = () => {
     setReportSending(true);
     try {
       await axios.post(
-        `http://localhost:3000/job-offers/${reportOfferId}/report`,
+        `${API_URL}/job-offers/${reportOfferId}/report`,
         { reason: reportReason, description: reportDesc },
         { headers: { Authorization: `Bearer ${token}` } },
       );

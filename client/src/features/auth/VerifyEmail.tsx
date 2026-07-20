@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { API_URL } from '../../api/axios';
 
 export const VerifyEmail = () => {
   const { t } = useTranslation();
@@ -16,7 +17,7 @@ export const VerifyEmail = () => {
     if (!token) { setStatus('error'); setError(t('verifyEmail.noToken')); return; }
     if (requested.current) return;
     requested.current = true;
-    axios.post('http://localhost:3000/auth/verify-email', { token })
+    axios.post(`${API_URL}/auth/verify-email`, { token })
       .then(() => setStatus('success'))
       .catch((err: any) => {
         setStatus('error');

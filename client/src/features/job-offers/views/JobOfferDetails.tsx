@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 import { JobOfferCard, SENIORITY_LABELS, type JobOffer } from '../components/JobOfferCard';
 import { setSeoTags, resetSeoTags, setJsonLd, removeJsonLd } from '../../../utils/seo';
+import { API_URL } from '../../../api/axios';
 
 const JSONLD_ID = 'jobposting-jsonld';
 const EMPLOYMENT_TYPE: Record<string, string> = { UOP: 'FULL_TIME', UZ: 'CONTRACTOR', B2B: 'CONTRACTOR' };
@@ -62,21 +63,21 @@ export const JobOfferDetails = () => {
     if (!offerId) return;
     setLoading(true);
     setNotFound(false);
-    axios.get(`http://localhost:3000/job-offers/${offerId}`)
+    axios.get(`${API_URL}/job-offers/${offerId}`)
       .then(res => setOffer(res.data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-    axios.get(`http://localhost:3000/job-offers/${offerId}/similar`)
+    axios.get(`${API_URL}/job-offers/${offerId}/similar`)
       .then(res => setSimilar(Array.isArray(res.data) ? res.data : []))
       .catch(() => {});
-    axios.post(`http://localhost:3000/job-offers/${offerId}/view`).catch(() => {});
+    axios.post(`${API_URL}/job-offers/${offerId}/view`).catch(() => {});
   }, [offerId]);
 
   useEffect(() => {
     if (!offer) return;
 
     const description = offer.description.slice(0, 200);
-    const logoUrl = offer.company.logoUrl ? `http://localhost:3000${offer.company.logoUrl}` : undefined;
+    const logoUrl = offer.company.logoUrl ? `${API_URL}${offer.company.logoUrl}` : undefined;
     setSeoTags({
       title: `${offer.title} — ${offer.company.companyName} | WorkPortal`,
       description,
@@ -134,7 +135,7 @@ export const JobOfferDetails = () => {
     setReportSending(true);
     try {
       await axios.post(
-        `http://localhost:3000/job-offers/${offerId}/report`,
+        `${API_URL}/job-offers/${offerId}/report`,
         { reason: reportReason, description: reportDesc },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -289,7 +290,7 @@ export const JobOfferDetails = () => {
             <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e8e5df', padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 {offer.company.logoUrl ? (
-                  <img src={`http://localhost:3000${offer.company.logoUrl}`} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', border: '1px solid #e8e5df' }} />
+                  <img src={`${API_URL}${offer.company.logoUrl}`} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', border: '1px solid #e8e5df' }} />
                 ) : (
                   <div style={{ width: 48, height: 48, borderRadius: 10, background: '#f9f8f6', border: '1px solid #e8e5df', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏢</div>
                 )}

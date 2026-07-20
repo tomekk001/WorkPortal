@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
+import { API_URL } from '../../../api/axios';
 
 interface CompanyProfileData {
   companyName: string;
@@ -32,7 +33,7 @@ export const CompanyProfile = () => {
 
   useEffect(() => {
     if (!token) return;
-    axios.get('http://localhost:3000/job-offers/company-profile', {
+    axios.get(`${API_URL}/job-offers/company-profile`, {
       headers: { Authorization: `Bearer ${token}` },
     }).then(res => {
       const data: CompanyProfileData | null = res.data;
@@ -59,7 +60,7 @@ export const CompanyProfile = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await axios.patch('http://localhost:3000/job-offers/company-profile', formData, {
+      await axios.patch(`${API_URL}/job-offers/company-profile`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       navigate('/');
@@ -77,7 +78,7 @@ export const CompanyProfile = () => {
     try {
       const fd = new FormData();
       fd.append('logo', file);
-      const res = await axios.post('http://localhost:3000/job-offers/company-profile/logo', fd, {
+      const res = await axios.post(`${API_URL}/job-offers/company-profile/logo`, fd, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
       setLogoUrl(res.data.logoUrl);
@@ -125,7 +126,7 @@ export const CompanyProfile = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <div style={{ width: 72, height: 72, borderRadius: 14, background: '#f9f8f6', border: '1.5px solid #e8e5df', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {logoUrl ? (
-                      <img src={`http://localhost:3000${logoUrl}`} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={`${API_URL}${logoUrl}`} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <span style={{ fontSize: 24, color: '#d1d5db' }}>🏢</span>
                     )}

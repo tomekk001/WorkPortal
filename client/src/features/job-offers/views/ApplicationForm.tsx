@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth/AuthContext';
 import { Header } from '../../auth/Header';
 import axios from 'axios';
+import { API_URL } from '../../../api/axios';
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -128,7 +129,7 @@ export const ApplicationForm = () => {
       if (files.cv)         fd.append('cv', files.cv);
       if (files.additional) fd.append('additional', files.additional);
 
-      await axios.post('http://localhost:3000/job-offers/submit-application', fd, {
+      await axios.post(`${API_URL}/job-offers/submit-application`, fd, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert(t('applicationForm.submitSuccess'));

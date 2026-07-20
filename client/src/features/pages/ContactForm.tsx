@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Header } from '../auth/Header';
+import { API_URL } from '../../api/axios';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
@@ -32,7 +33,7 @@ export const ContactForm = () => {
     setSending(true);
     setError('');
     try {
-      await axios.post('http://localhost:3000/contact', formData);
+      await axios.post(`${API_URL}/contact`, formData);
       setDone(true);
     } catch (err: any) {
       setError(err.response?.data?.message || t('contactForm.sendError'));
