@@ -1,37 +1,37 @@
 # 🧑‍💻 WorkPortal - Job Board System
 
-Nowoczesny portal ogłoszeniowy łączący **Kandydatów z Pracodawcami**.  
-Projekt realizowany w architekturze **Monorepo (Frontend + Backend)**.
+A modern job board connecting **Candidates with Employers**.
+Built as a **Monorepo (Frontend + Backend)**.
 
 ---
 
-# 🚀 Technologie
+# 🚀 Technologies
 
 - 🎨 **Frontend:** `React` + `TypeScript` + `Vite` + `Tailwind CSS`
 - ⚙️ **Backend:** `NestJS` + `TypeScript` + `Prisma ORM`
-- 🗄 **Baza danych:** `PostgreSQL (Docker)`
-- ✅ **Walidacja:** `Zod`
+- 🗄 **Database:** `PostgreSQL (Docker)`
+- ✅ **Validation:** `Zod`
 
 ---
 
-# 🛠 Wymagania (Prerequisites)
+# 🛠 Prerequisites
 
-Przed uruchomieniem upewnij się, że masz zainstalowane:
+Before running the project, make sure you have installed:
 
-- [Node.js](https://nodejs.org/) *(wersja LTS)*
+- [Node.js](https://nodejs.org/) *(LTS version)*
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ---
 
-# ⚡ Szybki Start (Instalacja)
+# ⚡ Quick Start (Installation)
 
-Wykonaj te kroki, aby uruchomić projekt od zera.
+Follow these steps to run the project from scratch.
 
 ---
 
-# 1️⃣ Baza Danych
+# 1️⃣ Database
 
-Uruchom kontener z PostgreSQL w tle:
+Start the PostgreSQL container in the background:
 
 ```bash
 docker-compose up -d
@@ -41,41 +41,41 @@ docker-compose up -d
 
 # 2️⃣ Backend (Server)
 
-Otwórz terminal w folderze **server**:
+Open a terminal in the **server** folder:
 
 ```bash
 cd server
 ```
 
-### 1. Instalacja zależności
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Konfiguracja `.env`
+### 2. Configure `.env`
 
-Upewnij się, że masz w pliku `.env`:
+Make sure your `.env` file contains:
 
 ```env
 DATABASE_URL="postgresql://admin:password123@localhost:5432/job_board?schema=public"
 ```
 
-### 3. Migracja bazy danych
+### 3. Database migration
 
-Zapisanie schematu do PostgreSQL:
+Push the schema to PostgreSQL:
 
 ```bash
 npx prisma migrate dev --name init
 ```
 
-### 4. Uruchom serwer
+### 4. Start the server
 
 ```bash
 npm run start:dev
 ```
 
-Serwer wystartuje pod adresem:
+The server will start at:
 
 ```
 http://localhost:3000
@@ -85,25 +85,25 @@ http://localhost:3000
 
 # 3️⃣ Frontend (Client)
 
-Otwórz nowy terminal w folderze **client**:
+Open a new terminal in the **client** folder:
 
 ```bash
 cd client
 ```
 
-### 1. Instalacja zależności
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Uruchom aplikację
+### 2. Start the application
 
 ```bash
 npm run dev
 ```
 
-Aplikacja będzie dostępna pod adresem:
+The application will be available at:
 
 ```
 http://localhost:5173
@@ -111,11 +111,11 @@ http://localhost:5173
 
 ---
 
-# 📚 Ściąga z Komend (Cheatsheet)
+# 📚 Command Cheatsheet
 
-### 🔄 Migracja bazy danych
+### 🔄 Database migration
 
-Najważniejsza komenda – uruchamiaj po każdej zmianie w `schema.prisma`.
+The most important command – run it after every change to `schema.prisma`.
 
 ```bash
 npx prisma migrate dev
@@ -125,7 +125,7 @@ npx prisma migrate dev
 
 ### 🗄 Prisma Studio
 
-Panel do podglądu i edycji danych w bazie:
+A panel for viewing and editing data in the database:
 
 ```bash
 npx prisma studio
@@ -133,9 +133,9 @@ npx prisma studio
 
 ---
 
-### 🔧 Generowanie typów Prisma
+### 🔧 Generating Prisma types
 
-Pomocne gdy IDE nie widzi zmian:
+Useful when your IDE doesn't pick up changes:
 
 ```bash
 npx prisma generate
@@ -143,9 +143,9 @@ npx prisma generate
 
 ---
 
-### 🌱 Seed danych
+### 🌱 Data seeding
 
-Wypełnia bazę przykładowymi danymi:
+Fills the database with sample data:
 
 ```bash
 npx ts-node prisma/seed-random.ts
@@ -153,13 +153,13 @@ npx ts-node prisma/seed-random.ts
 
 ---
 
-# 🧾 Komendy NPM
+# 🧾 NPM Commands
 
-| Komenda | Opis |
+| Command | Description |
 |--------|------|
-| `npm run dev` | Uruchamia serwer deweloperski Vite |
-| `npm run build` | Buduje wersję produkcyjną |
-| `npm run preview` | Podgląd zbudowanej wersji produkcyjnej |
+| `npm run dev` | Runs the Vite development server |
+| `npm run build` | Builds the production version |
+| `npm run preview` | Previews the built production version |
 
 ### Moduł I: Dla Kandydata (Poszukującego pracy)
 - [✔️] **1. Prosta wyszukiwarka ofert** - Umożliwia wyszukiwanie ogłoszeń po wpisaniu frazy (tytuł stanowiska) oraz wybraniu lokalizacji z listy rozwijanej (województwo lub miasto). Działa w oparciu o proste zapytania do bazy danych.
